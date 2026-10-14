@@ -102,3 +102,26 @@ falhava no retrato vertical dentro da capa horizontal do portal. Desde o PR de
 14/10 a capa da matéria mostra a foto inteira sobre ela mesma desfocada. Na
 escolha: para portal e newsletter, preferir foto horizontal; retrato vertical
 fica para o post do Instagram, que é vertical.
+
+## 14/10/2026, tarde: a fila de 15/10 (primeira produção da fase 1)
+
+Correções do dono, todas viradas regra no código (PR #121) ou corrigidas à mão
+na fila:
+
+- **Mês sem ano.** "Benefícios médios nos EUA sobem 3,60% em janeiro", numa
+  edição de outubro, parecia notícia velha. Virou "Aposentadoria pública dos
+  EUA vai subir 3,6% em janeiro de 2027": sujeito dito, ano escrito, verbo no
+  futuro.
+- **Vocabulário do brasileiro no título.** "Social Security" e "ajuste de
+  custo de vida" viram "aposentadoria pública dos EUA" e "reajuste".
+- **Foto de quem o leitor não reconhece.** O ramo pôs o retrato de Franklin
+  Roosevelt (fundador da Social Security, 1935) na matéria do reajuste de 2027.
+  A matéria ficou com capa tipográfica.
+- **Legenda que descreve a foto** ("Close do rosto de um homem idoso...") não
+  vai ao leitor.
+- **Linha fina igual ao título** e **perguntas em dobro** na página: defeitos
+  de código, corrigidos.
+
+Pendente para o código: o assunto saiu "a social security e os 3, 6%", com um
+espaço dentro do número. Corrigido à mão nesta edição; a causa ainda não foi
+achada.

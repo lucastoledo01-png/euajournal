@@ -175,6 +175,46 @@ describe("idempotência da gravação", () => {
     expect(r.reaproveitadas).toBe(1);
   });
 
+  it("candidata gravada SEM classificação é completada quando a classificação chega", async () => {
+    // 13/10/2026: a cota da OpenAI acabou no meio da produção e 1.134
+    // candidatas foram gravadas como REJECT_UNCLASSIFIED, sem classificação.
+    // As rodadas seguintes classificaram e aprovaram, e nada regravava a
+    // linha: o post lia "rejected" e descartava a pauta que o verificador
+    // tinha confirmado.
+    const verificacao = { canal: "instagram", status: "confirm", motivo: "ok", verificadoEm: "2026-10-14T02:19:00Z" };
+    const { client, ops } = bancoFalso([
+      { id: "x", project_id: PROJ, url: "https://www.uscis.gov/a", story_id: "s1",
+        classification_status: "pending", status: "rejected", decision_reason: "REJECT_UNCLASSIFIED",
+        metadata_json: { verificacao } },
+    ]);
+    const store = criarCandidatosStore(client);
+
+    const r = await store.gravarNovas(PROJ, [candidata({ status: "approved", decisionReason: "APPROVED_US_OPPORTUNITY" })]);
+
+    expect(r.gravadas).toBe(1);
+    expect(r.reaproveitadas).toBe(0);
+    expect(ops.filter((o) => o.op === "upsert")).toHaveLength(0);
+    const up = ops.find((o) => o.op === "update")!.detalhe as Record<string, unknown>;
+    expect(up.status).toBe("approved");
+    expect(up.decision_reason).toBe("APPROVED_US_OPPORTUNITY");
+    expect(up.classification_status).toBe("done");
+    expect((up.metadata_json as Record<string, unknown>).verificacao).toEqual(verificacao);
+  });
+
+  it("candidata sem classificação continua intocada quando a nova também vem sem", async () => {
+    const { client, ops } = bancoFalso([
+      { id: "x", project_id: PROJ, url: "https://www.uscis.gov/a", story_id: "s1",
+        classification_status: "pending", status: "rejected", metadata_json: {} },
+    ]);
+    const store = criarCandidatosStore(client);
+
+    const r = await store.gravarNovas(PROJ, [candidata({ status: "rejected", classificacao: undefined })]);
+
+    expect(r.gravadas).toBe(0);
+    expect(r.reaproveitadas).toBe(1);
+    expect(ops.filter((o) => o.op === "update" || o.op === "upsert")).toHaveLength(0);
+  });
+
   it("lista vazia não fala com o banco", async () => {
     const { client, ops } = bancoFalso();
     const store = criarCandidatosStore(client);

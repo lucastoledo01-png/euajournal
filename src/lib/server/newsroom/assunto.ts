@@ -59,14 +59,15 @@ function caixaBaixa(texto: string): string {
  * O assunto na forma da casa, sem mudar uma palavra do que ele diz.
  *
  * Travessão e meia-risca viram vírgula, que é o que a frase falada faz no lugar
- * deles. Ponto final e reticências no fim saem; interrogação e exclamação
+ * deles. A vírgula entre dois dígitos é decimal e fica colada. Ponto final e reticências no fim saem; interrogação e exclamação
  * ficam, porque a pergunta é uma das cinco formas.
  */
 export function normalizarAssunto(bruto: string): string {
   let t = String(bruto ?? "")
     .replace(/[\u2014\u2013]/g, ",")
     .replace(/\s+,/g, ",")
-    .replace(/,(?=\S)/g, ", ")
+    // Espaço depois da vírgula, menos na vírgula decimal: "3,6%" virava "3, 6%" (14/10/2026).
+    .replace(/(?<!\d),(?=\S)|,(?=\D)/g, ", ")
     .replace(/\s+/g, " ")
     .trim();
   t = t.replace(/(?:\.\s*|…\s*)+$/u, "").trim();

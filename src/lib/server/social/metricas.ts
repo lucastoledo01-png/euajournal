@@ -17,8 +17,48 @@
  * falhas, que a rota devolve.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchMediaInsights, getMetaConfig } from "./instagram/meta-client";
+import { getMetaConfig } from "./instagram/meta-client";
 import type { MetaMediaInsights } from "./instagram/meta-client";
+
+/*
+ * A chave de métricas (14/10/2026). A chave que publica é de Login do Facebook
+ * e não tem permissão de insights: a Meta respondia "objeto não existe ou
+ * falta permissão" para todo post, e o cliente antigo devolvia ZERO, que ia
+ * para o banco como se o post não tivesse alcance. A de métricas é de Login do
+ * Instagram (`INSTAGRAM_INSIGHTS_TOKEN`, com instagram_business_manage_insights)
+ * e fala com graph.instagram.com. Leitura que falha agora é falha, nunca zero.
+ */
+const API_DO_INSTAGRAM = "https://graph.instagram.com/v22.0";
+const API_DO_FACEBOOK = "https://graph.facebook.com/v22.0";
+const METRICAS_DO_POST = "reach,saved,shares,comments,likes";
+
+function chaveDeMetricas(env: Record<string, string | undefined>): { base: string; token: string } | null {
+  const doInstagram = env.INSTAGRAM_INSIGHTS_TOKEN?.trim();
+  if (doInstagram) return { base: API_DO_INSTAGRAM, token: doInstagram };
+  const { accessToken } = getMetaConfig(env);
+  return accessToken ? { base: API_DO_FACEBOOK, token: accessToken } : null;
+}
+
+/** Métricas de um post, ou um erro com o motivo da Meta. Nunca zero inventado. */
+export async function lerMetricasDoPost(
+  mediaId: string,
+  env: Record<string, string | undefined>,
+  fetcher: typeof fetch = fetch,
+): Promise<MetaMediaInsights> {
+  const chave = chaveDeMetricas(env);
+  if (!chave) throw new Error("sem chave de métricas do Instagram");
+  const res = await fetcher(`${chave.base}/${mediaId}/insights?metric=${METRICAS_DO_POST}&access_token=${encodeURIComponent(chave.token)}`, {
+    signal: AbortSignal.timeout(15_000),
+  });
+  const json = (await res.json().catch(() => ({}))) as { data?: Array<{ name?: string; values?: Array<{ value?: unknown }>; total_value?: { value?: unknown } }>; error?: { message?: string } };
+  if (!res.ok || !Array.isArray(json.data)) throw new Error(`Meta ${res.status}: ${json.error?.message?.slice(0, 120) ?? "sem dados"}`);
+  const v: Record<string, number> = {};
+  for (const item of json.data) {
+    const n = Number(item.values?.[0]?.value ?? item.total_value?.value ?? 0);
+    if (item.name) v[item.name] = Number.isFinite(n) ? n : 0;
+  }
+  return { reach: v.reach ?? 0, saved: v.saved ?? 0, shares: v.shares ?? 0, comments: v.comments ?? 0, likes: v.likes ?? 0 };
+}
 
 export const TABELA_DAS_METRICAS_DO_POST = "instagram_metricas_post";
 export const TABELA_DOS_SEGUIDORES = "instagram_seguidores_dia";
@@ -55,10 +95,14 @@ export async function lerSeguidoresDaConta(
   env: Record<string, string | undefined>,
   fetcher: typeof fetch = fetch,
 ): Promise<number | null> {
-  const { accountId, accessToken, isConfigured } = getMetaConfig(env);
-  if (!isConfigured || !accountId || !accessToken) return null;
+  const chave = chaveDeMetricas(env);
+  const { accountId } = getMetaConfig(env);
+  if (!chave) return null;
+  // Com a chave do Instagram a conta é "me"; com a do Facebook, o id da conta.
+  const quem = chave.base === API_DO_INSTAGRAM ? "me" : accountId;
+  if (!quem) return null;
   try {
-    const url = `https://graph.facebook.com/v22.0/${accountId}?fields=followers_count&access_token=${encodeURIComponent(accessToken)}`;
+    const url = `${chave.base}/${quem}?fields=followers_count&access_token=${encodeURIComponent(chave.token)}`;
     const res = await fetcher(url, { signal: AbortSignal.timeout(15_000) });
     const json = (await res.json().catch(() => ({}))) as { followers_count?: unknown };
     const n = Number(json.followers_count);
@@ -72,7 +116,7 @@ export async function coletarMetricasDoInstagram(d: DepsDasMetricas): Promise<Re
   const agora = (d.agora ?? (() => new Date()))();
   const dia = diaEmSaoPaulo(agora);
   const desde = new Date(agora.getTime() - (d.janelaEmDias ?? JANELA_PADRAO_EM_DIAS) * 24 * 60 * 60 * 1000).toISOString();
-  const lerInsights = d.lerInsights ?? ((id: string) => fetchMediaInsights(id, d.env, d.fetcher));
+  const lerInsights = d.lerInsights ?? ((id: string) => lerMetricasDoPost(id, d.env, d.fetcher));
   const lerSeguidores = d.lerSeguidores ?? (() => lerSeguidoresDaConta(d.env, d.fetcher));
   const falhas: string[] = [];
 

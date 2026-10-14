@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coletarMetricasDoInstagram, TABELA_DAS_METRICAS_DO_POST, TABELA_DOS_SEGUIDORES } from "./metricas";
+import { coletarMetricasDoInstagram, lerMetricasDoPost, lerSeguidoresDaConta, TABELA_DAS_METRICAS_DO_POST, TABELA_DOS_SEGUIDORES } from "./metricas";
 
 /** Supabase de mentira: devolve os posts dados e guarda cada upsert. */
 function bancoFalso(posts: Array<{ id: string; provider_post_id: string }>, erroNoUpsert?: string) {
@@ -90,5 +90,29 @@ describe("métricas do Instagram", () => {
     });
     expect(r.gravados).toBe(0);
     expect(r.falhas[0]).toContain("métricas dos posts não gravadas");
+  });
+
+  it("com a chave de métricas fala com graph.instagram.com; falha da Meta é erro, nunca zero", async () => {
+    const chamadas: string[] = [];
+    const ok = (async (url: string) => {
+      chamadas.push(url.split("?")[0]);
+      return new Response(JSON.stringify({ data: [{ name: "reach", values: [{ value: 40 }] }, { name: "saved", values: [{ value: 3 }] }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    const m = await lerMetricasDoPost("m1", { INSTAGRAM_INSIGHTS_TOKEN: "IGAA-teste" }, ok);
+    expect(m).toEqual({ reach: 40, saved: 3, shares: 0, comments: 0, likes: 0 });
+    expect(chamadas[0]).toBe("https://graph.instagram.com/v22.0/m1/insights");
+
+    const negado = (async () => new Response(JSON.stringify({ error: { message: "missing permissions" } }), { status: 400 })) as unknown as typeof fetch;
+    await expect(lerMetricasDoPost("m1", { INSTAGRAM_INSIGHTS_TOKEN: "IGAA-teste" }, negado)).rejects.toThrow("Meta 400: missing permissions");
+  });
+
+  it("seguidores pela chave do Instagram usam /me", async () => {
+    let alvo = "";
+    const f = (async (url: string) => {
+      alvo = url.split("?")[0];
+      return new Response(JSON.stringify({ followers_count: 9 }), { status: 200 });
+    }) as unknown as typeof fetch;
+    expect(await lerSeguidoresDaConta({ INSTAGRAM_INSIGHTS_TOKEN: "IGAA-teste" }, f)).toBe(9);
+    expect(alvo).toBe("https://graph.instagram.com/v22.0/me");
   });
 });

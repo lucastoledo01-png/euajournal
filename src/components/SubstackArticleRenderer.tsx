@@ -173,14 +173,29 @@ export function SubstackArticleRenderer({
       {/* 2. Capa, em caixa de proporção fixa */}
       {coverImage ? (
         <figure className="mb-0 mt-8">
+          {/*
+            A foto vai INTEIRA (14/10/2026). A caixa é 16:9 e o retrato é
+            vertical: recortada, a capa mostrava 40% da altura e cortava o
+            queixo ou o alto da cabeça (Nadella, Zuckerberg). Agora a foto
+            fica contida, e a sobra dos lados é a própria foto ampliada e
+            desfocada, que é decorativa e some para o leitor de tela.
+          */}
           <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-[#F4F4F5]">
+            <Image
+              alt=""
+              aria-hidden="true"
+              src={coverImage}
+              fill
+              sizes="(min-width: 768px) 680px, 100vw"
+              className={`scale-110 object-cover ${recorteDaFoto(coverImage).classe} blur-2xl brightness-90`}
+            />
             <Image
               alt={coverAlt?.trim() || coverDescription?.trim() || title}
               src={coverImage}
               fill
               sizes="(min-width: 768px) 680px, 100vw"
               preload
-              className={`object-cover ${recorteDaFoto(coverImage).classe}`}
+              className="object-contain"
             />
           </div>
           {legendaDaCapa.length ? (

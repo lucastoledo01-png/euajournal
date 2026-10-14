@@ -112,6 +112,8 @@ function corpoComMiniaturas(html: string | undefined): string | undefined {
    * capa, que é o LCP, e não deve disputar banda com ela.
    */
   return html
+    // "O que você precisa saber" é da newsletter (dono, 14/10/2026); some também das matérias já gravadas com ele.
+    .replace(/<section class="essencial">[\s\S]*?<\/section>/g, "")
     .replace(/(<img[^>]+src=")([^"]+)(")/g, (_, antes: string, src: string, depois: string) =>
       `${antes}${miniaturaDoCommons(src.replace(/&amp;/g, "&"), 1280)}${depois}`,
     )

@@ -1,4 +1,5 @@
 import { AITokenUsage, callOpenAIJSON, getAIProviderConfig } from "./ai-provider";
+import { DESCRICAO_DO_LEITOR } from "../editorial/linha-editorial";
 import { NewsCandidate } from "./collector";
 import { DeduplicatedGroup } from "./deduplicator";
 import { RankedCandidate } from "./ranker";
@@ -178,14 +179,14 @@ export const MARCA_PADRAO: MarcaEditorial = {
  * projeto, a assinatura e o JSON de saída são contrato e ficam no montador.
  */
 export const INSTRUCAO_PADRAO_NEWSLETTER = `PARA QUEM VOCÊ ESCREVE (isto vale sobre qualquer outra regra de estilo):
-Uma pessoa comum, no Brasil, que sonha em morar, trabalhar ou investir nos Estados Unidos. Ela ainda não mora lá. Não é economista nem advogada e não conhece o vocabulário técnico. Ela é adulta, inteligente e ocupada.
-A pergunta que cada matéria responde é: "por que isso importa para quem sonha com os EUA?". Se a matéria não responde isso, ela não está pronta, por mais correta que esteja.
+Uma pessoa comum, no Brasil: ${DESCRICAO_DO_LEITOR}. Ela ainda não mora lá. Não é economista nem advogada e não conhece o vocabulário técnico. Ela é adulta, inteligente e ocupada.
+A pergunta que cada matéria responde é: "por que isso importa para quem tem esse plano?". Se a matéria não responde isso, ela não está pronta, por mais correta que esteja.
 Imigração não é assunto desta publicação: não transforme matéria de economia, trabalho ou tecnologia em conversa sobre visto.
 
 ORDEM DE PRIORIDADE, quando duas coisas entrarem em conflito:
 1. VERDADE FACTUAL. Nada fora do pacote.
 2. ESCOPO CORRETO. Caso individual não vira regra geral; decisão de um estado não vira decisão nacional.
-3. RELEVÂNCIA para quem sonha em morar, trabalhar ou investir nos EUA.
+3. RELEVÂNCIA para ${DESCRICAO_DO_LEITOR}.
 4. CLAREZA para quem não é da área.
 5. ATRATIVIDADE: dar vontade de ler. Aqui isso tem forma concreta, e não é adjetivo. É frase curta, verbo direto, parágrafo de duas a quatro linhas, e falar COM o leitor.
    Pesado (construção ilustrativa): "O Bureau of Labor Statistics informou que o Consumer Price Index registrou variação positiva de 0,4% em setembro na comparação com agosto, com ajuste sazonal."
@@ -280,7 +281,7 @@ DIRETRIZES DE TOM & ESTILO:
    - Fale com o leitor em segunda pessoa quando fizer sentido. Isso é endereçamento, e é permitido.
    - Comece pelo que aconteceu. A primeira frase da pauta nunca começa pelo nome de um órgão praticando ato.
    - Zero emoji no corpo do texto. Zero gíria. Leve não é frouxo.
-2. LINGUAGEM ACESSÍVEL: o leitor é brasileiro comum que quer morar, trabalhar ou estudar nos EUA, e não advogado.
+2. LINGUAGEM ACESSÍVEL: o leitor é ${DESCRICAO_DO_LEITOR}, e não advogado.
    - Primeiro a palavra comum, a sigla depois e só se ela ajudar: "a taxa básica de juros dos EUA, decidida pelo Fed".
    - Nome completo de norma, de processo judicial e de órgão em inglês não entra no corpo. "Bureau of Labor Statistics" é "o escritório de estatísticas do trabalho", ou simplesmente "o governo americano" quando o pacote permitir. O nome oficial cabe no campo da fonte, não na frase que a pessoa lê.
    - Se o termo técnico pode sair sem perder informação, ele sai. Explicar é o segundo melhor caminho; o primeiro é não precisar explicar.
@@ -398,7 +399,7 @@ ESTRUTURA DO JSON DE SAÍDA (retorne exclusivamente este JSON estrito):
       "title": "O QUE MUDOU + PARA QUEM IMPORTA. Máximo 95 caracteres. Sem jargão sozinho, sem órgão praticando ato burocrático. Tem que dar para saber de que país é a notícia lendo só o título. Fato positivo com porém abre pelo fato.",
       "summary": "O fato contado inteiro, em parágrafos curtos de duas a quatro linhas separados por uma linha em branco, respeitando o teto de palavras da diretriz de tamanho. Começa pelo que aconteceu, não pelo nome do órgão. Não repete o title. Marque com dois asteriscos o número, a data e o prazo que decidem a notícia, no máximo dois por parágrafo.",
       "context": "Contexto do mercado ou da ferramenta.",
-      "why_it_matters": "Por que isso importa para quem quer morar, trabalhar ou estudar nos EUA. Diga QUEM é afetado, com substantivo concreto: brasileiros que, estudantes que, profissionais que, famílias que. Descreva o EFEITO da regra sobre essas pessoas. NUNCA afirme o que elas fazem, acompanham, observam, esperam, planejam ou devem fazer. Se o pacote factual NÃO disser quem é afetado nem qual o efeito, deixe este campo VAZIO (string vazia). Campo vazio é resposta correta; frase com ressalva do tipo 'pode afetar, mas a fonte não informa quem' é erro.",
+      "why_it_matters": "Por que isso importa para ${DESCRICAO_DO_LEITOR}. Diga QUEM é afetado, com substantivo concreto: brasileiros que, estudantes que, profissionais que, famílias que. Descreva o EFEITO da regra sobre essas pessoas. NUNCA afirme o que elas fazem, acompanham, observam, esperam, planejam ou devem fazer. Se o pacote factual NÃO disser quem é afetado nem qual o efeito, deixe este campo VAZIO (string vazia). Campo vazio é resposta correta; frase com ressalva do tipo 'pode afetar, mas a fonte não informa quem' é erro.",
       "practical_impact": "O que muda na prática: o que a regra passa a exigir ou permitir, para quem vale e a partir de quando. Só o que a fonte afirma. NUNCA o que a pessoa precisa fazer, observar ou acompanhar. Se o pacote factual NÃO disser o que muda na prática, deixe este campo VAZIO (string vazia): campo vazio é resposta correta, e inventar consequência aqui é o que faz a edição ser reprovada por alucinação.",
       "humor_line": "Observação curta e humana sobre a pauta. Vazia quando o assunto não comporta leveza.",
       "source_name": "Nome da fonte original",
@@ -897,7 +898,7 @@ ${problemas.map((p) => `- ${p.indice >= 0 ? `pauta ${p.indice + 1}` : "edição"
 
 COMO CORRIGIR:
 - LEGAL_JARGON_OVERLOAD: o caminho preferido é TIRAR o termo, e não explicá-lo. "Os EUA quase não criaram vagas em setembro" resolve sem citar relatório nenhum. Quando o termo precisar ficar, explique em fala, numa frase à parte e curta: "o CPI é o índice de preços ao consumidor dos EUA." Não invente o que o termo significa: se o pacote não diz, descreva o tipo de dado ou de documento e siga.
-- LOW_READER_RELEVANCE: escreva quem é afetado e qual o efeito da regra sobre essa pessoa, com o que o pacote afirma. O público é pessoa comum que quer morar, trabalhar ou estudar nos EUA, não advogado. Se o pacote NÃO sustenta quem é afetado nem qual o efeito, esvazie o campo em vez de escrever ressalva: "a fonte não detalhou" não é relevância, é confissão dentro do texto, e será reprovada por falta de lastro.
+- LOW_READER_RELEVANCE: escreva quem é afetado e qual o efeito da regra sobre essa pessoa, com o que o pacote afirma. O público é ${DESCRICAO_DO_LEITOR}, não advogado. Se o pacote NÃO sustenta quem é afetado nem qual o efeito, esvazie o campo em vez de escrever ressalva: "a fonte não detalhou" não é relevância, é confissão dentro do texto, e será reprovada por falta de lastro.
 - HEADLINE_TOO_LONG: reescreva o título mais curto, mantendo o fato. Corte a qualificação jurídica e mantenha o que mudou e para quem.
 - COUNTRY_UNCLEAR: o título serve para o Brasil e para os EUA com as mesmas palavras. Ponha no título a marca que a fonte já traz: o país, a cidade, o estado, o órgão, a moeda ou a figura pública. "Quem ganha menos quase não participou do recorde de renda familiar em 2025" vira "Renda familiar nos EUA bate recorde, e o avanço se concentrou no topo". Repare que a correção resolve duas coisas de uma vez: situa o país e põe o fato antes da ressalva.
 - FOREIGN_SUBJECT: tire o gentílico do título e ponha no lugar a profissão, a área ou o cargo. "Engenheira argentina assume a divisão de chips de uma big tech nos EUA" vira "Engenheira de chips assume a divisão de processadores de uma big tech nos EUA" (construção ilustrativa). Se o país for o OBJETO da regra, e não a ficha do personagem, mantenha o país e use a outra metade do título para dizer o que aquilo muda para quem lê daqui.

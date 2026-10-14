@@ -328,7 +328,9 @@ describe("o prompt da copy previne, além de o auditor detectar", () => {
 
   it("o exemplo de linguagem para pessoa comum está no prompt, com o par certo", () => {
     const p = prompt();
-    expect(p).toContain("sonha em morar, trabalhar ou investir");
+    // O leitor vem da fonte única (14/10/2026), e não de uma frase própria do carrossel.
+    expect(p).toContain("pensa em morar nos EUA e acompanha o país para tomar decisões de dinheiro e de carreira");
+    expect(p).not.toContain("sonha");
     // O par trocou de assunto em 05/10/2026 (saiu o RFE, entrou o yield); o ensinamento é o mesmo.
     expect(p).toContain("O yield da Treasury de 10 anos avançou com o guidance hawkish do Fomc.");
     expect(p).toContain("o comitê do Fed, o Fomc");

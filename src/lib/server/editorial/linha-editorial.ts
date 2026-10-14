@@ -37,9 +37,25 @@
 import { instrucaoVigente } from "../instrucoes";
 import { LINHA_PADRAO, type LinhaDoProjeto, type PoliticaBrasileira } from "./linha-do-projeto";
 
+/**
+ * O leitor, numa frase de decisão (dono, 14/10/2026). É a fonte única: os
+ * prompts dos três canais, do QA, da triagem e do carrossel leem daqui, e cada
+ * canal acrescenta só a SUA voz. Até esta data havia oito versões, e elas se
+ * contradiziam ("sonha", "investir", "estudar", "quem quer morar").
+ */
+export const DESCRICAO_DO_LEITOR =
+  "o brasileiro que pensa em morar nos EUA e acompanha o país para tomar decisões de dinheiro e de carreira";
+
+/** A pergunta que decide se uma pauta é do leitor. */
+export const PERGUNTA_DO_LEITOR = "um brasileiro com esse plano se importaria com isso?";
+
 export const LEITOR = `
-A publicação é brasileira e é sobre os ESTADOS UNIDOS: economia, trabalho, custo de vida, política, tecnologia, cultura, segurança e cidades. Imigração NÃO é assunto da publicação: visto, green card, processo migratório, deportação e fronteira ficam fora.
-O leitor é o brasileiro que SONHA com os EUA: pensa em morar, trabalhar ou investir lá. Não é quem já mora nos EUA. A linha é notícia positiva dos EUA e notícia ruim do Brasil, aproveitando o que está em alta.
+A publicação é brasileira e é sobre os ESTADOS UNIDOS: economia, trabalho e carreira, custo de vida, tecnologia, empresas, política com efeito prático, cultura e cidades. Imigração NÃO é assunto da publicação: visto, green card, processo migratório, deportação e fronteira ficam fora.
+O leitor é ${DESCRICAO_DO_LEITOR}. Ele lê para entender o que está mudando lá e o que isso muda no plano dele.
+A pergunta de toda pauta: ${PERGUNTA_DO_LEITOR} Se o "sim" precisa de esforço, a resposta é não.
+Notícia dos EUA entra positiva ou neutra: o fato que retrata o país como lugar hostil ou que fecha portas fica fora.
+Notícia do Brasil entra quando mexe no mesmo plano: dólar, juros, imposto, carreira, patrimônio. Disputa regional, figura sem projeção nacional e bastidor ficam fora.
+Pessoa e empresa entram pelo que o brasileiro reconhece. Quem não é conhecido aqui é apresentado pelo cargo e pela empresa na primeira menção.
 `.trim();
 
 export const REGRA_PAIS = `
@@ -71,7 +87,7 @@ eixo: a editoria da pauta.
 export const REGRA_RELEVANCIA = `
 relevancia: 0 a 10, e a régua depende do país.
 
-Para notícia dos EUA: quanto o fato interessa a um brasileiro que sonha em morar, trabalhar ou investir nos Estados Unidos, e quanto mostra o país como lugar onde a vida anda.
+Para notícia dos EUA: quanto o fato interessa a ${DESCRICAO_DO_LEITOR}, e quanto mostra o país como lugar onde a vida anda.
 Nomeação de cargo sem efeito prático é 1. Nota de rodapé de mercado é 2. Decisão do Fed sobre juros é 7, porque mexe no câmbio e no preço aqui. Assunto em alta entre brasileiros sobe um ponto. Lei que muda o que se paga de imposto, empresa grande demitindo em massa, cidade que virou destino de brasileiros, tecnologia que troca o jeito de trabalhar: 7 a 9.
 
 Para notícia do Brasil: quanto existe ali um PROBLEMA FACTUAL CONCRETO que afeta quem tem patrimônio, empresa ou carreira, e que pesa na decisão de ficar ou sair. Notícia setorial, disputa comercial, safra, exportação e balanço de empresa não pesam nessa decisão: valem 1 a 3, por maior que seja o número envolvido. Vale de 6 a 9 quando há fato verificável com alcance: mudança de alíquota, decisão que muda regra do jogo, número de inflação, câmbio, juros, dado de violência, decisão institucional com efeito prático. Fofoca de bastidor, disputa de cargo, declaração de político e pesquisa eleitoral isolada valem 1 a 3.

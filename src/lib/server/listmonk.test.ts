@@ -62,6 +62,10 @@ describe("listmonk integration", () => {
     expect(result).toEqual({ ok: true, id: 42 });
     expect(String(fetchMock.mock.calls[0][0])).toBe("https://listmonk.casaloti.ia.br/api/subscribers");
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).lists).toEqual([7]);
+    // Quem vem pelo site confirma por e-mail (14/10/2026): o Listmonk só manda
+    // a confirmação da lista de dupla confirmação quando a inscrição NÃO chega
+    // pré-confirmada.
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).preconfirm_subscriptions).toBe(false);
   });
 
   /** Sem token nao ha escolha: o formulario publico e o unico caminho. */
@@ -108,7 +112,10 @@ describe("listmonk integration", () => {
       }
       if (alvo.endsWith("/api/subscribers/lists")) {
         const corpo = JSON.parse(String(init?.body));
-        expect(corpo).toMatchObject({ ids: [77], action: "add", target_list_ids: [7] });
+        expect(corpo).toMatchObject({ ids: [77], action: "add", target_list_ids: [7], status: "unconfirmed" });
+        return new Response(JSON.stringify({ data: true }), { status: 200 });
+      }
+      if (alvo.endsWith("/api/subscribers/77/optin")) {
         return new Response(JSON.stringify({ data: true }), { status: 200 });
       }
       return new Response("", { status: 404 });
@@ -130,6 +137,7 @@ describe("listmonk integration", () => {
       "POST https://listmonk.casaloti.ia.br/api/subscribers",
       "GET https://listmonk.casaloti.ia.br/api/subscribers",
       "PUT https://listmonk.casaloti.ia.br/api/subscribers/lists",
+      "POST https://listmonk.casaloti.ia.br/api/subscribers/77/optin",
     ]);
   });
 

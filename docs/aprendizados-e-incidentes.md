@@ -1839,6 +1839,71 @@ e não passava pelo gancho: ensaio que não percorre o caminho do `--aplicar` n�
 prova o `--aplicar`. O `src/scripts/reencapar-arte.ts` tem a mesma leitura da
 coluna inexistente e ficou como está.
 
+### A edição de 14/10/2026 e o que o dono apontou nela
+
+Primeira produção depois da troca de servidor, rodada à mão na noite de 13/10.
+O dono leu a newsletter e apontou o que está abaixo. Ficam anotados como
+aprendizado para corrigir no código, não só nesta edição.
+
+**1. O assunto prometeu uma notícia que não estava na edição.** O assunto e a
+manchete ("microsoft vira rival da nvidia") foram escritos com a pauta da
+Microsoft dentro. Depois, a pauta caiu por falta de foto (`REJECT_NO_PHOTO`), e
+assunto, manchete e preheader não foram refeitos. O leitor abriria o e-mail
+procurando uma notícia que não existia. A Microsoft voltou à mão, com foto do
+Commons, e o dono gostou do texto. **Corrigir:** retirar pauta depois da
+redação obriga a refazer assunto, manchete e preheader, ou a retirar antes.
+
+**2. As notícias de apoio saíram curtas e genéricas.** Gemini 4 Argon e Big Mac
+vieram com dois parágrafos que não dizem nada além do título ("descrito como
+seu modelo de ponta", "a possibilidade alcança produtos como o Big Mac"). A
+do Gemini ainda tinha "nos EUA" sem lastro e fonte fraca (*Central Oregon
+Daily*). O contraste com a matéria da Microsoft, escrita com o texto inteiro
+da CNBC, deixa claro de onde vem: a pauta curta é a que entrou com o pacote
+factual raso. **Corrigir:** pauta com pacote raso não entra na newsletter, ou
+entra só como nota rápida.
+
+**3. A foto tem que mostrar o objeto da notícia.** A pauta do Big Mac saiu com
+uma foto genérica de dinheiro do Pexels. Se a notícia nomeia o Big Mac, a foto
+é a do Big Mac. Mesma família do caso Palmer Luckey e Anduril: a conferência
+aceita "contexto genérico" quando a manchete nomeia uma coisa concreta.
+**Corrigir:** objeto concreto nomeado na manchete (produto, prédio, pessoa) entra
+na busca da foto como o protagonista entra hoje.
+
+**4. Créditos da OpenAI acabaram em silêncio.** Às 22:16 a produção leu 1.117
+pautas e recusou todas como `REJECT_UNCLASSIFIED`, com custo zero. O motivo
+real (`insufficient_quota`, 429) só aparecia no log do contêiner. O aviso do
+Telegram disse "0 pautas com pacote factual", que manda procurar no lugar
+errado. **Corrigir:** 429 de cota na classificação vira alerta próprio, com a
+palavra "créditos".
+
+**5. Produção rodada fora do servidor sai incompleta.** A produção manual no
+Mac usou o `.env` local, sem `EDITORIAL_GUARD` e `SOCIAL_PIPELINE_V2`: os três
+artigos foram escritos e não gravados, e os posts saíram pelo caminho legado,
+como rascunho. **Regra:** produção fora do servidor só com o ambiente do
+servidor carregado (`.env.servidor`, fora do git), nunca com o `.env` antigo.
+
+**7. A falha de cota envenenou as candidatas, e o post descartava o que o
+verificador aprovou.** As 1.134 candidatas da rodada sem crédito foram gravadas
+com `status = rejected` e `REJECT_UNCLASSIFIED`, sem classificação. A gravação
+nunca regravava linha existente, então as rodadas seguintes classificavam e
+aprovavam a pauta só em memória; a composição do feed lia o banco
+(`podePublicar`) e descartava com `SOCIAL_REJECT_UNVERIFIED` pautas que o
+verificador tinha CONFIRMADO (Applied Materials, Walmart, Gemini, e a Microsoft
+nem chegou à final). Dois ciclos de posts terminaram com zero. **Corrigido:**
+`gravarNovas` completa a linha gravada sem classificação quando a
+classificação chega, preservando a verificação; a linha já classificada
+continua intocada.
+
+**8. O artigo da produção manual saiu no formato da newsletter.** Com o `.env`
+antigo, os ramos ficaram desligados e a esteira caiu no caminho velho, que
+publica a edição inteira como um artigo só (`edicao-AAAA-MM-DD`). O dono
+cancelou: a ideia é uma matéria desenvolvida por notícia, que é o que o ramo do
+portal faz no servidor.
+
+**6. Endereço do Pexels com `&` codificado duas vezes** no HTML da newsletter
+(`&amp;amp%3B`). A imagem abre porque o Pexels ignora o parâmetro torto, mas o
+recorte pedido na URL se perde.
+
 ## Legal & marca
 
 ### Não usar o mascote do Claude como identidade genérica da conta

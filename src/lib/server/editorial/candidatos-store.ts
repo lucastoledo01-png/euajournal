@@ -516,14 +516,45 @@ export function criarCandidatosStore(client: SupabaseClient): CandidatosStore {
        * faria a pauta entrar e sair da edição conforme a hora em que o cron
        * rodou, e nenhuma das duas respostas é mais correta que a outra.
        */
+      /*
+       * A exceção é a linha gravada SEM classificação (13/10/2026). Ela não
+       * tem resposta do modelo para preservar: é o registro de que a
+       * classificação falhou. A cota da OpenAI acabou no meio da produção,
+       * 1.134 candidatas foram gravadas como `REJECT_UNCLASSIFIED`, e como
+       * nada regravava a linha, o post lia "rejected" e descartava a pauta
+       * que a rodada seguinte classificou e o verificador confirmou. Quando a
+       * classificação chega, ela completa a linha; a verificação já gravada
+       * fica.
+       */
+      const paraCompletar: Array<{ anterior: CandidataPersistida; nova: CandidataParaGravar }> = [];
       const novas = candidatas.filter((c) => {
         const anterior = existentes.get(c.url);
         if (!anterior) return true;
+
+        if (anterior.classificationStatus !== "done" && c.classificacao) {
+          paraCompletar.push({ anterior, nova: c });
+          return false;
+        }
 
         resultado.reaproveitadas += 1;
         if (anterior.classificationStatus === "done") resultado.jaClassificadas.push(c.url);
         return false;
       });
+
+      for (const { anterior, nova } of paraCompletar) {
+        const linha = paraLinha(projectId, nova);
+        const metadata = {
+          ...(linha.metadata_json as Record<string, unknown>),
+          ...(anterior.verificacao ? { verificacao: anterior.verificacao } : {}),
+        };
+        const { error } = await client
+          .from("news_candidates")
+          .update({ ...linha, metadata_json: metadata, updated_at: new Date().toISOString() })
+          .eq("id", anterior.id);
+
+        if (error) resultado.erros.push(`candidata sem classificação, ${nova.url}: ${textoDoErro(error)}`);
+        else resultado.gravadas += 1;
+      }
 
       if (novas.length === 0) return resultado;
 

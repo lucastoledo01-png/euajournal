@@ -261,3 +261,16 @@ describe("o pedido do rodízio no prompt", () => {
     expect(system).toContain('"forma": "pergunta | nomes | personagem | cena | momento"');
   });
 });
+
+describe("vírgula decimal no assunto (14/10/2026)", () => {
+  it("o número fica inteiro: \"3,6%\" não vira \"3, 6%\"", () => {
+    expect(normalizarAssunto("A Social Security e os 3,6%")).toBe("a social security e os 3,6%");
+    expect(normalizarAssunto("US$ 2,9 bilhões para submarinos")).toBe("US$ 2,9 bilhões para submarinos");
+  });
+
+  it("a vírgula entre palavras continua ganhando o espaço", () => {
+    expect(normalizarAssunto("lula,trump e o dólar")).toBe("lula, trump e o dólar");
+    expect(normalizarAssunto("o Fed — e os juros")).toBe("o fed, e os juros");
+  });
+
+});

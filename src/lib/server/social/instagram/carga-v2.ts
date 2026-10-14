@@ -212,8 +212,9 @@ export type LeituraDaCarga =
  *
  *   - `title` e `caption`: são a manchete e a legenda aprovadas. Sem elas não
  *     existe post, e reconstruí-las é gerar.
- *   - `hashtags`: o Social Guard as tornou obrigatórias. Uma linha V2 sem
- *     hashtag não passou pela guarda que diz que passou.
+ *   - `hashtags`: a LISTA, que pode vir vazia desde que as hashtags foram
+ *     desligadas por padrão (06/10/2026). Sem o campo, a linha não passou
+ *     pela guarda que diz que passou.
  *   - `content_json.arte`: o bloco que registra COMO a peça foi desenhada.
  *     Exigir o bloco, e não o eixo dentro dele, é o que separa "eixo ausente
  *     do registro" de "eixo registrado como nenhum" — o segundo é uma decisão
@@ -267,7 +268,14 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
   const hashtags = Array.isArray(conteudo?.hashtags)
     ? (conteudo!.hashtags as unknown[]).map((h) => texto(h)).filter(Boolean)
     : [];
-  if (hashtags.length === 0) faltando.push("content_json.hashtags");
+  /*
+   * A LISTA é exigida, vazia ou não (14/10/2026). As hashtags estão
+   * desligadas por padrão desde 06/10 (`settings.instagram.hashtags`), e o
+   * Social Guard grava `[]`. Exigir ao menos uma recusava todo post na hora
+   * de publicar: nenhum saiu de 06 a 14/10. O campo ausente continua sendo
+   * registro incompleto.
+   */
+  if (!Array.isArray(conteudo?.hashtags)) faltando.push("content_json.hashtags");
 
   const arte = objeto(conteudo?.arte);
   if (!arte) faltando.push("content_json.arte");

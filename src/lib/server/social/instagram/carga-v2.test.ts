@@ -271,12 +271,22 @@ describe("entradas adversárias na leitura da carga", () => {
     }
   });
 
-  it("hashtags só com strings vazias contam como ausentes", async () => {
+  it("lista de hashtags vazia publica: as hashtags estão desligadas por padrão desde 06/10/2026", async () => {
+    // 14/10/2026: o worker exigia ao menos uma hashtag, e nenhum post saiu de 06 a 14/10.
     const linha = await base();
     const leitura = lerCargaV2({
       ...linha,
       content_json: { ...(linha.content_json as object), hashtags: ["", "   "] },
     });
+    expect(leitura.ok).toBe(true);
+    if (leitura.ok) expect(leitura.carga.hashtags).toEqual([]);
+  });
+
+  it("sem o campo hashtags (nem lista vazia), o registro continua incompleto", async () => {
+    const linha = await base();
+    const { hashtags: _fora, ...semCampo } = linha.content_json as Record<string, unknown>;
+    void _fora;
+    const leitura = lerCargaV2({ ...linha, content_json: semCampo });
     expect(leitura.ok).toBe(false);
     if (!leitura.ok) expect(leitura.faltando).toContain("content_json.hashtags");
   });

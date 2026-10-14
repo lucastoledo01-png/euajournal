@@ -495,7 +495,8 @@ describe("E. carga V2 incompleta não é consertada", () => {
     ["sem title", { title: "" }, {}],
     ["sem caption", { caption: "   " }, {}],
     ["sem story_id", { story_id: null }, {}],
-    ["sem hashtags", {}, { hashtags: [] }],
+    // Lista vazia publica desde 14/10/2026; o que bloqueia é o campo ausente.
+    ["sem o campo hashtags", {}, { hashtags: undefined }],
     ["sem o bloco arte", {}, { arte: undefined }],
     ["sem o bloco visual", {}, { visual: undefined }],
     ["visual sem foto e sem capa=texto", {}, { visual: { motivo: "" } }],

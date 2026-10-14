@@ -46,7 +46,7 @@ const COMPLETO: Artigo = {
     "Chicago tem 39 data centers ativos, segundo a cidade.",
   ],
   secoes: [
-    { intertitulo: "O que foi proposto?", paragrafos: ["Uma moratória de 12 meses para novos data centers."] },
+    { intertitulo: "O que foi proposto?", paragrafos: ["Uma moratória de **12 meses** para novos data centers."] },
     { intertitulo: "O que acontece agora?", paragrafos: ["As propostas seguem para a câmara municipal."] },
   ],
   tabela: { titulo: "Comparação", colunas: ["Item", "Valor"], linhas: [["Moratória", "12 meses"], ["Data centers ativos", "39"]] },
@@ -62,14 +62,16 @@ function ordem(html: string, marcas: string[]): number[] {
 }
 
 describe("molde: blocos presentes, na ordem combinada", () => {
-  it("tópicos, abertura com link no texto, intertítulos-pergunta, tabela, significado, perguntas, fontes e leia também", () => {
+  it("abertura com link no texto, intertítulos-pergunta, tabela, significado, perguntas, fontes e leia também", () => {
     const html = renderizarArtigoHtml(COMPLETO, FONTE, {
       fontes: [{ nome: "Axios Chicago", url: FONTE.url, detalhe: "23 de setembro de 2026" }],
       relacionadas: [{ slug: "outra-materia", titulo: "Outra matéria" }],
       editoria: { nome: "Política", href: "/editoria/governo" },
     });
+    // "O que você precisa saber" é da newsletter, não do portal (dono, 14/10/2026):
+    // mesmo com tópicos no artigo, a matéria não desenha o bloco.
+    expect(html).not.toContain('class="essencial"');
     const marcas = [
-      'class="essencial"',
       'class="abertura"',
       "<h2>O que foi proposto?</h2>",
       'class="tabela"',

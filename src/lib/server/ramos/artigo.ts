@@ -163,7 +163,7 @@ FORMA (o contrato do JSON):
 - Sem travessão. Sem emoji. Sem saudação nem despedida.
 - "subtitulo": a linha fina, uma frase que acrescenta ao título e não o repete.
 - "descricao_seo": de 120 a 155 caracteres, frase inteira.
-- "essencial": de dois a três tópicos curtos, uma frase cada. Cada tópico traz um fato que a abertura NÃO diz (número, data, prazo, próximo passo ou quem decide) e nunca repete uma frase dela. Tópico que repete a abertura ou não traz fato próprio é apagado; com menos de dois, o bloco sai. Em matéria de até 400 palavras, devolva lista vazia.
+- "essencial": devolva SEMPRE lista vazia. O bloco de tópicos é da newsletter, e a matéria do portal não o tem (14/10/2026).
 - "abertura": dois parágrafos. Marque UMA vez, no primeiro, o trecho que vira link para a fonte original, entre colchetes duplos: [[segundo a Axios]]. Só o nome do veículo ou a expressão que o cita.
 - "secoes": de duas a quatro, cada uma com "intertitulo" em forma de pergunta (terminando em "?") e de um a três parágrafos.
 - "tabela": só com comparação de verdade (dois ou mais itens medidos pela mesma régua, com os números do pacote). Sem isso, omita o campo.
@@ -929,12 +929,11 @@ export const TITULO_DAS_FONTES = "Fontes";
 export function renderizarArtigoHtml(artigo: Artigo, fonte: { nome: string; url: string }, extras: ExtrasDoHtml = {}): string {
   const partes: string[] = [];
 
-  const essencial = artigo.essencial ?? [];
-  if (essencial.length) {
-    partes.push(
-      `<section class="essencial"><h2>${TITULO_DO_ESSENCIAL}</h2><ul>${essencial.map((t) => `<li>${paragrafoHtml(t)}</li>`).join("")}</ul></section>`,
-    );
-  }
+  /*
+   * "O que você precisa saber" não é desenhado na matéria (dono, 14/10/2026):
+   * o bloco é da newsletter. O campo continua no contrato e passa pela poda,
+   * para a refação e os scripts antigos não quebrarem, mas não vai à página.
+   */
 
   const fontesDoTexto = extras.fontesDoTexto?.length ? extras.fontesDoTexto : [{ id: "F1", nome: fonte.nome, url: fonte.url }];
   const usadas = new Set<string>();

@@ -34,11 +34,36 @@ function jsonLd(container: HTMLElement): Record<string, unknown> {
 describe("PaginaDaMateria", () => {
   it("a foto da capa aparece uma vez, e o crédito dela fica embaixo da capa", () => {
     const { container } = render(<PaginaDaMateria article={materia} comComentarios={false} />);
-    const fotos = [...container.querySelectorAll("img")].filter((i) => (i.getAttribute("src") ?? "").includes("Wall_Street"));
-    expect(fotos).toHaveLength(1);
+    // A capa usa a foto duas vezes (a inteira e o fundo desfocado, 14/10/2026); o corpo, nenhuma.
+    const noCorpo = [...(container.querySelector(".artigo-corpo")?.querySelectorAll("img") ?? [])].filter((i) => (i.getAttribute("src") ?? "").includes("Wall_Street"));
+    expect(noCorpo).toHaveLength(0);
+    const naCapa = [...(container.querySelector("figure")?.querySelectorAll("img") ?? [])].filter((i) => (i.getAttribute("src") ?? "").includes("Wall_Street"));
+    expect(naCapa.filter((i) => i.getAttribute("aria-hidden") !== "true")).toHaveLength(1);
     // Sem legenda gravada, a neutra abre a legenda (06/10/2026), e o crédito segue junto.
     expect(container.querySelector("figcaption")?.textContent).toMatch(/^Imagem ilustrativa: .+\. · Dietmar Rabich, CC BY-SA 4\.0, via Wikimedia Commons$/);
     expect(container.querySelector(".artigo-corpo")?.innerHTML).not.toContain("Dietmar Rabich");
+  });
+
+  it("matéria gravada com \"O que você precisa saber\" não mostra o bloco (dono, 14/10/2026)", () => {
+    const comBloco = {
+      ...materia,
+      content_html:
+        `<section class="essencial"><h2>O que você precisa saber</h2><ul><li>Um tópico.</li></ul></section>` + materia.content_html,
+    };
+    const { container } = render(<PaginaDaMateria article={comBloco} comComentarios={false} />);
+    expect(container.querySelector(".essencial")).toBeNull();
+    expect(container.textContent).not.toContain("O que você precisa saber");
+  });
+
+  it("a capa mostra a foto inteira, sem cortar, sobre a própria foto desfocada (14/10/2026)", () => {
+    const { container } = render(<PaginaDaMateria article={materia} comComentarios={false} />);
+    const capa = container.querySelector("figure");
+    const fotos = [...(capa?.querySelectorAll("img") ?? [])];
+    // Uma visível, inteira (contain), e o fundo decorativo, sem texto alternativo.
+    expect(fotos.some((i) => (i.getAttribute("class") ?? "").includes("object-contain"))).toBe(true);
+    const fundo = fotos.find((i) => (i.getAttribute("class") ?? "").includes("blur"));
+    expect(fundo?.getAttribute("alt")).toBe("");
+    expect(fundo?.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("mostra as perguntas e respostas e só então marca o FAQPage", () => {

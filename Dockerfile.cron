@@ -1,0 +1,16 @@
+# Relógios do eua.journal: um crond que chama as rotas /api/cron do web.
+#
+# Substitui o crontab da VPS antiga. Fica dentro do projeto no EasyPanel, e não
+# no crontab da máquina, porque a VPS nova é dividida com outros projetos.
+# Precisa de CRON_SECRET no ambiente; CRON_BASE_URL é opcional.
+
+FROM alpine:3.20
+
+RUN apk add --no-cache curl tzdata
+
+COPY deployment/cron/crontab /etc/crontabs/root
+COPY deployment/cron/chamar.sh /usr/local/bin/chamar
+COPY deployment/cron/entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod 755 /usr/local/bin/chamar /usr/local/bin/entrypoint
+
+CMD ["/usr/local/bin/entrypoint"]

@@ -332,6 +332,9 @@ function fotoNaProporcao(url: string): string {
   }
 }
 
+/** A regra de 05/10/2026, desligada em 14/10/2026: a newsletter mantém a pauta sem foto. */
+const PAUTA_SEM_FOTO_CAI_DA_NEWSLETTER = false;
+
 const ESTILO_DA_FOTO =
   `width:100%;max-width:${FOTO_LARGURA}px;height:${FOTO_ALTURA}px;` +
   `object-fit:cover;display:block;border-radius:10px;`;
@@ -1712,6 +1715,8 @@ async function executarRedacaoDoDia(
         chave: (p) => p.storyId,
         titulo: (p) => p.grupo.primary.title,
         fotos: fotosDoDia,
+        // O pacote serve à newsletter e ao portal, que aceitam pauta sem foto desde 14/10/2026.
+        exigirFoto: false,
       });
       const pre = preComFoto.selecao;
       if (preComFoto.semFoto.length > 0) {
@@ -1853,6 +1858,8 @@ async function executarRedacaoDoDia(
           chave: (p) => p.storyId,
           titulo: (p) => p.grupo.primary.title,
           fotos: fotosDaNewsletter,
+          // Newsletter: pauta sem foto sai só com texto (14/10/2026).
+          exigirFoto: false,
         });
         daNewsletter = r.selecao;
         if (r.semFoto.length > 0) {
@@ -2584,7 +2591,21 @@ async function executarRedacaoDoDia(
    * pauta sem lastro sai em `runNewsroomPipeline`, e com menos que o mínimo a
    * edição não sai: vale o caminho do dia sem edição, registrado, sem inventar.
    */
+  /*
+   * ATUALIZADO em 14/10/2026, por decisão do dono: na newsletter a pauta sem
+   * foto FICA, só com texto, e o que sai é a imagem (a bandeira de último
+   * recurso, ou o endereço vazio). Tirar a pauta depois de escrita era o que
+   * deixava o assunto prometendo uma notícia que não estava na edição (14/10).
+   */
   {
+    const historias = pipelineResult.edition.stories;
+    const { saem: semFotoNaEdicao } = separarPautasSemFoto(historias, (st) => imagensDaEdicao.get(identidadeDaPauta(st)));
+    for (const i of semFotoNaEdicao) imagensDaEdicao.delete(identidadeDaPauta(historias[i]));
+    if (semFotoNaEdicao.length > 0) {
+      console.log(`[NEWSROOM] ${semFotoNaEdicao.length} pauta(s) sem foto ficam na edição, só com texto.`);
+    }
+  }
+  if (PAUTA_SEM_FOTO_CAI_DA_NEWSLETTER) {
     const historias = pipelineResult.edition.stories;
     const { ficam, saem } = separarPautasSemFoto(historias, (st) => imagensDaEdicao.get(identidadeDaPauta(st)));
     if (saem.length > 0) {

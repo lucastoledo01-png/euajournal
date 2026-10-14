@@ -123,6 +123,8 @@ export async function rodarRamoDoPortal(e: EntradaDoRamoDoPortal): Promise<Resul
       chave: (p) => p.storyId,
       titulo: (p) => p.grupo.primary.title,
       fotos: e.fotos,
+      // Sem foto, a matéria sai com capa tipográfica (14/10/2026); a capa fica nula logo abaixo.
+      exigirFoto: false,
     });
     selecao = r.selecao;
     semFoto = r.semFoto;

@@ -259,7 +259,7 @@ describe("portal: a sem foto não é escrita, e a próxima vira matéria", () =>
       veredicto: { aprovado: true, bloqueios: [], avisos: [], ancoragem: { conferidos: 1, naoSustentadas: [] }, conclusoesSemLastro: [] },
     }) as unknown as ResultadoDoArtigo;
 
-  it("três vagas, a melhor sem foto: as três matérias saem das que têm foto, e a capa é a foto conferida", async () => {
+  it("três vagas, a melhor sem foto: desde 14/10/2026 ela sai no portal com capa tipográfica (capa nula)", async () => {
     const ps = [pauta("sem foto", 99, V(0)), pauta("a", 90, V(1)), pauta("b", 80, V(2)), pauta("c", 70, V(3))];
     const { fotos } = fotosFixas(new Set([ps[0].storyId]));
     const escritas: string[] = [];
@@ -280,14 +280,14 @@ describe("portal: a sem foto não é escrita, e a próxima vira matéria", () =>
       }),
     });
 
-    // A sem foto nunca chegou ao redator: nenhum dinheiro gasto com ela.
-    expect(escritas).toEqual(["a", "b", "c"]);
+    // A sem foto é a melhor nota e entra: no portal ela não cai mais (dono, 14/10/2026).
+    expect(escritas).toEqual(["sem foto", "a", "b"]);
     expect(r.pecas).toHaveLength(3);
-    expect(r.semFoto.map((q) => q.titulo)).toEqual(["sem foto"]);
-    expect(r.linhasDeLog.join("\n")).toContain(MOTIVO_SEM_FOTO);
-    expect(r.pecas[0].conteudo.capa).toBe(`https://upload.wikimedia.org/wikipedia/commons/a/ab/${ps[1].storyId}.jpg`);
-    // Sem a régua, a seleção teria levado a sem foto.
-    expect(selecionarParaPortal(ps, comPacote(...ps), [], CONFIG).escolhidas[0].grupo.primary.title).toBe("sem foto");
+    expect(r.semFoto).toEqual([]);
+    expect(r.linhasDeLog.join("\n")).not.toContain(MOTIVO_SEM_FOTO);
+    // Sem foto, sem capa: a página e os cartões desenham a peça tipográfica.
+    expect(r.pecas[0].conteudo.capa).toBeNull();
+    expect(r.pecas[1].conteudo.capa).toBe(`https://upload.wikimedia.org/wikipedia/commons/a/ab/${ps[1].storyId}.jpg`);
   });
 });
 

@@ -1,0 +1,27 @@
+# Relógios do eua.journal, em UTC (Brasília é UTC-3).
+# Cópia fiel do crontab da VPS antiga, lido em 13/10/2026, trocando o domínio
+# público pelo endereço interno do serviço web. Cada linha chama
+# /usr/local/bin/chamar <rota> <segundos de espera>.
+
+# Redação do dia às 06:03, com duas novas tentativas (06:33 e 07:03).
+3 9 * * *     /usr/local/bin/chamar newsroom 60
+33 9 * * *    /usr/local/bin/chamar newsroom 60
+3 10 * * *    /usr/local/bin/chamar newsroom 60
+
+# Token da Meta renovado antes da redação, de propósito.
+0 8 * * *     /usr/local/bin/chamar refresh-instagram-token 60
+
+# Produção da véspera e ciclo da tarde: a rota decide pelo horário do projeto.
+*/15 * * * *  /usr/local/bin/chamar "producao?relogio=1" 300
+*/15 * * * *  /usr/local/bin/chamar "quente-da-tarde?relogio=1" 60
+
+# Relógios de minuto: publicação no portal, fila de aprovação e avisos.
+* * * * *     /usr/local/bin/chamar publicacao 55
+* * * * *     /usr/local/bin/chamar fila-de-aprovacao 55
+* * * * *     /usr/local/bin/chamar avisos 55
+*/5 * * * *   /usr/local/bin/chamar portal 120
+
+# Loop do Sistema PROMPT (domingo agrega a semana) e resumo semanal das edições.
+0 23 * * 1-6  /usr/local/bin/chamar prompt-loop 300
+0 23 * * 0    /usr/local/bin/chamar "prompt-loop?agregar=1" 300
+0 11 * * 1    /usr/local/bin/chamar aprendizado 300

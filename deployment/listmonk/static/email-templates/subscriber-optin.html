@@ -1,0 +1,20 @@
+{{ define "subscriber-optin" }}
+{{ template "header" . }}
+<h2 style="font-size: 24px; line-height: 30px; font-weight: 800; color: #111318; margin: 0 0 12px;">Falta um clique para você receber a eua.journal</h2>
+
+<p style="margin: 0 0 16px;">Olá{{ if .Subscriber.FirstName }}, {{ .Subscriber.FirstName }}{{ end }}! Recebemos o seu cadastro.</p>
+
+<p style="margin: 0 0 16px;">De terça a sexta, logo cedo, a eua.journal chega no seu e-mail com o que aconteceu nos Estados Unidos e por que isso importa para você: economia, trabalho, tecnologia, custo de vida e política, em poucos minutos de leitura e sempre com a fonte ao lado.</p>
+
+<p style="margin: 0 0 24px;">Para começar a receber, confirme que este e-mail é seu:</p>
+
+<p style="margin: 0 0 28px;">
+    <a href="{{ .OptinURL }}" class="button" style="background: #E4344A; color: #ffffff; display: inline-block; border-radius: 999px; padding: 14px 32px; text-decoration: none; font-weight: 800; font-size: 16px; font-family: Helvetica, Arial, sans-serif;">Confirmar meu e-mail</a>
+</p>
+
+<p class="discreto" style="font-size: 13px; line-height: 20px; color: #5B6472; margin: 0 0 8px;">Se não foi você quem se cadastrou, é só ignorar esta mensagem: sem a confirmação, você não recebe nada.</p>
+
+<p class="discreto" style="font-size: 13px; line-height: 20px; color: #5B6472; margin: 0;"><a href="{{ .UnsubURL }}?manage=true" style="color: #5B6472;">Gerenciar ou cancelar a inscrição</a></p>
+
+{{ template "footer" }}
+{{ end }}

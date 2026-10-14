@@ -180,6 +180,12 @@ export function createListmonkClient(env: EnvLike = process.env, fetcher: typeof
    * `status: "confirmed"` porque quem preencheu o formulario do site declarou a
    * intencao ali. Para lista de dupla confirmacao o Listmonk manda o e-mail de
    * confirmacao mesmo assim, entao isto nao atropela opt-in de ninguem.
+   *
+   * ATUALIZADO em 14/10/2026, por decisao do dono: quem vem pelo site confirma
+   * por e-mail. A inscricao entra `unconfirmed` e o pedido de confirmacao sai
+   * por `POST /api/subscribers/:id/optin`, que so manda para as listas de dupla
+   * confirmacao ainda nao confirmadas. Falha no envio da confirmacao nao desfaz
+   * a inscricao: ela fica registrada, e o dono reenvia pelo painel.
    */
   async function inscreverQuemJaExiste(
     email: string,
@@ -207,9 +213,15 @@ export function createListmonkClient(env: EnvLike = process.env, fetcher: typeof
     const juntar = await fetcher(`${config.url}/api/subscribers/lists`, {
       method: "PUT",
       headers: { Authorization: authHeader, "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [id], action: "add", target_list_ids: listIds, status: "confirmed" }),
+      body: JSON.stringify({ ids: [id], action: "add", target_list_ids: listIds, status: "unconfirmed" }),
     });
     if (!juntar.ok) return { ok: false, motivo: `listmonk_adicionar_lista_falhou_${juntar.status}` };
+
+    const confirmar = await fetcher(`${config.url}/api/subscribers/${id}/optin`, {
+      method: "POST",
+      headers: { Authorization: authHeader },
+    });
+    if (!confirmar.ok) console.warn(`[LISTMONK] pedido de confirmação não enviado ao assinante ${id}: HTTP ${confirmar.status}`);
 
     return { ok: true, id };
   }
@@ -245,7 +257,8 @@ export function createListmonkClient(env: EnvLike = process.env, fetcher: typeof
               Authorization: authHeader,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(buildListmonkSubscriberPayload(lead, config.listIds, true)),
+            // Sem pré-confirmação: quem vem pelo site confirma por e-mail (14/10/2026).
+            body: JSON.stringify(buildListmonkSubscriberPayload(lead, config.listIds, false)),
           });
 
           if (response.ok) {

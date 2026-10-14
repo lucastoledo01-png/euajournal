@@ -1,0 +1,70 @@
+{{ define "header" }}
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+        <base target="_blank">
+        <!--
+            eua.journal (14/10/2026): cabeçalho e rodapé de TODO e-mail de
+            sistema do Listmonk (confirmação de inscrição, avisos ao admin).
+            As cores são as do CSS das páginas públicas: azul-marinho #0A3161,
+            vermelho #E4344A, fundo #F4F5F7. Os estilos principais também vão
+            inline, porque parte dos clientes de e-mail ignora o <style>.
+        -->
+        <style>
+            body { background-color: #F4F5F7; margin: 0; color: #111318;
+                font-family: Helvetica, Arial, sans-serif; font-size: 16px; line-height: 26px; }
+            .wrap { background-color: #ffffff; max-width: 560px; margin: 0 auto; border-radius: 16px;
+                border: 1px solid #E6E8EC; overflow: hidden; }
+            .faixa { height: 4px; background: #0A3161; }
+            .corpo { padding: 36px 36px 32px; }
+            .header { padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid #E6E8EC; }
+            .header img { width: 168px; max-width: 100%; height: auto; display: block; }
+            h2 { font-size: 24px; line-height: 30px; font-weight: 800; color: #111318; margin: 0 0 12px; }
+            p { margin: 0 0 16px; }
+            a { color: #0A3161; }
+            .button { background: #E4344A; color: #ffffff !important; display: inline-block; border-radius: 999px;
+                padding: 14px 32px; text-align: center; text-decoration: none; font-weight: 800; font-size: 16px; }
+            .discreto { font-size: 13px; line-height: 20px; color: #5B6472; }
+            .discreto a { color: #5B6472; }
+            .footer { text-align: center; font-size: 12px; line-height: 18px; color: #8A929E; padding: 20px 16px 0; }
+            .footer a { color: #8A929E; }
+            .gutter { padding: 24px; }
+            @media screen and (max-width: 600px) {
+                .corpo { padding: 28px 22px 24px; }
+                .gutter { padding: 10px; }
+            }
+        </style>
+    </head>
+<body style="background-color: #F4F5F7; margin: 0;">
+    <div class="gutter">&nbsp;</div>
+    <div class="wrap" style="background-color: #ffffff; max-width: 560px; margin: 0 auto; border-radius: 16px; border: 1px solid #E6E8EC; overflow: hidden;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+            <tr>
+                <td style="height: 4px; width: 55%; background: #0A3161; font-size: 0; line-height: 0;">&nbsp;</td>
+                <td style="height: 4px; width: 45%; background: #E4344A; font-size: 0; line-height: 0;">&nbsp;</td>
+            </tr>
+        </table>
+        <div class="corpo" style="padding: 36px 36px 32px; font-family: Helvetica, Arial, sans-serif; color: #111318;">
+            <div class="header" style="padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid #E6E8EC;">
+                {{ if ne LogoURL "" }}
+                    <img src="{{ LogoURL }}" alt="eua.journal" width="168" style="width: 168px; max-width: 100%; height: auto; display: block;" />
+                {{ else }}
+                    <strong style="font-size: 22px; color: #0A3161;">eua<span style="color: #E4344A;">.journal</span></strong>
+                {{ end }}
+            </div>
+{{ end }}
+
+{{ define "footer" }}
+        </div>
+    </div>
+
+    <div class="footer" style="text-align: center; font-size: 12px; line-height: 18px; color: #8A929E; padding: 20px 16px 0; font-family: Helvetica, Arial, sans-serif;">
+        <p style="margin: 0 0 4px;">eua.journal: os Estados Unidos, em português, de terça a sexta.</p>
+        <p style="margin: 0;"><a href="https://euajournal.com" style="color: #8A929E;">euajournal.com</a></p>
+    </div>
+    <div class="gutter">&nbsp;</div>
+</body>
+</html>
+{{ end }}

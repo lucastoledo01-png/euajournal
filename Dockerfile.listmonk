@@ -1,0 +1,17 @@
+# Listmonk do eua.journal: a imagem oficial com os modelos de e-mail da marca.
+#
+# Os arquivos em deployment/listmonk/static são o diretório `static` da
+# v5.1.0, copiado inteiro, com dois modelos trocados: o cabeçalho e o rodapé
+# de todo e-mail de sistema (base.html) e o e-mail de confirmação de inscrição
+# (subscriber-optin.html). O Listmonk só aceita trocar modelo de sistema
+# apontando `--static-dir` para um diretório completo, por isso a cópia inteira.
+#
+# Ao atualizar a versão do Listmonk, copiar o `static` da versão nova e
+# reaplicar os dois modelos.
+
+FROM listmonk/listmonk:v5.1.0
+
+COPY deployment/listmonk/static /listmonk/static-eua
+
+# Instala o banco na primeira vez, aplica as atualizações e sobe com os modelos.
+CMD ["sh", "-c", "./listmonk --install --idempotent --yes && ./listmonk --upgrade --yes && ./listmonk --static-dir=/listmonk/static-eua"]

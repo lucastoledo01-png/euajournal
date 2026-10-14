@@ -202,7 +202,13 @@ export function perguntasDoArtigo(aeo: unknown): PerguntaVisivel[] {
 
 /** O corpo já traz a seção de perguntas (o ramo do portal a escreve no HTML). */
 export function corpoJaTemPerguntas(html: string | null | undefined): boolean {
-  return /<h2[^>]*>\s*Perguntas e respostas\s*<\/h2>/i.test(html ?? "");
+  /*
+   * Pela classe, e não só pelo título (14/10/2026): o ramo escreve "Entenda em
+   * 4 perguntas", e a busca por "Perguntas e respostas" não achava a seção. A
+   * página acrescentava outra igual embaixo, e a matéria saía com as mesmas
+   * quatro perguntas duas vezes.
+   */
+  return /<section[^>]*class="perguntas"/i.test(html ?? "") || /<h2[^>]*>\s*Perguntas e respostas\s*<\/h2>/i.test(html ?? "");
 }
 
 function textoSimples(html: string): string {
@@ -224,7 +230,10 @@ export function perguntasVisiveisDoArtigo(a: { aeo_questions?: unknown; content_
   if (gravadas.length > 0) return gravadas;
   const html = a.content_html ?? "";
   if (!corpoJaTemPerguntas(html)) return [];
-  const secao = html.match(/<h2[^>]*>\s*Perguntas e respostas\s*<\/h2>([\s\S]*?)<\/section>/i)?.[1] ?? "";
+  const secao =
+    html.match(/<section[^>]*class="perguntas"[^>]*>([\s\S]*?)<\/section>/i)?.[1] ??
+    html.match(/<h2[^>]*>\s*Perguntas e respostas\s*<\/h2>([\s\S]*?)<\/section>/i)?.[1] ??
+    "";
   return [...secao.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => ({
     pergunta: textoSimples(m[1]),
     resposta: textoSimples(m[2]),

@@ -1,0 +1,93 @@
+{
+  "data": "2026-10-14",
+  "publicarEm": "2026-10-14T15:00:00.000Z",
+  "categoria": "Tecnologia",
+  "fonte": {
+    "nome": "CNBC",
+    "url": "https://www.cnbc.com/2026/10/12/microsoft-will-mainly-use-its-maia-chips-for-ai-inference.html"
+  },
+  "capa": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Building_92_of_Microsoft_Redmond_Campus_-_panoramio.jpg",
+  "credito": {
+    "autor": "Jiaqian AirplaneFan",
+    "licenca": "CC BY 3.0",
+    "origem": "Wikimedia Commons",
+    "href": "https://commons.wikimedia.org/wiki/File:Building_92_of_Microsoft_Redmond_Campus_-_panoramio.jpg"
+  },
+  "legenda": "A sede da Microsoft em Redmond, no estado de Washington.",
+  "entidades": [
+    {
+      "papel": "sobre",
+      "tipo": "Organization",
+      "nome": "Microsoft"
+    },
+    {
+      "papel": "menciona",
+      "tipo": "Organization",
+      "nome": "Nvidia"
+    }
+  ],
+  "artigo": {
+    "titulo": "Microsoft passa a usar chip próprio de IA e reduz a dependência da Nvidia",
+    "subtitulo": "O Maia 300, terceira geração do acelerador da empresa, vai atender a maior parte dos pedidos aos modelos que ela roda. A produção começa em 2027.",
+    "titulo_seo": "Microsoft adota chip Maia 300 e depende menos da Nvidia",
+    "descricao_seo": "A Microsoft vai usar o Maia 300, seu chip de IA, para atender a maior parte dos pedidos aos modelos que roda. A produção começa em 2027.",
+    "abertura": [
+      "A Microsoft vai usar seus próprios chips de inteligência artificial para responder à maior parte dos pedidos feitos aos modelos que roda, depois de anos dependendo dos processadores gráficos da Nvidia, [[segundo a CNBC]]. A mudança começa com o Maia 300, terceira geração do acelerador da empresa, apresentado na segunda-feira (12).",
+      "A produção do Maia 300 começa em 2027. A Microsoft fala em instalações de vários gigawatts com chips da família Maia, de acordo com um texto de Scott Guthrie, vice-presidente executivo da empresa."
+    ],
+    "secoes": [
+      {
+        "intertitulo": "O que muda com o Maia 300?",
+        "paragrafos": [
+          "A Microsoft prevê colocar 96 chips Maia 300 em cada rack de data center, o dobro do Maia 200. Segundo a empresa, a nova versão processa até sete vezes mais tokens por rack, e 40% mais tokens por megawatt do que as GPUs.",
+          "Tokens são as unidades de texto que um modelo de IA lê e escreve. Alistair Speirs, gerente-geral da Microsoft, disse que a energia se traduz quase diretamente em custo de operação num data center, e que a empresa precisa de arquiteturas que tirem mais desempenho da energia que tem.",
+          "Partes do Microsoft 365 Copilot devem ficar mais rápidas com o novo chip, segundo Jim Kleewein, da Microsoft."
+        ]
+      },
+      {
+        "intertitulo": "Por que a Microsoft quer depender menos da Nvidia?",
+        "paragrafos": [
+          "As GPUs da Nvidia viraram o padrão para treinar e rodar modelos de IA e ocupam hoje os data centers da Microsoft, onde também são treinados modelos da OpenAI e da Anthropic. Com a demanda crescendo, as empresas de modelos passaram a usar chips de outros fornecedores, como Amazon, AMD, Cerebras e Google.",
+          "Para uso geral, a Microsoft já usa processadores próprios e também da Intel e da AMD. Amy Hood, diretora financeira, disse em setembro, numa conferência do Goldman Sachs, que os chips próprios ajudaram a melhorar a margem da empresa ao longo de uma década.",
+          "A família Maia começou em 2023, com o Maia 100. O Maia 200 veio em janeiro, e em julho o CEO Satya Nadella disse a analistas que ele entrega 30% mais desempenho por dólar do que o hardware mais recente da empresa e que já roda modelos da OpenAI."
+        ]
+      },
+      {
+        "intertitulo": "A Nvidia perde a Microsoft como cliente?",
+        "paragrafos": [
+          "Não. No treinamento de modelos, a Microsoft continua parceira da Nvidia e da AMD, segundo Speirs. Jensen Huang, CEO da Nvidia, esteve na semana passada num evento em que a Microsoft lançou um laptop Surface com processador da Nvidia.",
+          "Speirs não deu prazo para o Maia substituir as GPUs. Ele disse que a empresa quer manter margem de escolha, porque o setor muda rápido.",
+          "Analistas da Evercore ISI estimam que o Maia represente cerca de 10% dos gastos da Microsoft com chips de IA no primeiro trimestre de 2027. Eles recomendam a compra das ações da empresa."
+        ]
+      },
+      {
+        "intertitulo": "Outras empresas podem usar o chip?",
+        "paragrafos": [
+          "Ainda não. Diferente dos chips TPU do Google e do Inferentia e do Trainium da Amazon, os aceleradores da Microsoft não podem ser alugados por hora por outras empresas. Patrick Moorhead, CEO da consultoria Moor Insights and Strategy, lembrou que ninguém testou os chips fora da Microsoft."
+        ]
+      }
+    ],
+    "significado": [],
+    "perguntas": [
+      {
+        "pergunta": "O que é o Maia 300?",
+        "resposta": "É a terceira geração do acelerador de inteligência artificial da Microsoft, apresentada em 12 de outubro de 2026. A produção começa em 2027."
+      },
+      {
+        "pergunta": "A Microsoft vai deixar de usar chips da Nvidia?",
+        "resposta": "Não. A empresa vai usar o Maia para responder à maior parte dos pedidos aos seus modelos, mas continua parceira da Nvidia e da AMD no treinamento de modelos."
+      },
+      {
+        "pergunta": "Outras empresas podem alugar o Maia?",
+        "resposta": "Não. Ao contrário dos chips do Google e da Amazon, os aceleradores da Microsoft não são alugados por hora a outras empresas."
+      }
+    ],
+    "assuntos": [
+      "Microsoft",
+      "Nvidia",
+      "chips de IA",
+      "data centers",
+      "inteligência artificial"
+    ]
+  }
+}

@@ -1,3 +1,4 @@
+import { ehFamosoParaOPublico } from "../social/manchete-com-contexto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AssetVisual,
@@ -1497,8 +1498,16 @@ async function fotoDoProtagonista(e: EntradaDoProtagonista): Promise<FotoVerific
     }
   }
 
-  // 3. Quem representa a organização, com a identidade provada.
-  for (const rep of (marca?.representantes ?? []).slice(0, TETO_DE_REPRESENTANTES)) {
+  /*
+   * 3. Quem representa a organização, com a identidade provada, e SÓ se o
+   * público brasileiro reconhece o rosto (dono, 14/10/2026). O fundador da
+   * Social Security era Franklin Roosevelt, e a matéria do reajuste de 2027
+   * saiu com o retrato dele; Satya Nadella foi recusado pelo mesmo motivo.
+   * Rosto que ninguém reconhece não conta a história: a pauta segue sem foto
+   * (capa tipográfica no portal e na newsletter; no Instagram ela cai).
+   */
+  const reconheciveis = (marca?.representantes ?? []).filter((rep) => ehFamosoParaOPublico(rep.nome));
+  for (const rep of reconheciveis.slice(0, TETO_DE_REPRESENTANTES)) {
     const doRepresentante = await fotosDoRepresentante(rep, e);
     const fila = pontuar(doRepresentante.candidatas, doRepresentante.entidade);
     const achada = await pessoaVerificada(e, { nome: rep.nome, qid: rep.qid, imagemPrincipal: rep.imagemPrincipal }, fila, "representante", {

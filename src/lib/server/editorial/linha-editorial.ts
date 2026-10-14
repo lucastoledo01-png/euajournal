@@ -56,6 +56,7 @@ A pergunta de toda pauta: ${PERGUNTA_DO_LEITOR} Se o "sim" precisa de esforço, 
 Notícia dos EUA entra positiva ou neutra: o fato que retrata o país como lugar hostil ou que fecha portas fica fora.
 Notícia do Brasil entra quando mexe no mesmo plano: dólar, juros, imposto, carreira, patrimônio. Disputa regional, figura sem projeção nacional e bastidor ficam fora.
 Pessoa e empresa entram pelo que o brasileiro reconhece. Quem não é conhecido aqui é apresentado pelo cargo e pela empresa na primeira menção.
+Palavra do dia a dia do brasileiro, sobretudo no título. Programa, órgão ou termo americano vira o que ele é em português, com o nome original só se ajudar a reconhecer: "a aposentadoria pública dos EUA (Social Security)", "reajuste", não "ajuste de custo de vida". O título se entende sem saber inglês.
 `.trim();
 
 export const REGRA_PAIS = `

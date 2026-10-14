@@ -309,3 +309,13 @@ describe("autor no JSON-LD (06/10/2026)", () => {
     expect(lista.itemListElement).toEqual([{ "@type": "ListItem", position: 1, url: "https://casaloti.ia.br/artigos/a", name: "A" }]);
   });
 });
+
+describe("seção de perguntas pela classe (14/10/2026)", () => {
+  it("o título \"Entenda em 4 perguntas\" conta como seção já escrita, e a página não duplica", async () => {
+    const { corpoJaTemPerguntas, corpoComPerguntas } = await import("./dados-estruturados-do-artigo");
+    const html = '<section class="perguntas"><h2>Entenda em 1 pergunta</h2><h3>Quanto?</h3><p>3,6%.</p></section>';
+    expect(corpoJaTemPerguntas(html)).toBe(true);
+    expect(corpoComPerguntas(html, [{ pergunta: "Quanto?", resposta: "3,6%." }])).toBe(html);
+  });
+});
+

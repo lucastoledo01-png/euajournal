@@ -39,9 +39,26 @@ describe("PaginaDaMateria", () => {
     expect(noCorpo).toHaveLength(0);
     const naCapa = [...(container.querySelector("figure")?.querySelectorAll("img") ?? [])].filter((i) => (i.getAttribute("src") ?? "").includes("Wall_Street"));
     expect(naCapa.filter((i) => i.getAttribute("aria-hidden") !== "true")).toHaveLength(1);
-    // Sem legenda gravada, a neutra abre a legenda (06/10/2026), e o crédito segue junto.
-    expect(container.querySelector("figcaption")?.textContent).toMatch(/^Imagem ilustrativa: .+\. · Dietmar Rabich, CC BY-SA 4\.0, via Wikimedia Commons$/);
+    // Sem legenda que diga quem ou o que está na foto, só o crédito (14/10/2026: a neutra e a descritiva saíram).
+    expect(container.querySelector("figcaption")?.textContent).toBe("Dietmar Rabich, CC BY-SA 4.0, via Wikimedia Commons");
     expect(container.querySelector(".artigo-corpo")?.innerHTML).not.toContain("Dietmar Rabich");
+  });
+
+  it("legenda que descreve a foto não vai ao leitor; a que identifica vai (14/10/2026)", () => {
+    const com = (legenda: string) => ({
+      ...materia,
+      content_html: `<p class="legenda-da-capa">${legenda}</p>` + materia.content_html,
+    });
+    const descritiva = render(<PaginaDaMateria article={com("Close do rosto de um homem idoso de cabelos grisalhos.")} comComentarios={false} />);
+    expect(descritiva.container.querySelector("figcaption")?.textContent).not.toContain("Close do rosto");
+    descritiva.unmount();
+    const identifica = render(<PaginaDaMateria article={com("A sede da Microsoft em Redmond, no estado de Washington.")} comComentarios={false} />);
+    expect(identifica.container.querySelector("figcaption")?.textContent).toContain("A sede da Microsoft em Redmond");
+  });
+
+  it("linha fina igual ao título não aparece (14/10/2026)", () => {
+    const { container } = render(<PaginaDaMateria article={{ ...materia, description: materia.title }} comComentarios={false} />);
+    expect(container.querySelector("article")?.textContent?.split(materia.title).length).toBe(2);
   });
 
   it("matéria gravada com \"O que você precisa saber\" não mostra o bloco (dono, 14/10/2026)", () => {

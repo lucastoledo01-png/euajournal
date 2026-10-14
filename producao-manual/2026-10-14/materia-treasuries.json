@@ -1,0 +1,93 @@
+{
+  "data": "2026-10-14",
+  "publicarEm": "2026-10-14T21:00:00.000Z",
+  "categoria": "Economia",
+  "fonte": {
+    "nome": "NeoFeed",
+    "url": "https://neofeed.com.br/economia/com-treasuries-pagando-mais-de-5-em-dolares-conta-tambem-chega-ao-brasil/"
+  },
+  "capa": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Department_of_the_Treasury_sign_Washington_DC_2025-12-17_10-40-05.jpg",
+  "credito": {
+    "autor": "G. Edward Johnson",
+    "licenca": "CC BY 4.0",
+    "origem": "Wikimedia Commons",
+    "href": "https://commons.wikimedia.org/wiki/File:Department_of_the_Treasury_sign_Washington_DC_2025-12-17_10-40-05.jpg"
+  },
+  "legenda": "A entrada do Departamento do Tesouro dos EUA, em Washington, que emite os Treasuries.",
+  "entidades": [
+    {
+      "papel": "sobre",
+      "tipo": "Organization",
+      "nome": "Tesouro dos EUA"
+    },
+    {
+      "papel": "menciona",
+      "tipo": "Organization",
+      "nome": "Citi"
+    },
+    {
+      "papel": "menciona",
+      "tipo": "Organization",
+      "nome": "Federal Reserve"
+    }
+  ],
+  "artigo": {
+    "titulo": "Juros acima de 5% nos títulos dos EUA encarecem o dinheiro para o Brasil",
+    "subtitulo": "Com o Treasury de 10 anos a 5,24%, governo e empresas brasileiros disputam investidores com um papel americano de baixo risco, mesmo com a Selic em queda.",
+    "titulo_seo": "Treasuries acima de 5% encarecem o crédito para o Brasil",
+    "descricao_seo": "O Treasury de 10 anos chegou a 5,24% e o de 30 anos a 5,60%. Entenda por que isso encarece o financiamento de governo e empresas brasileiros.",
+    "abertura": [
+      "Os títulos do Tesouro dos Estados Unidos, os Treasuries, estão pagando mais de 5% ao ano em dólares, e isso encarece o dinheiro para governo e empresas do Brasil, [[segundo o NeoFeed]]. O Treasury de dez anos estava em 5,24% em 9 de outubro, e o de 30 anos, em 5,60%, pela série do Federal Reserve.",
+      "A Selic está em queda, mas ela não controla os juros americanos, que são uma das referências do custo de financiar o país. Com um papel de baixo risco pagando tanto em dólar, o Brasil precisa oferecer mais para atrair o mesmo investidor."
+    ],
+    "secoes": [
+      {
+        "intertitulo": "Por que o juro americano pesa no Brasil?",
+        "paragrafos": [
+          "Quando o Brasil se financia em dólar, o investidor parte do rendimento de um Treasury de prazo parecido e cobra um prêmio a mais pelo risco do país. Se o Treasury sobe, a nova captação fica mais cara mesmo que a avaliação sobre o Brasil continue igual.",
+          "Uma emissão do Tesouro Nacional em fevereiro mostra a conta. O Brasil captou US$ 3,5 bilhões com um título que vence em 2036, pagando 6,40% ao ano, 2,2 pontos acima do Treasury de referência. O papel com vencimento em 2056 saiu a 7,30%, com prêmio de 2,45 pontos.",
+          "As empresas pagam a mesma base e mais um adicional pelo próprio risco de crédito. Com a base mais alta, o financiamento encarece antes de qualquer mudança na avaliação do negócio."
+        ]
+      },
+      {
+        "intertitulo": "O que o Citi prevê para a Selic?",
+        "paragrafos": [
+          "Um relatório do Citi do início de outubro põe o Brasil entre os latino-americanos mais vulneráveis à alta dos Treasuries, junto com México e Colômbia. Nos três, os juros americanos passam com força para as taxas locais, o câmbio e o custo de financiamento.",
+          "No caso brasileiro, o banco soma essa sensibilidade aos desequilíbrios fiscais. Num cenário em que a pressão externa persiste, a Selic poderia subir até 15,50%, segundo o Citi.",
+          "Não é uma resposta automática. Se a pressão de fora enfraquecer o real e piorar as expectativas de inflação, sobra menos espaço para cortar os juros básicos."
+        ]
+      },
+      {
+        "intertitulo": "Para onde o dinheiro está indo?",
+        "paragrafos": [
+          "Desde o início de outubro, investidores puseram quase US$ 14 bilhões em fundos de títulos do governo americano, depois de entradas recordes de US$ 59,3 bilhões no terceiro trimestre, segundo cálculos do Financial Times com dados da EPFR.",
+          "Além de fundos conservadores, multimercados, fundos macro globais e até gestoras de ações estão aumentando a posição em Treasuries. John Bell, gestor da Northstar Capital, disse que os títulos voltaram a pagar retorno real positivo, algo raro na última década."
+        ]
+      }
+    ],
+    "significado": [
+      "Para quem investe ou pensa em investir em dólar, o rendimento acima de 5% num título do governo americano chama atenção, mas tem risco. Quem compra um Treasury longo pode perder dinheiro se precisar vendê-lo antes do vencimento depois de uma nova alta dos juros: a taxa contratada só é garantida para quem fica até o fim."
+    ],
+    "perguntas": [
+      {
+        "pergunta": "Quanto estão pagando os Treasuries?",
+        "resposta": "Em 9 de outubro de 2026, o Treasury de dez anos rendia 5,24% ao ano e o de 30 anos, 5,60%, pela série do Federal Reserve."
+      },
+      {
+        "pergunta": "Por que isso encarece o financiamento do Brasil?",
+        "resposta": "O investidor usa o Treasury como base e cobra um prêmio a mais pelo risco do Brasil. Com a base mais alta, a captação brasileira em dólar fica mais cara mesmo sem mudança na avaliação do país."
+      },
+      {
+        "pergunta": "A Selic pode subir por causa disso?",
+        "resposta": "O Citi calcula que, se a pressão externa persistir, a Selic poderia subir até 15,50%. Não é automático: depende de o real enfraquecer e de a inflação esperada piorar."
+      }
+    ],
+    "assuntos": [
+      "Treasuries",
+      "juros",
+      "Selic",
+      "dólar",
+      "Citi"
+    ]
+  }
+}

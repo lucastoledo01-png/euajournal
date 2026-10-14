@@ -1,3 +1,4 @@
+import { instrucaoDoMesSemAno, mesesSemAno } from "@/lib/datas-no-texto";
 import type { PacoteFactual } from "../editorial/pacote-factual";
 
 /**
@@ -34,7 +35,7 @@ import type { PacoteFactual } from "../editorial/pacote-factual";
  */
 
 export type ProblemaDeContexto = {
-  regra: "citacao_com_deitico" | "pessoa_sem_apresentacao" | "sem_sujeito" | "variacao_sem_metrica";
+  regra: "citacao_com_deitico" | "pessoa_sem_apresentacao" | "sem_sujeito" | "variacao_sem_metrica" | "mes_sem_ano";
   detalhe: string;
 };
 
@@ -371,6 +372,8 @@ export function conferirContextoDaManchete(
     quemFala?: string | null;
     /** O lide da legenda (`copy.gancho`): a variação sem métrica é conferida nele também. */
     lide?: string;
+    /** O dia da conferência, para o mês sem ano. Padrão: agora. */
+    hoje?: Date;
   } = {},
 ): ProblemaDeContexto[] {
   const problemas: ProblemaDeContexto[] = [];
@@ -410,6 +413,12 @@ export function conferirContextoDaManchete(
           `nomeie a métrica ("as ações da SpaceX sobem 8%", "o valor de mercado", "a receita", "o índice S&P 500")`,
       });
     }
+  }
+
+  // Mês que já passou neste ano, sem o ano: lido como notícia velha (14/10/2026).
+  const meses = mesesSemAno(headline, contexto.hoje ?? new Date());
+  if (meses.length > 0) {
+    problemas.push({ regra: "mes_sem_ano", detalhe: `manchete: ${instrucaoDoMesSemAno(meses, contexto.hoje ?? new Date())}` });
   }
 
   return problemas;

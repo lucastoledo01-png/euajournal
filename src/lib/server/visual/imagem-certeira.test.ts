@@ -457,7 +457,9 @@ describe("pauta de empresa: a marca, depois o logotipo, depois quem a representa
     expect(v.veredicto?.textoLido).toBe("ANTHROPIC");
   });
 
-  it("sem marca e sem logotipo publicável, o CEO, com a identidade conferida", async () => {
+  it("sem marca e sem logotipo publicável, CEO que o público brasileiro não reconhece não vira foto (14/10/2026)", async () => {
+    // Antes, a foto de Dario Amodei entrava como representante da Anthropic. O dono recusou
+    // Satya Nadella e Franklin Roosevelt pelo mesmo motivo: rosto desconhecido não conta a história.
     const { fetcher } = mundo({
       itens: [{ ...anthropic, p154: undefined }, dario],
       arquivos: [{ nome: "Dario Amodei.jpg", largura: 300 }],
@@ -465,13 +467,9 @@ describe("pauta de empresa: a marca, depois o logotipo, depois quem a representa
     });
     const { conferente, papeis } = modelo({});
     const r = await resolveVisualAsset(pauta(ANTHROPIC), { env: ENV, fetcher, somenteLeitura: true, conferenciaVisual: conferente });
-    expect(r.asset?.sourceAssetId).toBe("File:Dario Amodei no palco.jpg");
-    const v = r.asset?.metadata.verificacao as VerificacaoDoProtagonista;
-    expect(v.tipo).toBe("representante");
-    expect(v.representante).toMatchObject({ nome: "Dario Amodei", papel: "ceo" });
-    expect(papeis.some((p) => p.startsWith("identidade:"))).toBe(true);
-    // A foto do representante leva o nome da empresa, que é a entidade da pauta.
-    expect(r.asset?.entityName).toBe("Anthropic");
+    expect(r.status).toBe("NO_VALID_IMAGE");
+    // Nem chegou a conferir o rosto: o filtro é antes, e não custa chamada de modelo.
+    expect(papeis.some((p) => p.startsWith("identidade:"))).toBe(false);
   });
 
   it("o representante que não confere com o retrato não entra, e a pauta fica sem foto", async () => {

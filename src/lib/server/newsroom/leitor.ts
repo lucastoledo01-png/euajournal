@@ -1,3 +1,4 @@
+import { instrucaoDoMesSemAno, mesesSemAno } from "@/lib/datas-no-texto";
 import type { EditionContent, EditionStory } from "./schemas";
 import { palavrasChave } from "../editorial/fingerprint";
 
@@ -189,7 +190,7 @@ export type MotivoDeTexto =
   | "HEADLINE_TOO_LONG"
   | "FOREIGN_SUBJECT"
   | "COUNTRY_UNCLEAR";
-export type MotivoDeLeitor = MotivoDeTexto | "REDUNDANT_SUBHEAD";
+export type MotivoDeLeitor = MotivoDeTexto | "REDUNDANT_SUBHEAD" | "MONTH_WITHOUT_YEAR";
 
 export type AchadoDeLeitor = {
   indice: number;
@@ -556,8 +557,23 @@ function conferirRedundancia(
   };
 }
 
-export function conferirLinguagemDoLeitor(edition: EditionContent): AchadoDeLeitor[] {
+export function conferirLinguagemDoLeitor(edition: EditionContent, hoje: Date = new Date()): AchadoDeLeitor[] {
   const achados: AchadoDeLeitor[] = [];
+
+  /*
+   * Mês sem ano (14/10/2026): "sobem 3,60% em janeiro" numa edição de outubro
+   * se lê como notícia velha. Confere o que o leitor vê primeiro: assunto,
+   * headline, preheader e o título de cada matéria.
+   */
+  const topo = [edition.subject, edition.headline, edition.preheader].filter(Boolean).join(" | ");
+  const mesesDoTopo = mesesSemAno(topo, hoje);
+  if (mesesDoTopo.length > 0) {
+    achados.push({ indice: -1, motivo: "MONTH_WITHOUT_YEAR", descricao: `assunto, headline ou preheader: ${instrucaoDoMesSemAno(mesesDoTopo, hoje)}` });
+  }
+  edition.stories.forEach((story, i) => {
+    const meses = mesesSemAno(story.title, hoje);
+    if (meses.length > 0) achados.push({ indice: i, motivo: "MONTH_WITHOUT_YEAR", descricao: `título: ${instrucaoDoMesSemAno(meses, hoje)}` });
+  });
 
   // O par do topo da edição, que é o que o leitor vê antes de qualquer pauta.
   const doTopo = conferirRedundancia(edition.headline, edition.preheader, "headline", "preheader");

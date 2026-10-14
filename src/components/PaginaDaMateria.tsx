@@ -135,11 +135,18 @@ function semMarcas(s: string): string {
  * frase duas vezes, uma embaixo da outra. É a régua "cada linha acrescenta"
  * do `decisoes.md`, aplicada à página.
  */
-function linhaFinaQueAcrescenta(descricao: string | undefined, corpo: string | undefined): string | undefined {
+function linhaFinaQueAcrescenta(descricao: string | undefined, corpo: string | undefined, titulo?: string): string | undefined {
   const fina = semMarcas(descricao ?? "");
   if (!fina) return undefined;
+  // A linha fina igual ao título também não aparece (14/10/2026: "Social Security terá maior aumento..." duas vezes).
+  if (titulo && semMarcas(titulo).replace(/\W+/g, " ").trim().toLowerCase() === fina.replace(/\W+/g, " ").trim().toLowerCase()) return undefined;
   const primeiro = semMarcas(corpo?.match(/<p\b(?![^>]*class="(?:fonte|credito-da-foto|legenda-da-capa)")[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? "");
   return primeiro.startsWith(fina) ? undefined : descricao;
+}
+
+/** A descrição automática da foto, escrita pela conferência visual, começa assim. */
+export function ehDescricaoDeFoto(legenda: string): boolean {
+  return /^\s*(close|retrato|imagem|foto|vista|fachada de um|fachada de uma|um |uma |homem|mulher|pessoa|pessoas|grupo|duas |dois |tr[eê]s |pr[eé]dio|edif[ií]cio|cena|plano)/i.test(legenda);
 }
 
 export function PaginaDaMateria({
@@ -222,7 +229,15 @@ export function PaginaDaMateria({
    * na ancoragem.
    */
   const assuntos = indexacaoValidadaDoArtigo(article).assuntos;
-  const legenda = capa ? (legendaDaCapa ?? legendaNeutra(assuntos[0] ?? editoria?.nome ?? article.category)) : legendaDaCapa;
+  /*
+   * Legenda que DESCREVE a foto ("Close do rosto de um homem idoso...") não
+   * vai ao leitor (dono, 14/10/2026): é texto de acessibilidade, não legenda
+   * de matéria. Fica só a legenda que diz quem ou o que está na foto; sem ela,
+   * só o crédito. A neutra ("Imagem ilustrativa: ...") saiu pelo mesmo motivo.
+   */
+  void legendaNeutra;
+  void assuntos;
+  const legenda = legendaDaCapa && !ehDescricaoDeFoto(legendaDaCapa) ? legendaDaCapa : undefined;
   const dimensoes =
     dimensoesDaCapa ??
     (creditoResolvido?.largura && creditoResolvido?.altura ? { largura: creditoResolvido.largura, altura: creditoResolvido.altura } : null);
@@ -254,7 +269,7 @@ export function PaginaDaMateria({
 
           <SubstackArticleRenderer
             title={article.title}
-            subtitle={linhaFinaQueAcrescenta(article.description, corpo)}
+            subtitle={linhaFinaQueAcrescenta(article.description, corpo, article.title)}
             date={datas.publicada?.texto}
             dateTime={datas.publicada?.iso}
             updated={datas.atualizada?.texto}

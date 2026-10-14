@@ -26,6 +26,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # O domínio do portal entra no build: o Next grava NEXT_PUBLIC_* no pacote.
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+# A chave pública do Turnstile também (14/10/2026): sem ela o build gravava a
+# chave de fallback do código, do widget antigo, e o captcha travava em
+# "Verificando" no domínio novo.
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runner

@@ -127,8 +127,15 @@ export async function selecionarComFoto<P, S>(e: {
   fotos: FotosDoDia<P>;
   /** Proibidas de saída, por exemplo as que outra rodada já achou sem foto. */
   excluirDeInicio?: Iterable<string>;
+  /**
+   * Falso no portal e na newsletter (dono, 14/10/2026): ali a pauta sem foto
+   * sai com capa tipográfica, e não cai. Só o Instagram continua exigindo
+   * foto, porque no feed é a foto que faz a pessoa parar.
+   */
+  exigirFoto?: boolean;
 }): Promise<{ selecao: S; semFoto: QuedaSemFoto[]; excluidas: Set<string> }> {
   const excluir = new Set<string>(e.excluirDeInicio ?? []);
+  if (e.exigirFoto === false) return { selecao: e.selecionar(excluir), semFoto: [], excluidas: excluir };
   const semFoto: QuedaSemFoto[] = [];
   let selecao = e.selecionar(excluir);
 

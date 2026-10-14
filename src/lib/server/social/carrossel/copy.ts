@@ -17,6 +17,7 @@ import { z } from "zod";
 import { callOpenAIJSON, getAIProviderConfig } from "../../newsroom/ai-provider";
 import { limparVicios } from "../../newsroom/anti-vicios";
 import { REGRA_DO_DOLAR } from "../../editorial/dolar-em-portugues";
+import { DESCRICAO_DO_LEITOR } from "../../editorial/linha-editorial";
 import type { PacoteFactual } from "../../editorial/pacote-factual";
 import type { PautaAvaliada } from "../../editorial/guarda";
 import {
@@ -151,7 +152,7 @@ function descreverPapeis(papeis: PapelDeSlide[]): string {
  * no painel desde 05/10/2026 (etapa `carrossel_copy`). Os papéis dos slides,
  * os tetos de caractere e o JSON são contrato e ficam no código.
  */
-export const INSTRUCAO_PADRAO_CARROSSEL = `QUEM LÊ: uma pessoa no Brasil que sonha em morar, trabalhar ou investir nos Estados Unidos. Ainda não mora lá e não é especialista. Escreva como se explicasse para alguém inteligente que nunca leu um relatório técnico. Imigração não é assunto desta conta: não puxe a pauta para visto. Termo técnico só quando não há palavra comum, e aí explicado na mesma frase em que aparece. Nada de "payroll", "yield" e "guidance" soltos.
+export const INSTRUCAO_PADRAO_CARROSSEL = `QUEM LÊ: ${DESCRICAO_DO_LEITOR}. Ainda não mora lá e não é especialista. Escreva como se explicasse para alguém inteligente que nunca leu um relatório técnico. Imigração não é assunto desta conta: não puxe a pauta para visto. Termo técnico só quando não há palavra comum, e aí explicado na mesma frase em que aparece. Nada de "payroll", "yield" e "guidance" soltos.
 
   NÃO (construção ilustrativa): "O yield da Treasury de 10 anos avançou com o guidance hawkish do Fomc."
   ASSIM: "Os juros que o governo americano paga para pegar dinheiro emprestado por 10 anos subiram, depois que o comitê do Fed, o Fomc, sinalizou juros altos por mais tempo."

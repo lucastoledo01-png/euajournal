@@ -28,6 +28,7 @@
  */
 
 import { callOpenAIJSON, getAIProviderConfig } from "../newsroom/ai-provider";
+import { DESCRICAO_DO_LEITOR } from "./linha-editorial";
 
 export type FonteDeTendencia =
   | "google_trends_us"
@@ -268,7 +269,7 @@ export function montarSystemDaTriagem(): string {
   return `
 Você tria assuntos em alta para um jornal diário sobre os Estados Unidos escrito em português para brasileiros.
 
-A pergunta é uma só: um brasileiro que sonha em morar, trabalhar ou investir nos EUA quer ler sobre isso?
+A pergunta é uma só: ${DESCRICAO_DO_LEITOR} quer ler sobre isso?
 
 APROVE quando o assunto tocar em: ${EIXOS}.
 REPROVE imigração (visto, green card, deportação, fronteira), resultado de jogo, fofoca de celebridade, lançamento de série, boato e assunto puramente local americano sem efeito fora dele.

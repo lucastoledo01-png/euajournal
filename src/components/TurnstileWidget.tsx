@@ -38,7 +38,14 @@ type TurnstileWidgetProps = {
   carregar?: boolean;
 };
 
-const fallbackSiteKey = "0x4AAAAAAEXJ_FUjA4w-X0Nd";
+/*
+ * A chave pública do widget do euajournal.com (14/10/2026). A antiga era do
+ * widget do casaloti.ia.br, e no domínio novo o captcha dava o erro 110200
+ * (domínio não autorizado). Fica no código porque o EasyPanel não repassa as
+ * variáveis ao build, e NEXT_PUBLIC_* só existe se estiver no build. A chave
+ * pública aparece em toda página que usa o captcha; a secreta nunca entra aqui.
+ */
+const fallbackSiteKey = "0x4AAAAAAFWodFLs05O5b08S";
 const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || fallbackSiteKey;
 export const ENDERECO_DO_TURNSTILE = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 

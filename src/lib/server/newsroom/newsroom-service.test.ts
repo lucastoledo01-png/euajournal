@@ -128,7 +128,7 @@ describe("crédito da foto", () => {
     const id = identidadeDaPauta(edicao.stories[0]);
     const html = renderEditionToHtml(edicao, new Map([[id, "https://upload.wikimedia.org/foto.jpg"]]));
 
-    expect(html).toContain("upload.wikimedia.org/foto.jpg");
+    expect(html).toContain(encodeURIComponent("upload.wikimedia.org/foto.jpg"));
     expect(html).not.toContain("Wikimedia Commons /");
   });
 

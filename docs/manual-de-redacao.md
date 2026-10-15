@@ -160,3 +160,17 @@ código não lia.
 - Instagram: de 3 a 5 hashtags por legenda (regra do dono, 14/10/2026). O
   código completa o piso com o país e a editoria da pauta, e corta acima de
   cinco. Só aparecem com `settings.instagram.hashtags = true`.
+
+## 14/10/2026, noite: a newsletter de 15/10 cortava as fotos
+
+**O que o dono apontou.** No computador, a foto do Lula saiu com a cabeça
+cortada no alto, e o prédio da pauta de inflação também. A foto do Lula ainda
+era do começo dos anos 2000, e o prédio era o Fed de Minneapolis (o erro de
+"Federal Reserve" corrigido no mesmo dia).
+
+**As regras.**
+- Foto de e-mail nunca é cortada. A moldura continua 5:3 (600x360), mas a foto
+  vai inteira, sobre ela mesma desfocada, composta no servidor pela rota
+  `/api/visual/foto-inteira` (o e-mail não faz desfoque por CSS).
+- Retrato de pessoa mostra a pessoa como está hoje: com data conhecida e mais
+  de cinco anos, é recusado (`LIMITE_DO_RETRATO` em `temporalidade.ts`).

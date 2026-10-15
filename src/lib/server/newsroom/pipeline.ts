@@ -391,7 +391,7 @@ ESTRUTURA DO JSON DE SAÍDA (retorne exclusivamente este JSON estrito):
   "subject": "A opção mais forte entre as subject_options: caixa baixa, de 2 a 7 palavras, até 40 caracteres, sem ponto final",
   "preheader": "De 60 a 110 caracteres. NÃO é resumo do headline: é a informação seguinte, a que mais interessa a quem vai decidir se lê. Quem é afetado, o prazo, o número. Se ela repetir o headline com outras palavras, está errada.",
   "headline": "O título da edição, uma frase afirmativa de até 70 caracteres, em linguagem comum, dizendo o que mudou. Não começa por nome de órgão, não usa sigla sozinha, não é pergunta.",
-  "intro": "Saudação matinal super leve e descontraída dando o bom dia e o clima da edição.",
+  "intro": "Uma ou duas frases de abertura, informais, leves e motivacionais, no tom do The News: um bom dia com personalidade, puxado pelo dia da semana, pela época do ano ou por uma ideia que dê energia a quem acompanha os EUA e pensa em dinheiro e carreira. NUNCA resume nem lista as notícias da edição: o índice 'Nesta edição' vem logo abaixo, e repetir as pautas aqui é redundante. Sem número, nome próprio ou fato das pautas. Varie a cada edição; não comece por 'A edição de hoje traz'. Ex.: 'Bom dia! Quinta-feira é aquele dia em que a semana já mostra o que rendeu. Pega o café e vem com a gente.'",
   "stories": [
     {
       "rank": 1,
@@ -1072,6 +1072,16 @@ Retorne EXCLUSIVAMENTE a edição inteira no mesmo formato JSON.
   };
 }
 
+/** Aberturas sem fato, para quando a da redação não se sustenta. Cada uma tem de 40 a 800 caracteres. */
+export const ABERTURAS_NEUTRAS = [
+  "Bom dia! Café na mão e cabeça nos EUA: bora ver o que mudou por lá.",
+  "Bom dia! Quem acompanha de perto decide melhor. Vem com a gente.",
+  "Bom dia! Mais um dia para ficar um passo à frente. Pega o café e vamos lá.",
+  "Bom dia! Plano bom é plano bem informado, e a gente cuida da parte da informação.",
+  "Bom dia! Cinco minutos de leitura agora valem horas de pesquisa depois. Vamos nessa.",
+  "Bom dia! O mundo não para, e quem sonha alto também não. Bora para as notícias.",
+];
+
 /**
  * A moldura da edição sem afirmação nenhuma, só com os títulos já auditados.
  *
@@ -1085,9 +1095,15 @@ export function molduraNeutra(edicao: Pick<EditionContent, "stories">): Pick<Edi
     titulos.length <= 1
       ? titulos.join("")
       : `${titulos.slice(0, -1).join("; ")}; e ${titulos[titulos.length - 1]}`;
-  let intro = `Bom dia. Nesta edição: ${lista}.`;
-  if (intro.length > 800) intro = `${intro.slice(0, 796).replace(/\s+\S*$/, "")}...`;
-  if (intro.length < 40) intro = `Bom dia. Estas são as notícias de hoje sobre os Estados Unidos: ${lista}.`;
+  void lista;
+  /*
+   * A abertura neutra não lista as pautas (14/10/2026): o índice "Nesta
+   * edição" vem logo abaixo, e o dono leu a repetição como redundância. Ela
+   * é uma frase leve, sem fato nenhum, escolhida pelos títulos para variar
+   * de uma edição para outra sem sorteio.
+   */
+  const semente = titulos.join("|").split("").reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const intro = ABERTURAS_NEUTRAS[semente % ABERTURAS_NEUTRAS.length];
   return { intro, closing: "Essas foram as notícias de hoje.", quick_bits: [] };
 }
 

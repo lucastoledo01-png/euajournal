@@ -261,7 +261,8 @@ describe("uma pauta sem lastro não derruba a edição", () => {
     expect(r.aprovado).toBe(true);
     expect(r.edition.stories).toHaveLength(3);
     expect(r.pautasRemovidas).toEqual([]);
-    expect(r.edition.intro).toBe("Bom dia. Nesta edição: Matéria alfa; Matéria beta; e Matéria gama.");
+    expect(r.edition.intro).toMatch(/^Bom dia!/);
+    expect(r.edition.intro).not.toContain("Matéria alfa");
     expect(r.avisos.join(" ")).toContain("MOLDURA_NEUTRA");
     expect(r.avisos.join(" ")).toContain("não prevê");
   });

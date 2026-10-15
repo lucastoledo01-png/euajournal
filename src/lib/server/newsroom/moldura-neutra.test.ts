@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { molduraNeutra } from "./pipeline";
+import { ABERTURAS_NEUTRAS, molduraNeutra } from "./pipeline";
 import { EditionContentSchema } from "./schemas";
 
 const historia = (title: string) => ({ title }) as never;
 
 describe("moldura neutra da edição", () => {
-  it("só repete os títulos já auditados, sem afirmar nada novo", () => {
+  it("abre com uma frase leve, sem fato e sem repetir as pautas do índice (14/10/2026)", () => {
     const m = molduraNeutra({ stories: [historia("Fed corta juros."), historia("Emprego sobe nos EUA")] });
-    expect(m.intro).toBe("Bom dia. Nesta edição: Fed corta juros; e Emprego sobe nos EUA.");
+    expect(ABERTURAS_NEUTRAS).toContain(m.intro);
+    expect(m.intro).not.toContain("Fed corta juros");
+    for (const a of ABERTURAS_NEUTRAS) {
+      expect(a.length).toBeGreaterThanOrEqual(40);
+      expect(a).not.toMatch(/\u2014/);
+    }
     expect(m.quick_bits).toEqual([]);
     expect(m.closing.length).toBeGreaterThanOrEqual(10);
   });

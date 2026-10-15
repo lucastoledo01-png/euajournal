@@ -46,10 +46,17 @@ export function origemPermitida(src: string): boolean {
   }
 }
 
+/**
+ * A versão da composição. A rota guarda a imagem por um dia no navegador e uma
+ * semana na CDN; quando a regra muda (14/10/2026: foto deitada sem desfoque),
+ * a versão nova no endereço é o que faz a imagem nova aparecer.
+ */
+export const VERSAO_DA_FOTO_INTEIRA = 2;
+
 /** O endereço público da foto inteira. Imagem sem origem permitida volta como veio. */
 export function urlDaFotoInteira(src: string, base: string = MARCA.site): string {
   if (!src || !origemPermitida(src)) return src;
-  return `${base.replace(/\/$/, "")}/api/visual/foto-inteira?src=${encodeURIComponent(src)}`;
+  return `${base.replace(/\/$/, "")}/api/visual/foto-inteira?v=${VERSAO_DA_FOTO_INTEIRA}&src=${encodeURIComponent(src)}`;
 }
 
 /**

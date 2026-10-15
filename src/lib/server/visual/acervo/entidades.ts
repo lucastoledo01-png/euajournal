@@ -48,4 +48,23 @@ export const ASSUNTO_POR_QID: Record<string, string> = {
   Q54109: "capitolio",
   Q13677: "nyse",
   Q11201: "suprema_corte_eua",
+  // Lote 04 (15/10/2026)
+  Q60392579: "tarcisio_de_freitas",
+  Q3069485: "fernando_haddad",
+  Q10264359: "davi_alcolumbre",
+  Q10364348: "ronaldo_caiado",
+  Q57092113: "romeu_zema",
+  Q99831978: "kassio_nunes_marques",
+  Q10320705: "edson_fachin",
+  Q10304982: "jair_bolsonaro",
+  Q28935729: "jd_vance",
+  Q7172014: "pete_hegseth",
+  Q324546: "marco_rubio",
+  Q461391: "gavin_newsom",
+  Q6397725: "kevin_warsh",
+  Q16269109: "palmer_luckey",
+  Q7414: "disney",
+  // O prédio e o Departamento de Defesa, que as pautas chamam pelo mesmo nome.
+  Q11208: "pentagono",
+  Q11209: "pentagono",
 };

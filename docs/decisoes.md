@@ -610,6 +610,29 @@ pessoa, onde quer que tenha sido feito. Cena de terceiro país é recusada.
 é gravada. Em uma semana isso é a lista de produção ordenada por frequência, e
 não um chute sobre o que fotografar.
 
+### O primeiro lote curado (14/10/2026)
+
+O acervo ganhou o primeiro lote: cerca de 50 fotos de 36 entidades recorrentes
+(Trump, Lula, Flávio, Fed, Tesouro, Casa Branca, Capitólio, STF, TSE, big
+techs...), escolhidas olhando cada uma: o nome ou o logo dominando a foto da
+organização, licença livre, retrato atual da pessoa. Três mudanças vieram junto.
+
+- **O acervo casa pelo QID**, em `acervo/entidades.ts`. O resolvedor chega com o
+  rótulo do Wikidata, que muda com o idioma ("Lula" vira "Luiz Inácio Lula da
+  Silva"); o arquivo continua com o nome curto (`pessoas-br-lula-retrato-01`).
+  Entidade nova no acervo entra nessa tabela junto com a foto.
+- **Foto de terceiro no acervo leva o crédito dela.** A ingestão lê um
+  `creditos.json` na pasta (autor, licença, página do original), e o asset sai
+  com `attribution` e a página do original. Antes todo acervo era "acervo
+  próprio", sem autor, e uma foto CC BY-SA sairia sem crédito.
+- **"Federal Reserve" resolvia para o Federal Reserve Bank of Minneapolis**
+  (Q2503528), um dos 12 bancos regionais, e já tinha ilustrado duas pautas.
+  `ENTIDADES_FIXAS`, em `wikidata.ts`, aponta o nome direto para o Q53536.
+
+Cada arquivo é um só derivado 3:4. A capa da matéria mostra a foto inteira sobre
+ela mesma desfocada (14/10/2026), então o retrato não é cortado no portal; a
+versão horizontal fica para quando o desfoque não bastar.
+
 ### Os números que dimensionam o acervo
 
 Medidos em 29/09/2026, no banco de produção:

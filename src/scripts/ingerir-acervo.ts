@@ -24,6 +24,13 @@ import { BUCKET_DO_ACERVO, TABELA_DO_ACERVO } from "../lib/server/visual/acervo/
  *   npx tsx src/scripts/ingerir-acervo.ts ~/Drive/acervo --aplicar --autor="Estúdio X" \
  *       --original="https://drive.google.com/drive/folders/..."
  *
+ * Foto de terceiro (Commons, banco oficial) leva o crédito dela num
+ * `creditos.json` na pasta (14/10/2026), por nome final do arquivo:
+ *   { "pessoas-eua-donald_trump-retrato-01.jpg":
+ *       { "autor": "Daniel Torok", "licenca": "domínio público",
+ *         "original": "https://commons.wikimedia.org/wiki/File:..." } }
+ * O que o arquivo declara vence `--autor` e `--original`.
+ *
  * O formato do nome é `grupo-pais-assunto-detalhe-numero.jpg`, e o catálogo
  * de grupos e cenas está em `src/lib/server/visual/acervo/catalogo-de-cenas.ts`.
  */
@@ -58,7 +65,20 @@ async function main(): Promise<void> {
   const aplicar = process.argv.includes("--aplicar");
   const projectId = argumento("projeto") ?? DEFAULT_PROJECT_ID;
   const salvarEm = argumento("salvar-derivados");
-  const opcoesDaLinha = { autor: argumento("autor"), originalRef: argumento("original") ?? null };
+  const opcoesDoLote = { autor: argumento("autor"), originalRef: argumento("original") ?? null };
+  const arquivoDeCreditos = path.join(path.resolve(pasta), "creditos.json");
+  const creditos: Record<string, { autor?: string; licenca?: string; original?: string }> = fs.existsSync(arquivoDeCreditos)
+    ? JSON.parse(fs.readFileSync(arquivoDeCreditos, "utf-8"))
+    : {};
+  const opcoesDaLinha = (plano: ArquivoPlanejado) => {
+    const c = creditos[plano.nome.arquivo];
+    if (!c) return opcoesDoLote;
+    return {
+      autor: c.autor ?? opcoesDoLote.autor,
+      licenca: c.licenca,
+      originalRef: c.original ?? opcoesDoLote.originalRef,
+    };
+  };
 
   const arquivos = await listarPasta(path.resolve(pasta));
   console.log(`${arquivos.length} arquivo(s) de imagem em ${pasta}`);
@@ -79,6 +99,8 @@ async function main(): Promise<void> {
         `original=${m.larguraOriginal}x${m.alturaOriginal}`,
     );
     for (const aviso of p.avisos) console.log(`      aviso: ${aviso}`);
+    const credito = opcoesDaLinha(p);
+    console.log(`      crédito: ${credito.autor || "(sem autor)"} | ${("licenca" in credito && credito.licenca) || "acervo próprio"}`);
     if (salvarEm) {
       fs.mkdirSync(salvarEm, { recursive: true });
       fs.writeFileSync(path.join(salvarEm, path.basename(p.caminho)), p.derivado);
@@ -98,7 +120,7 @@ async function main(): Promise<void> {
       console.log(`Exemplo da linha que seria gravada em ${TABELA_DO_ACERVO}:`);
       console.log(
         JSON.stringify(
-          linhaDoAcervo(projectId, exemplo, `<url pública do bucket ${BUCKET_DO_ACERVO}>/${exemplo.caminho}`, opcoesDaLinha),
+          linhaDoAcervo(projectId, exemplo, `<url pública do bucket ${BUCKET_DO_ACERVO}>/${exemplo.caminho}`, opcoesDaLinha(exemplo)),
           null,
           2,
         ),

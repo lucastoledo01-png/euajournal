@@ -213,7 +213,8 @@ export async function aplicarPlano(
   client: SupabaseClient,
   projectId: string,
   planos: ArquivoPlanejado[],
-  opcoes: OpcoesDaLinha = {},
+  /** Uma opção para o lote, ou uma por arquivo (o crédito de cada foto, 14/10/2026). */
+  opcoes: OpcoesDaLinha | ((plano: ArquivoPlanejado) => OpcoesDaLinha) = {},
 ): Promise<ResultadoDaAplicacao> {
   const resultado: ResultadoDaAplicacao = { enviados: 0, pulados: [], erros: [] };
 
@@ -242,7 +243,7 @@ export async function aplicarPlano(
     }
 
     const url = client.storage.from(BUCKET_DO_ACERVO).getPublicUrl(plano.caminho).data.publicUrl;
-    const { error } = await client.from(TABELA_DO_ACERVO).insert(linhaDoAcervo(projectId, plano, url, opcoes));
+    const { error } = await client.from(TABELA_DO_ACERVO).insert(linhaDoAcervo(projectId, plano, url, typeof opcoes === "function" ? opcoes(plano) : opcoes));
     if (error) {
       resultado.erros.push(`${plano.nome.arquivo}: linha não gravada: ${error.message}`);
       continue;

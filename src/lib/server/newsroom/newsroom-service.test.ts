@@ -105,7 +105,7 @@ describe("chamada do VisaMatch", () => {
     expect(html).toContain("visamatch.imigrareua.com");
     expect(html).toContain("utm_content=quiz");
     expect(html).toContain("utm_term=edicao-2026-10-06");
-    expect(html).toContain("Qual destes caminhos combina mais com você?");
+    expect(html).toContain("Qual destes caminhos para os EUA combina mais com você?");
   });
 });
 

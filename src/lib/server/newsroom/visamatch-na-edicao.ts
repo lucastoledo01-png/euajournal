@@ -142,12 +142,21 @@ const VOCE_SABIA: VarianteDoVisaMatch = {
     ),
 };
 
+/*
+ * Reescritas pelo dono em 14/10/2026: "por lá" e "uma oferta de emprego" não
+ * diziam onde, e "alguns anos" não dizia quantos. Cada opção agora fala dos
+ * EUA e dá o número que separa um caminho do outro.
+ */
 const OPCOES_DO_QUIZ = [
-  "Tenho formação superior e alguns anos de experiência",
-  "Quero abrir ou comprar um negócio por lá",
-  "Tenho, ou posso ter, uma oferta de emprego",
+  "Tenho graduação e mais de 5 anos de experiência",
+  "Quero abrir ou comprar um negócio nos EUA",
+  "Tenho ou posso ter uma oferta de emprego nos EUA",
   "Ainda não sei, quero entender as opções",
 ];
+const PERGUNTA_DO_QUIZ = "Qual destes caminhos para os EUA combina mais com você?";
+const INSTRUCAO_DO_QUIZ = "Toque em uma das opções.";
+const RODAPE_DO_QUIZ =
+  "Escolha uma resposta e faça uma análise de perfil sem custo com o VisaMatch, da Imigrar EUA, parceira do eua.journal, e descubra em poucos minutos qual visto se encaixa no seu perfil.";
 
 const QUIZ: VarianteDoVisaMatch = {
   id: "quiz",
@@ -156,20 +165,22 @@ const QUIZ: VarianteDoVisaMatch = {
   rotulo: "Pergunta rápida · Ferramenta de parceiro",
   textos: [
     "Pergunta rápida · Ferramenta de parceiro",
-    "Qual destes caminhos combina mais com você?",
+    PERGUNTA_DO_QUIZ,
+    INSTRUCAO_DO_QUIZ,
     ...OPCOES_DO_QUIZ,
-    "Qualquer resposta abre o VisaMatch, ferramenta de um parceiro nosso, que faz mais algumas perguntas e mostra os caminhos que existem para o seu perfil.",
+    RODAPE_DO_QUIZ,
   ],
   renderizar: (link, c) =>
     caixa(
       rotuloHtml("Pergunta rápida · Ferramenta de parceiro", c, c.cor) +
-        `<div style="font-family:${c.fonte};font-size:19px;line-height:1.3;font-weight:800;color:${c.tinta};margin:0 0 14px 0;">Qual destes caminhos combina mais com você?</div>` +
+        `<div style="font-family:${c.fonte};font-size:19px;line-height:1.3;font-weight:800;color:${c.tinta};margin:0 0 4px 0;">${PERGUNTA_DO_QUIZ}</div>` +
+        `<div style="font-family:${c.fonte};font-size:13px;line-height:1.4;color:${c.tintaSuave};margin:0 0 12px 0;">${INSTRUCAO_DO_QUIZ}</div>` +
         OPCOES_DO_QUIZ.map(
           (o) =>
             `<a href="${escapeHtml(link)}" target="_blank" style="display:block;font-family:${c.fonte};font-size:15px;line-height:1.4;color:${c.tinta};background:#FFFFFF;border:1px solid ${c.linha};border-radius:10px;padding:11px 14px;margin:0 0 8px 0;text-decoration:none;">${escapeHtml(o)}</a>`,
         ).join("") +
         paragrafo(
-          "Qualquer resposta abre o VisaMatch, ferramenta de um parceiro nosso, que faz mais algumas perguntas e mostra os caminhos que existem para o seu perfil.",
+          RODAPE_DO_QUIZ,
           c,
           "8px 0 0 0",
           13,

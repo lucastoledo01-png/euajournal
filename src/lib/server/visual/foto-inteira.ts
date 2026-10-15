@@ -89,10 +89,26 @@ export async function baixarFoto(
   return Buffer.from(await r.arrayBuffer());
 }
 
-/** A foto inteira sobre ela mesma desfocada, em 1200x720, JPEG. */
+/**
+ * Foto deitada não ganha desfoque (14/10/2026, segunda leitura do dono): o
+ * Walmart visto de cima saiu com duas faixas desfocadas que não protegiam
+ * nada, "estava melhor antes". A partir desta proporção a foto só é ajustada
+ * à moldura 5:3, com o corte guiado pelo ponto de interesse (`attention`); o
+ * que se perde é uma faixa fina de céu ou de chão. Em pé ou quadrada, onde o
+ * corte comeria a cabeça, continua a foto inteira sobre ela mesma desfocada.
+ */
+export const PROPORCAO_DEITADA = 1.25;
+
+/** A foto na moldura de 1200x720, JPEG: ajustada se deitada, inteira sobre o desfoque se não. */
 export async function comporFotoInteira(foto: Buffer): Promise<Buffer> {
   const W = LARGURA_DA_FOTO_INTEIRA;
   const H = ALTURA_DA_FOTO_INTEIRA;
+  const meta = await sharp(foto).rotate().metadata();
+  const largura = meta.autoOrient?.width ?? meta.width ?? 0;
+  const altura = meta.autoOrient?.height ?? meta.height ?? 1;
+  if (largura / altura >= PROPORCAO_DEITADA) {
+    return sharp(foto).rotate().resize(W, H, { fit: "cover", position: sharp.strategy.attention }).jpeg({ quality: 85 }).toBuffer();
+  }
   const fundo = await sharp(foto).rotate().resize(W, H, { fit: "cover" }).blur(40).modulate({ brightness: 0.6 }).toBuffer();
   const frente = await sharp(foto).rotate().resize(W, H, { fit: "inside", withoutEnlargement: false }).toBuffer();
   const m = await sharp(frente).metadata();

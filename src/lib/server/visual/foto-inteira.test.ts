@@ -19,6 +19,14 @@ describe("a foto inteira do e-mail (14/10/2026)", () => {
     expect(data[1]).toBeLessThan(60);
   });
 
+  it("foto deitada só é ajustada à moldura, sem faixas desfocadas", async () => {
+    // 4:3 toda azul: com desfoque, as laterais escureceriam (brilho 0.6); ajustada, continuam azuis.
+    const deitada = await sharp({ create: { width: 800, height: 600, channels: 3, background: { r: 0, g: 0, b: 255 } } }).png().toBuffer();
+    const saida = await comporFotoInteira(deitada);
+    const { data } = await sharp(saida).extract({ left: 2, top: 360, width: 1, height: 1 }).raw().toBuffer({ resolveWithObject: true });
+    expect(data[2]).toBeGreaterThan(230);
+  });
+
   it("só aceita https dos hosts conhecidos: não é proxy aberto", () => {
     expect(origemPermitida("https://upload.wikimedia.org/wikipedia/commons/a/ab/X.jpg")).toBe(true);
     expect(origemPermitida("http://upload.wikimedia.org/x.jpg")).toBe(false);

@@ -465,6 +465,6 @@ describe("a hashtag descreve o post, não a página da fonte", () => {
      * e o teste passaria a medir o teto em vez do caminho.
      */
     expect(tags).toContain("#EB2");
-    expect(tags.length).toBe(7);
+    expect(tags.length).toBe(5);
   });
 });

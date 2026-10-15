@@ -442,7 +442,8 @@ export function fecharLegenda(texto: string, opcoes: OpcoesDoFecho = {}): FechoD
   const corpo = linhas.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 
   const tagsFinais =
-    opcoes.hashtags === "manter" ? tags : Array.isArray(opcoes.hashtags) ? opcoes.hashtags.filter(Boolean) : [];
+    // Nunca mais que cinco, venham de onde vierem (regra do dono, 14/10/2026).
+    (opcoes.hashtags === "manter" ? tags : Array.isArray(opcoes.hashtags) ? opcoes.hashtags.filter(Boolean) : []).slice(0, 5);
   // Toda linha de crédito sai só com os nomes, venha de onde vier (regra do dono, 06/10/2026, noite).
   const credito = linhaDeCreditoSoComNomes((opcoes.credito === "manter" ? creditoExistente : (opcoes.credito ?? "")).trim());
   if (opcoes.credito === "manter" && creditoExistente) {

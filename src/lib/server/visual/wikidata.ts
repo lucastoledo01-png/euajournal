@@ -578,6 +578,12 @@ export async function resolverEntidadeNoWikidata(
  * Declaração com data de fim (qualificador P582) é cargo que acabou, e sai: o
  * CEO de 2019 numa pauta de 2026 é a foto de outra gestão. Rank `preferred`
  * vai na frente, como o Wikidata pede para o valor atual.
+ *
+ * Pessoa morta (P570) não representa ninguém hoje (14/10/2026). O fundador da
+ * Social Security Administration no Wikidata é Franklin Roosevelt, e o post do
+ * reajuste de 2027 saiu com o retrato dele; o dono: "um cara nada a ver".
+ * E órgão público quase nunca declara logotipo: a marca dele é o SELO (P158),
+ * que entra quando não há P154.
  */
 export type Representante = {
   qid: string;
@@ -644,7 +650,7 @@ export async function dadosDaMarca(
   try {
     const corpo = await pedir([qid], "claims");
     const claims = corpo.entities?.[qid]?.claims ?? {};
-    const logotipo = valoresVigentes(claims, "P154")[0] ?? null;
+    const logotipo = valoresVigentes(claims, "P154")[0] ?? valoresVigentes(claims, "P158")[0] ?? null;
     const papeis: Array<{ prop: string; papel: Representante["papel"] }> = [
       { prop: "P169", papel: "ceo" },
       { prop: "P112", papel: "fundador" },
@@ -669,6 +675,8 @@ export async function dadosDaMarca(
         if (!e) continue;
         // Só gente: o "fundador" de uma subsidiária costuma ser outra empresa.
         if (!valoresVigentes(e.claims ?? {}, "P31").includes("Q5")) continue;
+        // Representante histórico não é rosto de notícia de hoje.
+        if ((e.claims?.P570 ?? []).length > 0) continue;
         const nome = e.labels?.pt?.value || e.labels?.en?.value || "";
         if (!nome) continue;
         representantes.push({

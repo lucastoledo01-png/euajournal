@@ -183,6 +183,44 @@ describe("o Wikidata da marca", () => {
   });
 });
 
+describe("representante morto e selo de órgão (14/10/2026)", () => {
+  it("o fundador morto não representa o órgão, e o selo (P158) vale como logotipo", async () => {
+    const fetcher = vi.fn(async (entrada: string | URL) => {
+      const ids = new URL(String(entrada)).searchParams.get("ids") ?? "";
+      if (ids === "Q2824618") {
+        return new Response(
+          JSON.stringify({
+            entities: {
+              Q2824618: {
+                claims: {
+                  P158: [{ mainsnak: { datavalue: { value: "US-SocialSecurityAdmin-Seal.svg" } } }],
+                  P112: [{ mainsnak: { datavalue: { value: { id: "Q8007" } } } }],
+                },
+              },
+            },
+          }),
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          entities: {
+            Q8007: {
+              labels: { en: { value: "Franklin Delano Roosevelt" } },
+              claims: {
+                P31: [{ mainsnak: { datavalue: { value: { id: "Q5" } } } }],
+                P570: [{ mainsnak: { datavalue: { value: { time: "+1945-04-12T00:00:00Z" } } } }],
+              },
+            },
+          },
+        }),
+      );
+    }) as unknown as typeof fetch;
+    const d = await dadosDaMarca("Q2824618", { fetcher });
+    expect(d.logotipo).toBe("US-SocialSecurityAdmin-Seal.svg");
+    expect(d.representantes).toEqual([]);
+  });
+});
+
 describe("o cartão do logotipo", () => {
   it("logotipo escuro vai sobre papel claro, inteiro dentro da área segura dos recortes", async () => {
     // Um "logotipo" preto de 600x150 com fundo transparente.

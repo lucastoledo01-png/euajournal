@@ -134,6 +134,16 @@ Você recebe a manchete e o resumo. Devolva o OBJETO ou a CENA concreta que
 ilustra o assunto, e uma busca em inglês para achar essa foto num banco de
 imagens.
 
+PRIMEIRO, O OBJETO DA NOTÍCIA. Antes de pensar em cena, pergunte: a manchete
+nomeia uma COISA que tem forma física? Um programa com documento próprio (o
+cartão da Social Security, o título do Tesouro), um produto (o Big Mac, o
+iPhone, o Ozempic), um prédio (a sede do Fed), um veículo, uma moeda. Se
+nomeia, ESSA coisa é a foto, e a busca pede ela pelo nome em inglês. O nome
+do próprio objeto impresso nele (o "SOCIAL SECURITY" do cartão, a embalagem
+do produto) é identidade do assunto e não conta como texto proibido.
+Nunca ilustre um programa ou órgão com a pessoa histórica ligada a ele: o
+fundador, quem assinou a lei, o retrato antigo. A notícia é de hoje.
+
 REGRAS DURAS:
 - Substantivo CONCRETO e fotografável: casa, rua residencial, prédio de
   escritório, canteiro de obras, prateleira de mercado, torre de controle,
@@ -145,14 +155,14 @@ REGRAS DURAS:
 - NUNCA pessoa identificável. Nada de retrato, rosto, multidão em close nem
   "família feliz". Se a cena pedir gente, escolha o lugar onde a gente está,
   não a gente.
-- NUNCA texto na imagem. Nada de placa legível, cartaz, manchete de jornal,
+- NUNCA texto na imagem, salvo o nome do próprio objeto da notícia. Nada de placa legível, cartaz, manchete de jornal,
   tela com texto, letreiro. A peça já tem a manchete escrita por cima.
 - E NÃO PEÇA o que só se fotografa com placa. "casas à venda" devolve placa de
   "for sale"; "loja fechada" devolve cartaz; "protesto" devolve faixa. Peça o
   LUGAR ou o OBJETO, e deixe o estado para a manchete: em vez de "casas à
   venda", peça "rua residencial americana"; em vez de "loja fechada", peça
   "fachada de loja vazia".
-- Nada de logotipo nem marca de empresa.
+- Nada de logotipo nem marca de empresa que não seja o objeto da notícia.
 - A busca tem de 3 a 7 palavras, em inglês, sem aspas e sem operadores.
 - Devolva também uma BUSCA AMPLA: o ambiente ou o objeto genérico do mesmo
   assunto, de 2 a 5 palavras, para quando a primeira não render foto. Ela
@@ -170,6 +180,18 @@ manchete: "Controladores de voo nos EUA terão apoio de IA de US$ 875 milhões"
   objeto: torre de controle de aeroporto
   consulta: airport control tower exterior united states
   ampla: airport runway airplanes
+
+manchete: "Social Security Administration anuncia reajuste de 3,6% para
+pagamentos de janeiro"
+  objeto: o cartão da Social Security
+  consulta: social security card united states
+  ampla: social security benefits retirement
+  (repare: o objeto do programa, e NÃO o retrato de Franklin Roosevelt, que
+  criou o programa em 1935; o dono reprovou exatamente isso em 14/10/2026)
+
+manchete: "McDonald's sobe preço do Big Mac nos EUA"
+  objeto: o sanduíche Big Mac
+  consulta: big mac burger mcdonalds
 
 manchete: "Zoox pode ampliar frota de robotáxis em Nevada"
   objeto: carro autônomo numa rua de cidade

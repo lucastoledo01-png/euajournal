@@ -37,6 +37,8 @@ export type ImagemDoAcervo = {
   luminanciaDoTopo: number | null;
   autor: string;
   licenca: string;
+  /** Página do original (Commons, banco oficial) ou o link do Drive. */
+  originalRef?: string | null;
   /**
    * Gravado e nunca lido como barreira (decisão de 29/09/2026: "as travas de
    * licença saem, o registro fica"). Anotar de onde a imagem veio custa zero e
@@ -87,7 +89,7 @@ export type Acervo = {
 
 const COLUNAS =
   "id,arquivo,grupo,pais,assunto,detalhe,tag,repositorio,caminho,url_publica,largura,altura," +
-  "orientacao,tom,luminancia_topo,autor,licenca,rights_status,usos,ultimo_uso_em";
+  "orientacao,tom,luminancia_topo,autor,licenca,original_ref,rights_status,usos,ultimo_uso_em";
 
 type Linha = {
   id: string;
@@ -107,6 +109,7 @@ type Linha = {
   luminancia_topo: number | string | null;
   autor: string | null;
   licenca: string | null;
+  original_ref?: string | null;
   rights_status: string | null;
   usos: number | null;
   ultimo_uso_em: string | null;
@@ -131,6 +134,7 @@ export function daLinha(l: Linha): ImagemDoAcervo {
     luminanciaDoTopo: l.luminancia_topo === null ? null : Number(l.luminancia_topo),
     autor: l.autor ?? "",
     licenca: l.licenca ?? "",
+    originalRef: l.original_ref ?? null,
     rightsStatus: l.rights_status ?? "unknown",
     usos: Number(l.usos ?? 0),
     ultimoUsoEm: l.ultimo_uso_em,

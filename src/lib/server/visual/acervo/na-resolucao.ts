@@ -1,6 +1,7 @@
 import type { AssetVisual, EntidadeVisual, TipoDeContextoDaImagem } from "../tipos";
 import { ehPessoa, normalizarEntidade } from "../tipos";
 import type { Acervo, FaltaNoAcervo, ImagemDoAcervo, MotivoDaFalta, TipoDeFalta } from "./acervo";
+import { ASSUNTO_POR_QID } from "./entidades";
 
 /**
  * O pedaço do resolvedor que fala com o acervo próprio.
@@ -45,11 +46,14 @@ export function usadaNaJanela(img: ImagemDoAcervo, janelaEmDias: number, agoraMs
  */
 export function assuntosDaEntidade(entidade: EntidadeVisual): string[] {
   const nomes = [entidade.nome, entidade.normalizado];
+  /*
+   * O QID vem primeiro (14/10/2026): o rótulo muda com o idioma da busca
+   * ("Federal Reserve", "Sistema de Reserva Federal"), o identificador não.
+   */
+  const peloQid = entidade.qid ? ASSUNTO_POR_QID[entidade.qid.toUpperCase()] : undefined;
   return [
     ...new Set(
-      nomes
-        .map((n) => normalizarEntidade(n ?? "").replace(/ /g, "_"))
-        .filter((n) => n.length >= 2),
+      [peloQid ?? "", ...nomes.map((n) => normalizarEntidade(n ?? "").replace(/ /g, "_"))].filter((n) => n.length >= 2),
     ),
   ];
 }
@@ -161,11 +165,13 @@ export function assetDoAcervo(img: ImagemDoAcervo, entidade: EntidadeVisual | nu
     source: "acervo_proprio",
     sourceAssetId: img.arquivo,
     imageUrl: img.urlPublica,
-    sourcePageUrl: img.urlPublica,
+    // A página do original (Commons, banco oficial) quando a curadoria a gravou.
+    sourcePageUrl: /^https?:\/\//.test(img.originalRef ?? "") ? (img.originalRef as string) : img.urlPublica,
     author: img.autor,
     license: img.licenca || "acervo próprio",
     licenseUrl: "",
-    attribution: "",
+    // Foto de terceiro no acervo continua devendo o crédito ao autor (14/10/2026).
+    attribution: img.autor ? `${img.autor} (${img.licenca || "acervo próprio"})` : "",
     rightsStatement: "acervo próprio do projeto; conferido na ingestão",
     rightsStatus: rights ?? "unknown",
     rightsCheckedAt: agora,

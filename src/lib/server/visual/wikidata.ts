@@ -338,6 +338,24 @@ async function buscarCandidatos(
   }));
 }
 
+/**
+ * Nomes que a busca do Wikidata resolve para a coisa errada (14/10/2026).
+ *
+ * "Federal Reserve" devolvia o Federal Reserve Bank of Minneapolis, um dos 12
+ * bancos regionais, e a pauta do Fed ganhava a foto da sede de Minneapolis.
+ * Aqui o nome aponta direto para o item certo, que passa pela mesma régua de
+ * tipo e país dos outros candidatos.
+ */
+export const ENTIDADES_FIXAS: Record<string, { id: string; label: string }> = {
+  "federal reserve": { id: "Q53536", label: "Federal Reserve" },
+  "fed": { id: "Q53536", label: "Federal Reserve" },
+  "federal reserve system": { id: "Q53536", label: "Federal Reserve" },
+  "sistema de reserva federal": { id: "Q53536", label: "Federal Reserve" },
+  "reserva federal": { id: "Q53536", label: "Federal Reserve" },
+  "banco central americano": { id: "Q53536", label: "Federal Reserve" },
+  "banco central dos eua": { id: "Q53536", label: "Federal Reserve" },
+};
+
 export async function resolverEntidadeNoWikidata(
   nome: string,
   opcoes: {
@@ -360,8 +378,10 @@ export async function resolverEntidadeNoWikidata(
     // brasileiro em português, e o custo de perguntar duas vezes é baixo.
     const idiomas = opcoes.idioma ? [opcoes.idioma] : ["pt", "en"];
     const achadosPorId = new Map<string, { id: string; label: string; descricao: string }>();
+    const fixa = ENTIDADES_FIXAS[normalizarEntidade(nome)];
+    if (fixa) achadosPorId.set(fixa.id, { ...fixa, descricao: "" });
 
-    for (const idioma of idiomas) {
+    for (const idioma of fixa ? [] : idiomas) {
       for (const a of await buscarCandidatos(nome, idioma, fetcher, cabecalho)) {
         if (!achadosPorId.has(a.id)) achadosPorId.set(a.id, a);
       }

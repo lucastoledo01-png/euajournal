@@ -125,3 +125,35 @@ na fila:
 Pendente para o código: o assunto saiu "a social security e os 3, 6%", com um
 espaço dentro do número. Corrigido à mão nesta edição; a causa ainda não foi
 achada.
+
+## 14/10/2026, noite: a foto da Social Security
+
+**O que o dono reprovou.** O post do reajuste de 3,6% saiu com o retrato de
+Franklin Roosevelt ("um cara nada a ver"), e a matéria ficou sem capa porque a
+refação "não achou outra foto".
+
+**A causa do Roosevelt.** A manchete nomeia a Social Security Administration,
+que é organização, e a regra da "imagem certeira" tenta, por último, quem a
+representa: CEO, fundador ou presidente do conselho, pelo Wikidata. O fundador
+(P112) da agência é Roosevelt, morto em 1945, e ele é "famoso para o público",
+então passou. E a agência não declara logotipo (P154), só o selo (P158), que o
+código não lia.
+
+**O que mudou no código.**
+1. Representante morto (P570) não representa ninguém hoje.
+2. Sem P154, o selo (P158) vale como logotipo: órgão público tem selo, não logo.
+3. A pergunta da cena (`cena-da-pauta.ts`) começa pelo OBJETO DA NOTÍCIA: se a
+   manchete nomeia uma coisa com forma física (o cartão de um programa, um
+   produto, um prédio), a foto é essa coisa, e o nome dela impresso no objeto
+   não conta como texto proibido. Nunca a pessoa histórica ligada ao programa.
+
+**As regras do manual.**
+- Programa do governo se ilustra pelo objeto dele: o cartão da Social Security,
+  o título do Tesouro, o formulário. Não pelo fundador nem por quem assinou a lei.
+- Matéria sobre benefício de um grupo (aposentados) aceita o grupo na foto: o
+  dono aprovou "um casal de idosos nos EUA, bandeira dos EUA com idosos". Foi
+  usado à mão (Pexels 8806113, Mike Jones). No código, a cena ainda proíbe
+  pessoa identificável (regra de 18/09/2026); mudar isso é decisão pendente.
+- Instagram: de 3 a 5 hashtags por legenda (regra do dono, 14/10/2026). O
+  código completa o piso com o país e a editoria da pauta, e corta acima de
+  cinco. Só aparecem com `settings.instagram.hashtags = true`.

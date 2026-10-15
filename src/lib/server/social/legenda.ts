@@ -65,14 +65,16 @@ export type ContextoDaLegenda = {
 };
 
 /**
- * Piso de três, alvo de quatro a sete.
+ * De três a cinco (regra do dono, 14/10/2026: "mínimo de 3 e máximo de 5").
+ * Era piso de três e alvo de quatro a sete.
  *
  * O piso existe só porque o schema da legenda exige três. Ele não é meta: uma
  * quarta hashtag inventada para fechar a conta é exatamente o que colocou
  * "#EstadosUnidos" embaixo de uma notícia sobre a Polícia Federal.
  */
 const MINIMO_DE_HASHTAGS = 3;
-const MAXIMO_DE_HASHTAGS = 7;
+export const MAXIMO_DE_HASHTAGS = 5;
+export const MINIMO_DE_HASHTAGS_DA_LEGENDA = MINIMO_DE_HASHTAGS;
 const LIMITE_DA_LEGENDA = 2000;
 
 function normalizar(texto: string): string {
@@ -513,6 +515,18 @@ function justificadaPeloTexto(tag: string, texto: string): boolean {
   });
 }
 
+/** A editoria da pauta (eixo da classificação) em hashtag, para completar o piso. */
+const HASHTAG_DA_EDITORIA: Record<string, string> = {
+  economia: "#Economia",
+  trabalho: "#Trabalho",
+  tecnologia: "#Tecnologia",
+  custo_de_vida: "#CustoDeVida",
+  politica: "#Politica",
+  brasil: "#Brasil",
+  cultura: "#Cultura",
+  seguranca: "#Seguranca",
+};
+
 /**
  * As hashtags desta pauta.
  *
@@ -520,9 +534,9 @@ function justificadaPeloTexto(tag: string, texto: string): boolean {
  * sugeriu e o texto sustenta, e o enquadramento por último. Assim dois posts
  * do mesmo dia não terminam iguais, que era a reclamação de origem.
  *
- * Não há piso artificial. Se a pauta só sustenta três hashtags, saem três: uma
- * quarta inventada é justamente o que fez "#EstadosUnidos" aparecer embaixo de
- * uma notícia sobre a Polícia Federal.
+ * Saem de três a cinco. Se a pauta só sustenta três, saem três: uma quarta
+ * inventada é justamente o que fez "#EstadosUnidos" aparecer embaixo de uma
+ * notícia sobre a Polícia Federal.
  */
 export function hashtagsDaPauta(contexto: ContextoDaLegenda, sugeridas: string[] = []): string[] {
   const texto = normalizar(
@@ -574,11 +588,19 @@ export function hashtagsDaPauta(contexto: ContextoDaLegenda, sugeridas: string[]
    * justificativa. Qualquer outra coisa aqui seria hashtag de marca.
    */
   const doPais = sinais.pais === "BR" ? "#Brasil" : "#EstadosUnidos";
-  if (escolhidas.length < MINIMO_DE_HASHTAGS && permitida(doPais)) {
-    if (!escolhidas.some((t) => t.toLowerCase() === doPais.toLowerCase())) escolhidas.push(doPais);
+  /*
+   * O piso de três é regra do dono desde 14/10/2026. Os complementos, nesta
+   * ordem, saem da classificação e nunca de palpite: o país da pauta, a
+   * editoria dela e, só se ainda faltar, "#Noticias".
+   */
+  const editoria = HASHTAG_DA_EDITORIA[normalizar(contexto.categoria ?? "").replace(/\s+/g, "_")];
+  for (const extra of [doPais, editoria, "#Noticias"]) {
+    if (escolhidas.length >= MINIMO_DE_HASHTAGS) break;
+    if (!extra || !permitida(extra)) continue;
+    if (!escolhidas.some((t) => t.toLowerCase() === extra.toLowerCase())) escolhidas.push(extra);
   }
 
-  return escolhidas;
+  return escolhidas.slice(0, MAXIMO_DE_HASHTAGS);
 }
 
 /** Frases que pedem o comentário da palavra-chave. */

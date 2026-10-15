@@ -24,6 +24,8 @@ type Foto = {
   entidade: string;
   tipo: "Person" | "Organization" | "Place";
   motivo: string;
+  /** Origem da foto; padrão Commons. Pexels dá o crédito "Foto: Nome (Pexels)". */
+  source?: string;
 };
 
 async function main() {
@@ -45,7 +47,7 @@ async function main() {
   const p = projetoDaFila(projeto as never, projeto.id)!;
   const deps = depsDaFila(db, p);
   const ap = await deps.store.porId(apId);
-  if (!ap || ap.ramo !== "post") throw new Error("aprovação de post não encontrada");
+  if (!ap || (ap.ramo !== "post" && ap.ramo !== "artigo")) throw new Error("aprovação de post ou de matéria não encontrada");
   if (ap.liberadoEm) throw new Error("o post já foi liberado para o ar");
   console.log(`post ${ap.pecaId}, ${ap.estado}, sai ${ap.publicarEm}: ${ap.resumo?.titulo ?? ""}`);
 
@@ -54,7 +56,7 @@ async function main() {
     entityName: f.entidade,
     entityNormalized: f.entidade.toLowerCase(),
     entityType: f.tipo,
-    source: "wikimedia_commons",
+    source: f.source ?? "wikimedia_commons",
     sourceAssetId: f.sourceAssetId,
     imageUrl: f.imageUrl,
     sourcePageUrl: f.sourcePageUrl,
@@ -95,18 +97,20 @@ async function main() {
   const ganchos = criarGanchosDeProducao({ ...mundoDeProducao(), imagem: async () => resultado as never });
   const motivo = `foto escolhida à mão: ${f.motivo}`;
   const ctx = { aprovacao: ap, etapa: "imagem", naoRepetir: "", motivo } as never;
-  const r1 = await ganchos.post!.imagem!(ctx);
+  const ramo = ap.ramo as "post" | "artigo";
+  const r1 = await ganchos[ramo]!.imagem!(ctx);
   console.log("imagem:", JSON.stringify(r1).slice(0, 300));
   if (!(r1 as { ok: boolean }).ok) process.exit(1);
-  const r2 = await ganchos.post!.arte!({ ...(ctx as object), etapa: "arte" } as never);
+  // A matéria não tem arte: a capa é a própria foto.
+  const r2 = ramo === "post" ? await ganchos.post!.arte!({ ...(ctx as object), etapa: "arte" } as never) : r1;
   console.log("arte:", JSON.stringify(r2).slice(0, 300));
   if (!(r2 as { ok: boolean }).ok) process.exit(1);
 
-  const lida = await deps.pecas.ler("post", ap.pecaId);
+  const lida = await deps.pecas.ler(ramo, ap.pecaId);
   const imagens = (r2 as { resumo?: { imagens?: string[] } }).resumo?.imagens ?? ap.resumo.imagens;
   const linha = await enfileirar(
     p,
-    { ramo: "post", pecaId: ap.pecaId, hash: lida!.hashAtual, publicarEm: ap.publicarEm, avisos: ap.avisos, resumo: { ...ap.resumo, imagens } },
+    { ramo, pecaId: ap.pecaId, hash: lida!.hashAtual, publicarEm: ap.publicarEm, avisos: ap.avisos, resumo: { ...ap.resumo, imagens } },
     deps,
   );
   console.log("fila:", linha?.estado, linha?.hashArtefato?.slice(0, 12));

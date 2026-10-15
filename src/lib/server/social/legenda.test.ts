@@ -201,7 +201,19 @@ describe("hashtags", () => {
     // estudante. Foi essa inferência larga que produziu #EstudarNosEUA.
     expect(tags).not.toContain("#EstudarNosEUA");
     expect(tags).not.toContain("#EstudanteInternacional");
-    expect(tags).toContain("#ProfissionaisNosEUA");
+    // Com o teto de cinco (14/10/2026), o enquadramento de profissão fica fora.
+    expect(tags.length).toBeLessThanOrEqual(5);
+  });
+
+  it("sai sempre de três a cinco, completando com país e editoria (regra do dono, 14/10/2026)", () => {
+    const poucas = hashtagsDaPauta({ titulo: "Reajuste de 3,6% nos pagamentos", resumo: "", categoria: "custo_de_vida", pais: "US" } as never);
+    expect(poucas.length).toBeGreaterThanOrEqual(3);
+    expect(poucas).toContain("#CustoDeVida");
+    const muitas = hashtagsDaPauta(
+      { titulo: "Fed, inflação, juros, emprego e dólar mexem com a bolsa nos EUA", resumo: "Federal Reserve, Wall Street, Nasdaq, S&P 500", categoria: "economia", pais: "US" } as never,
+      ["#Fed", "#Inflacao", "#Juros", "#WallStreet", "#Dolar", "#Bolsa"],
+    );
+    expect(muitas.length).toBeLessThanOrEqual(5);
   });
 
   it("com contexto real de estudo, #EstudarNosEUA é válida", () => {

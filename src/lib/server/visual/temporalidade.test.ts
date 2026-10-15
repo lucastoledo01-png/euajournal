@@ -112,13 +112,13 @@ describe("imagem antiga que continua válida", () => {
     expect(r.temporalRelevanceScore).toBeGreaterThan(50);
   });
 
-  it("retrato oficial antigo da pessoa certa passa", () => {
+  it("retrato oficial recente da pessoa certa passa", () => {
     const juiza = { nome: "Jane Doe", tipo: "public_official" } as EntidadeVisual;
     const r = analisarTemporalidade(
       {
-        sourceAssetId: "File:Official portrait of Judge Jane Doe 2015.jpg",
+        sourceAssetId: "File:Official portrait of Judge Jane Doe 2023.jpg",
         imageContextType: "official_portrait",
-        metadata: { data: "2015", descricao: "Official portrait of Judge Jane Doe." },
+        metadata: { data: "2023", descricao: "Official portrait of Judge Jane Doe." },
       },
       { titulo: "Juíza Jane Doe decide sobre o Diversity Visa", entidade: juiza, centralidade: 100 },
       2026,
@@ -126,6 +126,18 @@ describe("imagem antiga que continua válida", () => {
 
     expect(r.recusa).toBeNull();
     expect(r.historicalEventSpecific).toBe(false);
+  });
+
+  /** 14/10/2026: o Lula do começo dos anos 2000 numa pauta de decreto de 2026. */
+  it("retrato com mais de cinco anos é recusado: a pessoa aparece como está hoje", () => {
+    const lula = { nome: "Luiz Inácio Lula da Silva", tipo: "person" } as EntidadeVisual;
+    const r = analisarTemporalidade(
+      { sourceAssetId: "File:Lula 2015.jpg", imageContextType: "entity_portrait", metadata: { data: "2015" } },
+      { titulo: "Lula regulamenta marco dos games", entidade: lula, centralidade: 100 },
+      2026,
+    );
+    expect(r.recusa).toBe("TEMPORAL_MISMATCH");
+    expect(r.detalhe).toContain("como está hoje");
   });
 
   it("imagem sem data não é recusada por falta de data", () => {

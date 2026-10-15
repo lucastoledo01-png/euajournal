@@ -252,8 +252,9 @@ export function pautaSensivelAoTempo(titulo: string, resumo = ""): boolean {
 
 /** Tolerância de idade por tipo de imagem, em anos. */
 const TOLERANCIA: Record<string, { ok: number; limite: number }> = {
-  official_portrait: { ok: 15, limite: 45 },
-  entity_portrait: { ok: 10, limite: 35 },
+  // Retrato é da pessoa como ela está hoje (14/10/2026): ver LIMITE_DO_RETRATO.
+  official_portrait: { ok: 2, limite: 8 },
+  entity_portrait: { ok: 2, limite: 8 },
   institution: { ok: 15, limite: 45 },
   company: { ok: 15, limite: 45 },
   place: { ok: 20, limite: 50 },
@@ -261,6 +262,16 @@ const TOLERANCIA: Record<string, { ok: number; limite: number }> = {
   exact_event: { ok: 1, limite: 5 },
   historical_event: { ok: 0, limite: 1 },
 };
+
+/**
+ * Retrato de pessoa com data conhecida e mais de cinco anos é recusado
+ * (14/10/2026). A newsletter de 15/10 saiu com um Lula do começo dos anos 2000,
+ * da Agência Senado, numa pauta de decreto de 2026, e o dono pediu "uma foto
+ * do Lula de 2026". A régua antiga aceitava retrato de até 35 anos e só
+ * recusava idade em pauta de indicador. Sem data, continua sem recusa.
+ */
+export const LIMITE_DO_RETRATO = 5;
+const TIPOS_DE_RETRATO = new Set(["official_portrait", "entity_portrait"]);
 
 export type AnaliseTemporal = {
   assetDate: number | null;
@@ -348,6 +359,9 @@ export function analisarTemporalidade(
     recusa = "SEMANTIC_CONTEXT_MISMATCH";
     detalhe =
       `eixo "${conflito.eixo}": a pauta é ${conflito.pauta} e a imagem é ${conflito.imagem}`;
+  } else if (TIPOS_DE_RETRATO.has(tipo) && idade !== null && idade > LIMITE_DO_RETRATO) {
+    recusa = "TEMPORAL_MISMATCH";
+    detalhe = `retrato de ${idade} anos, acima do teto de ${LIMITE_DO_RETRATO}: a pessoa aparece como está hoje`;
   } else if (sensivel && idade !== null && idade > limite) {
     recusa = "TEMPORAL_MISMATCH";
     detalhe = `pauta de indicador com imagem de ${idade} anos, acima do teto de ${limite}`;

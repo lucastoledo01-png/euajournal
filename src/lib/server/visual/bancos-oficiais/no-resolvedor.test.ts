@@ -10,7 +10,7 @@ import type { DefinicaoDoBanco, FotoDoBanco } from "./tipos";
 
 const ENV = { PEXELS_API_KEY: "chave-de-teste" };
 
-/** Wikidata devolve Flávio Bolsonaro (Q5), o Commons uma foto de 2019 dele. */
+/** Wikidata devolve Flávio Bolsonaro (Q5), o Commons uma foto de 2023 dele. */
 function mundo() {
   return vi.fn(async (entrada: string | URL) => {
     const url = String(entrada);
@@ -25,7 +25,7 @@ function mundo() {
               claims: {
                 P31: [{ mainsnak: { datavalue: { value: { id: "Q5" } } } }],
                 // O retrato de referência (06/10/2026): sem ele, nenhuma foto do Flávio teria a identidade conferida.
-                P18: [{ mainsnak: { datavalue: { value: "Flávio Bolsonaro 2019.jpg" } } }],
+                P18: [{ mainsnak: { datavalue: { value: "Flávio Bolsonaro 2023.jpg" } } }],
               },
             },
           },
@@ -38,19 +38,19 @@ function mundo() {
           query: {
             pages: {
               "1": {
-                title: "File:Flávio Bolsonaro 2019.jpg",
+                title: "File:Flávio Bolsonaro 2023.jpg",
                 imageinfo: [
                   {
-                    url: "https://upload.wikimedia.org/Flavio_Bolsonaro_2019.jpg",
-                    descriptionurl: "https://commons.wikimedia.org/wiki/File:Flavio_Bolsonaro_2019.jpg",
+                    url: "https://upload.wikimedia.org/Flavio_Bolsonaro_2023.jpg",
+                    descriptionurl: "https://commons.wikimedia.org/wiki/File:Flavio_Bolsonaro_2023.jpg",
                     width: 2400,
                     height: 1600,
                     mime: "image/jpeg",
                     extmetadata: {
                       LicenseShortName: { value: "CC BY 2.0" },
                       Artist: { value: "Alguém" },
-                      ImageDescription: { value: "Flávio Bolsonaro em 2019" },
-                      DateTimeOriginal: { value: "2019-03-01" },
+                      ImageDescription: { value: "Flávio Bolsonaro em 2023" },
+                      DateTimeOriginal: { value: "2023-03-01" },
                     },
                   },
                 ],
@@ -111,7 +111,7 @@ const aprovaTudo: Conferente = async () => ({
 });
 
 describe("bancos oficiais no resolvedor", () => {
-  it("ligados: a foto atual do banco oficial ganha da foto de 2019 do Commons, com o crédito curto", async () => {
+  it("ligados: a foto atual do banco oficial ganha da foto de 2023 do Commons, com o crédito curto", async () => {
     const banco = camaraFalsa([foto("velha", "2025-03-10"), foto("nova", "2026-05-21")]);
     const r = await resolveVisualAsset(PAUTA, {
       env: ENV,
@@ -185,14 +185,14 @@ describe("bancos oficiais no resolvedor", () => {
     const banco = camaraFalsa([foto("bolha", "2026-05-21")]);
     const r = await buscarSegundaFoto(
       PAUTA,
-      { imageUrl: "https://upload.wikimedia.org/Flavio_Bolsonaro_2019.jpg" },
+      { imageUrl: "https://upload.wikimedia.org/Flavio_Bolsonaro_2023.jpg" },
       {
         nome: "Flávio Bolsonaro",
         normalizado: "flavio bolsonaro",
         tipo: "politician",
         qid: "Q1",
         // A bolha de pessoa exige o retrato de referência (06/10/2026).
-        imagemPrincipal: "Flávio Bolsonaro 2019.jpg",
+        imagemPrincipal: "Flávio Bolsonaro 2023.jpg",
         categoriaCommons: null,
         siteOficial: null,
         origem: "teste",

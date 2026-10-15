@@ -104,6 +104,7 @@ import { gravarArtigosAgendados, horariosDoPortal } from "../ramos/portal";
 import { gravarCustos, gravarVeredito, vereditoDaPeca } from "../ramos/registro";
 import { lancarCustosDoInstagram, pecasDoInstagram } from "../ramos/instagram";
 import { hashtagsLigadasNoProjeto } from "../social/legenda-final";
+import { urlDaFotoInteira } from "../visual/foto-inteira";
 
 export type RunNewsroomOptions = {
   /** Projeto para o qual a edição é produzida. Sem valor, usa o projeto semente. */
@@ -332,6 +333,17 @@ function fotoNaProporcao(url: string): string {
   }
 }
 
+/**
+ * A foto do e-mail, inteira (14/10/2026). Origem conhecida passa pela rota que
+ * compõe a foto inteira sobre ela mesma desfocada em 5:3, então nada é cortado
+ * (ver `visual/foto-inteira.ts`). Origem desconhecida segue o caminho antigo.
+ */
+function fotoDoEmail(url: string): string {
+  const limpa = (url || "").replace(/&amp;/g, "&");
+  const inteira = urlDaFotoInteira(limpa);
+  return inteira !== limpa ? inteira : fotoNaProporcao(url);
+}
+
 /** A regra de 05/10/2026, desligada em 14/10/2026: a newsletter mantém a pauta sem foto. */
 const PAUTA_SEM_FOTO_CAI_DA_NEWSLETTER = false;
 
@@ -487,7 +499,7 @@ export function renderEditionToHtml(
         </h2>
         ${
           imagem
-            ? `<img src="${escapeHtml(fotoNaProporcao(imagem))}" alt="" width="${FOTO_LARGURA}" height="${FOTO_ALTURA}" style="${ESTILO_DA_FOTO}${recorteDaFoto(imagem).css}margin:0 0 14px 0;" />${creditoHtml}`
+            ? `<img src="${escapeHtml(fotoDoEmail(imagem))}" alt="" width="${FOTO_LARGURA}" height="${FOTO_ALTURA}" style="${ESTILO_DA_FOTO}${recorteDaFoto(imagem).css}margin:0 0 14px 0;" />${creditoHtml}`
             : ""
         }
         ${corpoDoTexto(s.summary, `font-family:${fonte};font-size:16px;line-height:1.62;color:${TINTA_SUAVE};margin:0 0 12px 0;`)}
@@ -505,7 +517,7 @@ export function renderEditionToHtml(
 
         ${
           imagem
-            ? `<img src="${escapeHtml(fotoNaProporcao(imagem))}" alt="" width="${FOTO_LARGURA}" height="${FOTO_ALTURA}" style="${ESTILO_DA_FOTO}${recorteDaFoto(imagem).css}margin:0 0 18px 0;" />${creditoHtml}`
+            ? `<img src="${escapeHtml(fotoDoEmail(imagem))}" alt="" width="${FOTO_LARGURA}" height="${FOTO_ALTURA}" style="${ESTILO_DA_FOTO}${recorteDaFoto(imagem).css}margin:0 0 18px 0;" />${creditoHtml}`
             : ""
         }
 

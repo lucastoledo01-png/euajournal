@@ -165,7 +165,7 @@ describe("HTML da edição", () => {
    * deitada ocupava um terço. Na mesma edição isso vira rolagem sem fim entre
    * um título e o próximo, que foi o que o dono relatou.
    */
-  it("a foto sai recortada na proporção fixa, e não com altura livre", () => {
+  it("a foto sai inteira na proporção fixa, pela rota da foto inteira, e não com altura livre (14/10/2026)", () => {
     // A chave do mapa é a identidade da pauta, a mesma que o render usa. Montar
     // a chave à mão aqui faria o teste passar com a imagem ausente.
     const primeira = EDICAO.stories[0];
@@ -180,9 +180,9 @@ describe("HTML da edição", () => {
     const img = html.match(/<img[^>]+pexels[^>]*>/)?.[0] ?? "";
 
     expect(img).not.toContain("height:auto");
-    expect(img).toContain("object-fit:cover");
-    // Corte na origem: é o que o Outlook recebe, já que ele ignora o CSS.
-    expect(img).toContain("fit=crop");
-    expect(img).toContain("h=360");
+    expect(img).toContain('height="360"');
+    // A rota compõe a foto inteira em 5:3: nada é cortado, nem no Outlook.
+    expect(img).toContain("/api/visual/foto-inteira?src=");
+    expect(img).toContain(encodeURIComponent("https://images.pexels.com/photos/3751006/"));
   });
 });

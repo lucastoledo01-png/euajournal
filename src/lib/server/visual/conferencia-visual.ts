@@ -76,8 +76,12 @@ numa pauta de custo de vida ou um escritório numa pauta de trabalho. Aprove se
 ela é coerente com o tema e não sugere um fato, um lugar ou uma pessoa
 específica que a pauta não cita. "É genérica" e "não identifica o órgão" NÃO são
 motivos de recusa aqui.
-Continuam sendo recusa, sem exceção: pessoa identificável, texto legível como
-assunto, cena de outro país, logotipo ou marca de empresa em destaque, assunto
+Pessoa ANÔNIMA que representa o grupo afetado pela pauta (aposentados numa
+pauta de aposentadoria, trabalhadores numa de emprego) PODE ficar, mesmo com o
+rosto visível: é a regra do dono desde 14/10/2026, e ela vale acima da regra
+geral de pessoa identificável. Continua recusa a pessoa famosa ou reconhecível
+que a pauta não cita, criança em destaque, e gente que não é do grupo da pauta.
+Continuam sendo recusa, sem exceção: texto legível como assunto, cena de outro país, logotipo ou marca de empresa em destaque, assunto
 homônimo e cena sem relação com o tema.
 Também é recusa a cena de ocasião PRIVADA ou festiva que um leitor tomaria pelo
 lugar do fato: salão decorado, casamento, festa, cerimônia, banquete, buffet.

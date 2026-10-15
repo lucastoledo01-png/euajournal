@@ -33,7 +33,7 @@ describe("a foto inteira do e-mail (14/10/2026)", () => {
     expect(origemPermitida("https://exemplo.com/x.jpg")).toBe(false);
     expect(urlDaFotoInteira("https://exemplo.com/x.jpg")).toBe("https://exemplo.com/x.jpg");
     expect(urlDaFotoInteira("https://images.pexels.com/photos/1/a.jpeg", "https://euajournal.com")).toBe(
-      "https://euajournal.com/api/visual/foto-inteira?src=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1%2Fa.jpeg",
+      "https://euajournal.com/api/visual/foto-inteira?v=2&src=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1%2Fa.jpeg",
     );
   });
 

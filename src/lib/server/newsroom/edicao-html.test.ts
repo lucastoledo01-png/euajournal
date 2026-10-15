@@ -182,7 +182,7 @@ describe("HTML da edição", () => {
     expect(img).not.toContain("height:auto");
     expect(img).toContain('height="360"');
     // A rota compõe a foto inteira em 5:3: nada é cortado, nem no Outlook.
-    expect(img).toContain("/api/visual/foto-inteira?src=");
+    expect(img).toContain("/api/visual/foto-inteira?v=2&amp;src=");
     expect(img).toContain(encodeURIComponent("https://images.pexels.com/photos/3751006/"));
   });
 });

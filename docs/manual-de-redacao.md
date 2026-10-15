@@ -152,8 +152,11 @@ código não lia.
   o título do Tesouro, o formulário. Não pelo fundador nem por quem assinou a lei.
 - Matéria sobre benefício de um grupo (aposentados) aceita o grupo na foto: o
   dono aprovou "um casal de idosos nos EUA, bandeira dos EUA com idosos". Foi
-  usado à mão (Pexels 8806113, Mike Jones). No código, a cena ainda proíbe
-  pessoa identificável (regra de 18/09/2026); mudar isso é decisão pendente.
+  usado à mão (Pexels 8806113, Mike Jones). DECIDIDO no mesmo dia ("pode
+  liberar o grupo afetado na busca"): a pergunta da cena e a conferência
+  visual aceitam gente anônima do grupo afetado. Retrato, multidão, criança em
+  destaque, famoso não citado e nacionalidade pela aparência continuam fora.
+  Isto supera, para esse caso, a regra de 18/09/2026 em `decisoes.md`.
 - Instagram: de 3 a 5 hashtags por legenda (regra do dono, 14/10/2026). O
   código completa o piso com o país e a editoria da pauta, e corta acima de
   cinco. Só aparecem com `settings.instagram.hashtags = true`.

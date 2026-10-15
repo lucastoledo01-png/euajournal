@@ -95,14 +95,16 @@ describe("as duas proibições do dono", () => {
    * representar um grupo. No caso de "brasileiros nos EUA" seria inferir
    * nacionalidade por aparência, e o caminho não é acertar melhor: é não fazer.
    */
-  it("recusa consulta que pede gente", () => {
-    for (const q of [
-      "happy family buying house",
-      "businessman office desk",
-      "crowd waiting in line",
-      "portrait of a worker",
-    ]) {
+  it("recusa consulta que pede retrato, multidão ou criança", () => {
+    for (const q of ["crowd waiting in line", "portrait of a worker", "children playing park"]) {
       expect(consultaProibida(q), q).not.toBeNull();
+    }
+  });
+
+  /** Decisão do dono de 14/10/2026: o grupo afetado pela notícia pode aparecer. */
+  it("deixa passar o grupo afetado, anônimo", () => {
+    for (const q of ["senior couple american flag", "construction workers on site", "retired people porch united states"]) {
+      expect(consultaProibida(q), q).toBeNull();
     }
   });
 
@@ -132,9 +134,8 @@ describe("as duas proibições do dono", () => {
 
   it("pega plural e derivada, porque a régua casa palavra inteira", () => {
     for (const q of [
-      "persons waiting at the airport",
-      "peoples of new york street",
-      "construction workers on site",
+      "portraits on a wall",
+      "crowds of new york street",
       "newspapers on a desk",
     ]) {
       expect(consultaProibida(q), q).not.toBeNull();
@@ -155,11 +156,11 @@ describe("as duas proibições do dono", () => {
   it("a proibição roda sobre a resposta do modelo, não só sobre a instrução", async () => {
     const cena = await cenaDaPauta(PAUTA, {
       env: ENV,
-      fetcher: respondendo({ objeto: "família feliz na casa nova", consulta: "happy family new house" }),
+      fetcher: respondendo({ objeto: "retrato de um corretor", consulta: "portrait real estate agent office" }),
     });
 
     expect(cena.falhou).toBe(true);
-    expect(cena.motivo).toContain("family");
+    expect(cena.motivo).toContain("portrait");
   });
 });
 
@@ -226,10 +227,10 @@ describe("o que a revisão adversarial pegou", () => {
     expect(cena.custoUsd).toBe(0);
   });
 
-  /** Plural irregular, que o sufixo simples não cobre. */
-  it("pega plural irregular de pessoa", () => {
+  /** Desde 14/10/2026 gente anônima do grupo afetado passa; quem a julga é a conferência visual. */
+  it("não barra mais gente anônima pela palavra", () => {
     for (const q of ["businessmen shaking hands", "men walking downtown", "women in an office"]) {
-      expect(consultaProibida(q), q).not.toBeNull();
+      expect(consultaProibida(q), q).toBeNull();
     }
   });
 });

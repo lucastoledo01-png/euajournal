@@ -152,9 +152,14 @@ REGRAS DURAS:
 - A cena é no PAÍS DA PAUTA, que vem na entrada. Sem país declarado, assuma os
   Estados Unidos. Se a busca puder trazer outro país, acrescente o estado ou a
   cidade que a matéria cita, ou "united states", ou "brazil".
-- NUNCA pessoa identificável. Nada de retrato, rosto, multidão em close nem
-  "família feliz". Se a cena pedir gente, escolha o lugar onde a gente está,
-  não a gente.
+- O GRUPO AFETADO pela notícia pode aparecer (decisão do dono, 14/10/2026):
+  aposentados numa pauta de aposentadoria, trabalhadores numa de emprego,
+  consumidores numa de preço. Gente anônima, de banco de imagem, e de
+  preferência com algo que situe nos EUA (a bandeira, uma rua americana).
+  Ex.: "senior couple american flag". Continua proibido: pessoa famosa ou
+  nomeada que a pauta não cita, criança em destaque, e escolher gente pela
+  aparência para dizer nacionalidade ("brasileiros nos EUA" não se fotografa
+  pelo rosto). Pauta sem grupo afetado claro pede o lugar ou o objeto.
 - NUNCA texto na imagem, salvo o nome do próprio objeto da notícia. Nada de placa legível, cartaz, manchete de jornal,
   tela com texto, letreiro. A peça já tem a manchete escrita por cima.
 - E NÃO PEÇA o que só se fotografa com placa. "casas à venda" devolve placa de
@@ -264,11 +269,13 @@ const PROIBIDAS = [
    * Plural e derivada entram, porque a régua casa palavra inteira: "persons"
    * não é "person".
    */
-  "person", "persons", "people", "peoples", "family", "families",
-  "portrait", "portraits", "faces", "crowd", "crowds", "human", "humans",
-  "businessman", "businessmen", "businesswoman", "businesswomen",
-  "child", "children", "student", "students", "men", "women",
-  "worker", "workers", "sign", "signs", "signage", "banner", "banners",
+  /*
+   * Gente anônima do grupo afetado saiu da lista em 14/10/2026 (decisão do
+   * dono: "pode liberar o grupo afetado na busca"). Ficam retrato, close de
+   * rosto, multidão e criança, que continuam fora.
+   */
+  "portrait", "portraits", "faces", "crowd", "crowds",
+  "child", "children", "sign", "signs", "signage", "banner", "banners",
   "poster", "posters", "billboard", "billboards", "newspaper", "newspapers",
   "headline", "headlines", "lettering", "typography", "logo", "logos",
   /*

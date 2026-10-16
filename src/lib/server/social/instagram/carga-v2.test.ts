@@ -97,7 +97,7 @@ const SEM_FOTO = { motivo: "NO_VALID_IMAGE", asset: null, entidade: { nome: "USC
 const COM_FOTO = {
   motivo: "",
   asset: {
-    id: "asset-1",
+    id: "5c6d7e8f-1a2b-4c3d-9e4f-0a1b2c3d4e5f",
     source: "wikimedia_commons",
     sourceAssetId: "File:USCIS.jpg",
     sourcePageUrl: "https://commons.wikimedia.org/wiki/File:USCIS.jpg",
@@ -180,7 +180,7 @@ describe("a linha que o pipeline grava é aceita pelo worker", () => {
       imageUrl: "https://upload.wikimedia.org/wikipedia/commons/6/6b/USCIS.jpg",
       attribution: "Foto: Alguém / Wikimedia Commons / CC BY-SA 4.0",
     });
-    expect(leitura.carga.visualAssetId).toBe("asset-1");
+    expect(leitura.carga.visualAssetId).toBe("5c6d7e8f-1a2b-4c3d-9e4f-0a1b2c3d4e5f");
   });
 
   it("nenhuma linha do store cai na falha fechada por acidente", async () => {

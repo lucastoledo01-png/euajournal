@@ -18,6 +18,27 @@ import type { AssetVisual, StatusDeDireitos, TipoDeEntidade } from "./tipos";
  *   não uma.
  */
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * O id que pode ir para `visual_asset_id`, ou nulo.
+ *
+ * `social_posts.visual_asset_id` e `editorial_history.visual_asset_id` são
+ * chave estrangeira para `visual_assets`, e nem todo asset mora lá. A foto do
+ * acervo próprio chega com o id da tabela do ACERVO: em 15/10/2026 quatro das
+ * cinco fotos do dia eram do acervo, o insert dos posts violou a chave, e o
+ * dia saiu sem post nenhum. Asset de fonte externa que não chegou a ser
+ * registrado fica com o id da origem, que nem é uuid.
+ *
+ * Nulo aqui não perde nada: a foto inteira continua gravada no registro da
+ * peça (`content_json.visual` no post), que é onde a antirrepetição lê.
+ */
+export function idNaBiblioteca(asset: Pick<AssetVisual, "id" | "source"> | null | undefined): string | null {
+  if (!asset?.id) return null;
+  if (asset.source === "acervo_proprio") return null;
+  return UUID.test(asset.id) ? asset.id : null;
+}
+
 const COLUNAS =
   "id,entity_name,entity_normalized,entity_type,source,source_asset_id,source_page_url,image_url," +
   "author,license,license_url,attribution,rights_statement,rights_status,rights_checked_at," +

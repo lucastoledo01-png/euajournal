@@ -5,6 +5,7 @@ import { criarHistoricoStore } from "../editorial/history";
 import { registroDoPost } from "./historico-do-feed";
 import type { PostGerado } from "./gerador";
 import type { Vaga } from "./agenda";
+import { idNaBiblioteca } from "../visual/biblioteca";
 import type { ResultadoVisual } from "../visual/tipos";
 import type { ArtefatoDeSlide } from "./artefato";
 import type { FormatoDoPost } from "./carrossel/formato";
@@ -404,7 +405,7 @@ export function criarSocialPostsStore(client: SupabaseClient, fila: OpcoesDaFila
           origin_channel: p.origem.originChannel,
           origin_story_id: p.origem.originStoryId,
           editorial_score: p.post.pauta.pontuacao.total,
-          visual_asset_id: asset?.id ?? null,
+          visual_asset_id: idNaBiblioteca(asset),
 
           social_guard_status: p.post.veredicto.passed ? "passed" : "failed",
           social_guard_reasons: {

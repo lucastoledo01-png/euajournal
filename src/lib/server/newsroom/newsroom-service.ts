@@ -63,7 +63,7 @@ import { descreverModoVisual, diagnosticoVazio, modoDoResolvedorVisual } from ".
 import type { DiagnosticoVisual } from "../visual/modo";
 import { confirmarImagemPublicada, imagemDaPauta } from "../visual/acervo/imagem-da-pauta";
 import { ehUltimoRecurso } from "../visual/bandeira";
-import { criarBiblioteca } from "../visual/biblioteca";
+import { criarBiblioteca, idNaBiblioteca } from "../visual/biblioteca";
 import type { ResultadoVisual } from "../visual/tipos";
 import { extrairEntidades } from "../editorial/classificador";
 import { montarPacotesDasPautas } from "../editorial/pacote-factual";
@@ -2832,7 +2832,7 @@ async function executarRedacaoDoDia(
                * não responde se a imagem podia ser publicada.
                */
               if (asset) {
-                registro.visualAssetId = asset.id ?? null;
+                registro.visualAssetId = idNaBiblioteca(asset);
                 registro.imagemFonte = asset.source;
                 registro.imagemLicenca = asset.license;
                 registro.imagemAutor = asset.author;

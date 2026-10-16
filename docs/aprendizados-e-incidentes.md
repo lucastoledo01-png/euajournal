@@ -2228,3 +2228,26 @@ autocorretor corrompem valores de chave silenciosamente.
 ```bash
 LC_ALL=C grep -c '[^ -~]' .env    # tem que ser 0
 ```
+
+### 15/10/2026: cinco posts escolhidos, zero gravados, por causa do id da foto
+
+**Sintoma.** A produção de 15/10 escolheu 5 posts, todos com foto, e gravou
+nenhum. O aviso disse "0 posts" e nada mais. O motivo estava só em
+`social_cycle_diagnostic.diagnostico.errors`: `insert or update on table
+"social_posts" violates foreign key constraint
+"social_posts_visual_asset_id_fkey"`.
+
+**Causa.** `visual_asset_id` é chave estrangeira para `visual_assets`. A foto
+do acervo próprio (primeiro lote em 14/10) chega com o id da tabela do ACERVO,
+e quatro das cinco fotos do dia eram do acervo. O insert é um lote só, então
+uma linha recusada derrubou as cinco. `editorial_history.visual_asset_id` tem a
+mesma chave e o mesmo risco na newsletter.
+
+**Corrigido.** `idNaBiblioteca` (`visual/biblioteca.ts`) só devolve id de
+asset que mora em `visual_assets`: nunca o do acervo, e só uuid. O post e o
+histórico da newsletter usam a função. A foto continua inteira em
+`content_json.visual`, que é onde a antirrepetição lê.
+
+**Lição.** Fonte nova de asset é mais um escritor de toda coluna que guarda o
+id do asset. Chave estrangeira com nome genérico (`visual_asset_id`) parece
+aceitar qualquer asset, e só aceita os de uma tabela.

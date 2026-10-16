@@ -7,6 +7,7 @@ import {
 } from "./social-posts-store";
 import type { PostParaGravar } from "./social-posts-store";
 import type { RegistroHistorico } from "../editorial/history";
+import { idNaBiblioteca } from "../visual/biblioteca";
 
 /**
  * Onde um post do social vira linha, e as duas coisas que ele não pode fazer:
@@ -375,6 +376,44 @@ describe("registro de direito de imagem", () => {
     // Regra do dono: nenhuma tira de crédito na arte do Instagram, para licença nenhuma.
     expect(v.atribuicaoImpressa).toBe(false);
     expect(v.attribution).toContain("CC BY-SA");
+  });
+
+  /*
+   * 15/10/2026: quatro das cinco fotos do dia vieram do acervo, com o id da
+   * tabela do acervo em `visual_asset_id`, que é chave estrangeira para
+   * `visual_assets`. O insert foi recusado e o dia saiu sem post.
+   */
+  it("a foto do acervo não vai para visual_asset_id, e a foto fica registrada no content_json", async () => {
+    const { client, gravadas } = bancoFalso();
+    const doAcervo = {
+      ...dominioPublico,
+      id: "3f2a9c1e-7b4d-4e8a-9c0f-1a2b3c4d5e6f",
+      source: "acervo_proprio",
+      sourceAssetId: "pessoas-br-lula-retrato-01.jpg",
+    };
+    await criarSocialPostsStore(client).gravar([
+      paraGravar({ visual: { asset: doAcervo, motivo: null, entidade: null, fontesConsultadas: [] } }),
+    ]);
+
+    expect(gravadas[0].visual_asset_id).toBeNull();
+    const v = (gravadas[0].content_json as { visual: Record<string, unknown> }).visual;
+    expect(v.source).toBe("acervo_proprio");
+  });
+
+  it("a foto registrada na biblioteca continua indo para visual_asset_id", async () => {
+    const { client, gravadas } = bancoFalso();
+    const daBiblioteca = { ...dominioPublico, id: "9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e" };
+    await criarSocialPostsStore(client).gravar([
+      paraGravar({ visual: { asset: daBiblioteca, motivo: null, entidade: null, fontesConsultadas: [] } }),
+    ]);
+
+    expect(gravadas[0].visual_asset_id).toBe("9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e");
+  });
+
+  it("id de origem que não é uuid não vai para a chave estrangeira", () => {
+    expect(idNaBiblioteca({ id: "va-1", source: "wikimedia_commons" })).toBeNull();
+    expect(idNaBiblioteca({ id: "nyse-bandeira-gigante", source: "wikimedia_commons" })).toBeNull();
+    expect(idNaBiblioteca(null)).toBeNull();
   });
 
   it("sem foto, o registro conta a decisão e o porquê dela", async () => {

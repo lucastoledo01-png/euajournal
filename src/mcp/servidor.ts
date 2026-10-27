@@ -100,10 +100,13 @@ export function criarServidor(config: ConfigDaPlataforma): McpServer {
     {
       title: "Pautas disponíveis",
       description: "Lista as pautas com pacote factual e foto que ainda não viraram post neste projeto.",
-      inputSchema: {},
+      inputSchema: {
+        dias: z.number().int().min(1).max(60).optional().describe("Quantos dias para trás procurar. Padrão 30."),
+      },
       annotations: { readOnlyHint: true },
     },
-    ferramenta(() => chamarPlataforma(config, "pautas")),
+    async ({ dias }) =>
+      ferramenta(() => chamarPlataforma(config, "pautas", { consulta: { dias: dias ? String(dias) : undefined } }))(),
   );
 
   servidor.registerTool(

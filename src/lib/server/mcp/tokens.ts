@@ -124,3 +124,64 @@ export async function requireTokenDoMcp(
   await deps.tokens.marcarUso(linha.id).catch(() => undefined);
   return { ok: true, acesso: { projeto, rotulo: linha.rotulo, quem: `dono:via-claude:${linha.rotulo}` } };
 }
+
+export type TokenDoPainel = {
+  id: string;
+  rotulo: string;
+  criadoEm: string;
+  usadoEm: string | null;
+  revogadoEm: string | null;
+};
+
+/** Os tokens do projeto, para a tela "Conectar ao Claude". Nunca o resumo, nunca o token. */
+export async function listarTokens(projectId: string): Promise<TokenDoPainel[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("tokens_do_mcp")
+    .select("id, rotulo, criado_em, usado_em, revogado_em")
+    .eq("project_id", projectId)
+    .order("criado_em", { ascending: false });
+  if (error) throw new Error(`tokens_do_mcp, leitura falhou: ${error.message}`);
+  return ((data ?? []) as Array<{ id: string; rotulo: string; criado_em: string; usado_em: string | null; revogado_em: string | null }>).map((l) => ({
+    id: l.id,
+    rotulo: l.rotulo,
+    criadoEm: l.criado_em,
+    usadoEm: l.usado_em,
+    revogadoEm: l.revogado_em,
+  }));
+}
+
+/** Cria o token e devolve o token inteiro, que não volta a aparecer. */
+export async function criarToken(projectId: string, rotulo: string): Promise<{ id: string; token: string }> {
+  const token = gerarTokenDoMcp();
+  const { data, error } = await getSupabaseAdminClient()
+    .from("tokens_do_mcp")
+    .insert({ project_id: projectId, rotulo, token_hash: resumoDoToken(token) })
+    .select("id")
+    .single();
+  if (error) throw new Error(`tokens_do_mcp, gravação falhou: ${error.message}`);
+  return { id: (data as { id: string }).id, token };
+}
+
+/** Revoga sem apagar: a autoria das tarefas entregues continua legível. */
+export async function revogarToken(projectId: string, id: string): Promise<void> {
+  const { error } = await getSupabaseAdminClient()
+    .from("tokens_do_mcp")
+    .update({ revogado_em: new Date().toISOString() })
+    .eq("project_id", projectId)
+    .eq("id", id)
+    .is("revogado_em", null);
+  if (error) throw new Error(`tokens_do_mcp, gravação falhou: ${error.message}`);
+}
+
+/** O rótulo que assina as entregas: minúsculas, números e hífen. */
+export function rotuloValido(bruto: unknown): string | null {
+  if (typeof bruto !== "string") return null;
+  const r = bruto
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return r.length >= 2 && r.length <= 40 ? r : null;
+}

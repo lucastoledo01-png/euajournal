@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import type { Project } from "@/lib/server/projects";
+import { comandoDeInstalacao } from "@/app/admin/[projeto]/claude/ConectarAoClaude";
 import {
   gerarTokenDoMcp,
   requireTokenDoMcp,
   resumoDoToken,
+  rotuloValido,
   type DepsDoAcesso,
   type LinhaDoToken,
 } from "./tokens";
@@ -75,5 +77,21 @@ describe("o token do MCP", () => {
     expect(resumoDoToken(token)).toMatch(/^[0-9a-f]{64}$/);
     expect(resumoDoToken(token)).not.toContain(token);
     expect(gerarTokenDoMcp()).not.toBe(gerarTokenDoMcp());
+  });
+});
+
+describe("a conexão pelo painel", () => {
+  it("o rótulo vira minúsculas, sem acento e com hífen; curto ou vazio é recusado", () => {
+    expect(rotuloValido("Lucas Mac")).toBe("lucas-mac");
+    expect(rotuloValido("  Notebook da João!! ")).toBe("notebook-da-joao");
+    expect(rotuloValido("a")).toBeNull();
+    expect(rotuloValido("")).toBeNull();
+    expect(rotuloValido(42)).toBeNull();
+  });
+
+  it("o comando registra o MCP online do site, com o token no cabeçalho", () => {
+    expect(comandoDeInstalacao("https://euajournal.com", "ejmcp_x")).toBe(
+      'claude mcp add --transport http --scope user euajournal https://euajournal.com/api/mcp --header "Authorization: Bearer ejmcp_x"',
+    );
   });
 });

@@ -42,8 +42,12 @@ O MCP mora na plataforma, em `https://<site>/api/mcp` (Streamable HTTP, sem
 sessão). O computador do usuário não instala servidor nenhum: o Claude só
 precisa da URL e do token.
 
-**Claude Code** (o que trabalha sozinho, em modo automático). O mesmo comando
-no Terminal do Mac e no PowerShell do Windows:
+**O jeito do usuário:** no painel, em `/admin/<projeto>/claude` ("Conectar ao
+Claude"), dar um nome ao computador e copiar o comando gerado. O painel cria o
+token, mostra uma vez e lista os computadores conectados, com "Revogar".
+
+**Claude Code** (no chat, ou sozinho em modo automático). O comando que o painel
+gera, o mesmo no Terminal do Mac e no PowerShell do Windows:
 
 ```bash
 claude mcp add --transport http --scope user euajournal https://<site>/api/mcp --header "Authorization: Bearer ejmcp_..."

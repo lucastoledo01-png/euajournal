@@ -40,6 +40,7 @@ const PROJETOS = {
       marca: { nome: "eua.journal", cor: "#000", logoUrl: null },
       capacidades: { coleta: "enforce" },
       moldes: {},
+      motor: "openai",
     },
   ],
 };

@@ -28,6 +28,20 @@ const PROJETOS = {
       marca: { nome: "eua.journal", cor: "#000", logoUrl: null },
       capacidades: { coleta: "enforce", newsletter: "enforce", social: "dry_run" },
       moldes: {},
+      motor: "openai",
+    },
+    {
+      id: "00000000-0000-4000-8000-000000000002",
+      slug: "teste-claude",
+      nome: "Teste Claude",
+      status: "active",
+      nicho: "teste",
+      timezone: "America/Sao_Paulo",
+      siteUrl: null,
+      marca: { nome: "Teste Claude", cor: "#000", logoUrl: null },
+      capacidades: { aprovacao: "enforce" },
+      moldes: {},
+      motor: "claude_mcp",
     },
   ],
 };
@@ -81,5 +95,16 @@ describe("home do painel", () => {
 
     const card = await screen.findByRole("link", { name: /eua\.journal/i });
     expect(card).toHaveAttribute("href", "/admin/desbuguei");
+  });
+
+  it("o card diz quem faz o trabalho de modelo do projeto", async () => {
+    vi.stubGlobal("fetch", responderPor(true));
+
+    render(<AdminPage />);
+
+    const automatico = await screen.findByRole("link", { name: /eua\.journal/i });
+    expect(automatico).toHaveTextContent("Motor: OpenAI (automático)");
+    const claude = await screen.findByRole("link", { name: /teste claude/i });
+    expect(claude).toHaveTextContent("Motor: Claude via MCP");
   });
 });

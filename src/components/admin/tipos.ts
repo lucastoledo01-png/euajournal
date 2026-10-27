@@ -22,6 +22,16 @@ export type ProjetoDoPainel = {
   capacidades: Partial<Record<string, EstadoDeCapacidade>>;
   /** Só o que o projeto declara. Molde ausente está ligado. */
   moldes: Partial<Record<string, boolean>>;
+  /** Quem faz o trabalho de modelo. Ver `lib/server/mcp/motor.ts`. */
+  motor: MotorDoProjeto;
+};
+
+/** Espelho de `MOTORES` em `lib/server/mcp/motor.ts`, para o cliente não importar código de servidor. */
+export type MotorDoProjeto = "openai" | "claude_mcp";
+
+export const ROTULO_DO_MOTOR: Record<MotorDoProjeto, string> = {
+  openai: "Motor: OpenAI (automático)",
+  claude_mcp: "Motor: Claude via MCP",
 };
 
 export type RespostaDeProjetos = {

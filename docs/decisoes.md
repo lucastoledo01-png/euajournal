@@ -2869,3 +2869,42 @@ Ficam aqui para não serem redescobertas como novidade.
   avatar do Instagram é candidato, mas tem detalhe demais para o tamanho.
   FECHADO: o site ganhou `src/app/icon.png` (o "eua" com o ponto sobre
   azul-marinho), e desde 06/10/2026 o avatar é esse mesmo ícone.
+
+## O motor Claude via MCP (27/10/2026)
+
+O dono quer perfis de dois tipos na mesma plataforma: os 100% automáticos com
+a OpenAI, como hoje, e os operados pelo usuário no Claude Desktop, conectado
+por MCP. Não é a API da Anthropic: é o Claude aplicativo, no plano do usuário.
+
+**O motor é do projeto**, em `settings.motor` (`mcp/motor.ts`). Ausente ou
+torto vale `openai`, o projeto de antes byte a byte. O card do painel diz qual é.
+
+**A inteligência fica na plataforma.** Cada chamada de modelo vira uma tarefa
+(`tarefas_do_claude`) com a instrução exata que a produção mandaria, o
+material e o esquema; o Claude entrega e a plataforma valida com as mesmas
+guardas e grava onde a produção grava. Instrução editável, memória da fila,
+regras aprovadas e exemplos chegam ao Claude do mesmo jeito que chegam à
+OpenAI.
+
+**Aprovação só no painel, sempre manual, e a reprovação volta para o Claude.**
+No motor Claude, `modoDoRamo` é manual mesmo com o automático declarado, o
+MCP não tem ferramenta de decidir, e a reprovação estaciona a peça esperando
+a correção do Claude, em vez de refazer no servidor. A plataforma não consegue
+acordar o aplicativo: o aviso vai pelo Telegram, e o Claude vê a pendência ao
+perguntar o estado do dia.
+
+**Zero chamada à OpenAI nesse motor, inclusive vetores.** Quem decide se duas
+matérias são o mesmo fato, ou se o fato já saiu no feed, é o Claude, com as
+comparações por regra (URL, entidades, impressão do acontecimento) rodando
+antes como rede.
+
+**Classificação com teto diário.** Mil candidatas por dia não cabem numa
+conversa: a plataforma filtra por regra e manda no máximo
+`settings.mcp.teto_de_classificacao` (padrão 120).
+
+**A ordem de construção** começa pelo post de peça única do Instagram: base
+(motor, token, tarefas, servidor local), texto e arte, foto, pacote e
+verificador, classificação e repetição, correções, cron. Carrossel, matéria e
+newsletter depois. O token é por usuário e por projeto, guardado só como
+resumo SHA-256, e o motor é conferido a cada chamada: voltar o projeto para
+`openai` corta o MCP na hora. Configuração em `docs/mcp.md`.

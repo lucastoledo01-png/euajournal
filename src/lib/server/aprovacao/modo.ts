@@ -3,6 +3,7 @@ import {
   type EstadoDaCapacidade,
   type ProjetoComCapacidades,
 } from "../capacidades";
+import { ehMotorClaude } from "../mcp/motor";
 import type { Ramo } from "./contrato";
 
 /**
@@ -40,8 +41,13 @@ function configDaAprovacao(projeto: ProjetoComCapacidades | null | undefined): R
  *
  * O erro de digitação cai no lado que ESPERA, e não no que publica: é a mesma
  * regra das capacidades, onde valor torto vira `off` e nunca `enforce`.
+ *
+ * No motor Claude via MCP (27/10/2026) é sempre manual, por decisão do dono:
+ * o que o Claude Desktop entrega só vai ao ar depois de alguém aprovar no
+ * painel, nem a peça sem aviso sai sozinha. Ver `mcp/motor.ts`.
  */
 export function modoDoRamo(projeto: ProjetoComCapacidades | null | undefined, ramo: Ramo): ModoDoRamo {
+  if (ehMotorClaude(projeto)) return "manual";
   const valor = configDaAprovacao(projeto)[ramo];
   return valor === "automatico" ? "automatico" : "manual";
 }

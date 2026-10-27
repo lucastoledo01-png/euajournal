@@ -36,10 +36,35 @@ Regras que não mudam com o motor:
 
    O token aparece uma vez. Perdeu, revoga (`--revogar <id> --aplicar`) e cria outro.
 
-## Conectar o Claude Desktop
+## Conectar o Claude (Mac ou Windows)
 
-O servidor roda na máquina do usuário, a partir desta cópia do repositório
-(`npm ci` feito). Em `~/Library/Application Support/Claude/claude_desktop_config.json`:
+O MCP mora na plataforma, em `https://<site>/api/mcp` (Streamable HTTP, sem
+sessão). O computador do usuário não instala servidor nenhum: o Claude só
+precisa da URL e do token.
+
+**Claude Code** (o que trabalha sozinho, em modo automático). O mesmo comando
+no Terminal do Mac e no PowerShell do Windows:
+
+```bash
+claude mcp add --transport http --scope user euajournal https://<site>/api/mcp --header "Authorization: Bearer ejmcp_..."
+```
+
+Para conferir: `claude mcp list` deve mostrar `euajournal` conectado. Para
+testar sem deploy, com a plataforma rodando na máquina (`npm run dev`), use
+`http://localhost:3000/api/mcp`.
+
+O token é segredo: não vai para o repositório, nem para print, nem para chat.
+Perdeu ou vazou, revoga no script (`--revogar <id> --aplicar`) e cria outro.
+
+**Claude Desktop pela interface** (conector personalizado) normalmente pede
+login por OAuth, que ainda não existe aqui. Fica para depois; o modo
+automático usa o Claude Code.
+
+### Servidor local (só desenvolvimento)
+
+`src/mcp/servidor.ts` é o mesmo conjunto de ferramentas por stdio, chamando
+as rotas `/api/mcp/<ferramenta>` por HTTP. Serve para depurar com o Claude
+Desktop apontado para a plataforma local:
 
 ```json
 {
@@ -51,7 +76,7 @@ O servidor roda na máquina do usuário, a partir desta cópia do repositório
         "/caminho/do/euajournal/src/mcp/servidor.ts"
       ],
       "env": {
-        "EUAJOURNAL_URL": "https://euajournal.com",
+        "EUAJOURNAL_URL": "http://localhost:3000",
         "EUAJOURNAL_MCP_TOKEN": "ejmcp_..."
       }
     }
@@ -59,11 +84,9 @@ O servidor roda na máquina do usuário, a partir desta cópia do repositório
 }
 ```
 
-Caminhos absolutos: o Claude Desktop não herda o PATH do terminal. O
-`/caminho/do/node` é o que `which node` mostra. Reinicie o Claude Desktop
-depois de salvar.
-
-O token é segredo: não vai para o repositório, nem para print, nem para chat.
+Atenção: em 27/10/2026 o Claude Desktop regravou o
+`claude_desktop_config.json` ao salvar preferências e a entrada sumiu. Se as
+ferramentas desaparecerem do Desktop, confira o arquivo.
 
 ## As ferramentas
 

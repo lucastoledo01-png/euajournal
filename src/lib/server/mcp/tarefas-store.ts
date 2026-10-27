@@ -61,7 +61,16 @@ export type TarefasStore = {
   proxima(projectId: string, tipo?: TipoDeTarefa): Promise<Tarefa | null>;
   doDia(projectId: string, editionDate: string): Promise<Tarefa[]>;
   entregar(id: string, resultado: unknown, quem: string): Promise<Tarefa>;
-  pedirReparo(id: string, resultado: unknown, motivos: string[], quem: string): Promise<Tarefa>;
+  /**
+   * Devolve a tarefa ao Claude com os motivos. A instrução nova, quando vem,
+   * substitui a gravada: o reparo da copy é o mesmo pedido com a lista do que
+   * corrigir no fim, como o reparo da esteira.
+   */
+  pedirReparo(id: string, resultado: unknown, motivos: string[], quem: string, instrucao?: Record<string, unknown>): Promise<Tarefa>;
+  /** Acrescenta ao resultado de uma tarefa entregue o que a plataforma concluiu depois (a guarda passou). */
+  anotar(id: string, resultado: unknown): Promise<Tarefa>;
+  /** Encerra sem publicar, com o motivo: pauta que nenhuma reescrita resolve. */
+  cancelar(id: string, motivos: string[]): Promise<Tarefa>;
 };
 
 export function ehTipoDeTarefa(valor: unknown): valor is TipoDeTarefa {
@@ -122,9 +131,20 @@ export function tarefasEmMemoria(agora: () => Date = () => new Date()): TarefasS
       Object.assign(t, { estado: "entregue", resultado, motivos: [], tentativas: t.tentativas + 1, entregueEm: agora().toISOString(), entreguePor: quem });
       return t;
     },
-    async pedirReparo(id, resultado, motivos, quem) {
+    async pedirReparo(id, resultado, motivos, quem, instrucao) {
       const t = achar(id);
       Object.assign(t, { estado: "reparar", resultado, motivos, tentativas: t.tentativas + 1, entreguePor: quem });
+      if (instrucao) t.instrucao = instrucao;
+      return t;
+    },
+    async anotar(id, resultado) {
+      const t = achar(id);
+      t.resultado = resultado;
+      return t;
+    },
+    async cancelar(id, motivos) {
+      const t = achar(id);
+      Object.assign(t, { estado: "cancelada", motivos });
       return t;
     },
   };
@@ -240,10 +260,23 @@ export function tarefasSupabase(client: SupabaseClient): TarefasStore {
         entregue_por: quem,
       });
     },
-    async pedirReparo(id, resultado, motivos, quem) {
+    async pedirReparo(id, resultado, motivos, quem, instrucao) {
       const atual = await porId(id);
       if (!atual) throw new Error(`tarefa ${id} não existe`);
-      return atualizar(id, { estado: "reparar", resultado, motivos, tentativas: atual.tentativas + 1, entregue_por: quem });
+      return atualizar(id, {
+        estado: "reparar",
+        resultado,
+        motivos,
+        tentativas: atual.tentativas + 1,
+        entregue_por: quem,
+        ...(instrucao ? { instrucao } : {}),
+      });
+    },
+    async anotar(id, resultado) {
+      return atualizar(id, { resultado });
+    },
+    async cancelar(id, motivos) {
+      return atualizar(id, { estado: "cancelada", motivos });
     },
   };
 }

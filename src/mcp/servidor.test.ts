@@ -24,7 +24,18 @@ describe("o servidor MCP local", () => {
   it("não tem ferramenta de aprovar, reprovar nem cancelar: isso é só do painel", async () => {
     const cliente = await conectar();
     const nomes = (await cliente.listTools()).tools.map((t) => t.name);
-    expect(nomes).toEqual(expect.arrayContaining(["estado_do_dia", "ver_fila"]));
+    expect(nomes).toEqual(
+      expect.arrayContaining([
+        "estado_do_dia",
+        "ver_fila",
+        "pautas_disponiveis",
+        "iniciar_post",
+        "proxima_tarefa",
+        "entregar_tarefa",
+        "montar_post",
+        "agendar_post",
+      ]),
+    );
     for (const nome of nomes) expect(nome).not.toMatch(/aprovar|reprovar|cancelar/);
   });
 
@@ -50,6 +61,32 @@ describe("o servidor MCP local", () => {
     const r = await cliente.callTool({ name: "ver_fila", arguments: {} });
     expect(r.isError).toBe(true);
     expect(textoDe(r)).toMatch(/HTTP 403.*motor Claude/);
+  });
+
+  it("montar_post devolve a peça como imagem, para o Claude olhar antes de agendar", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ ok: true, manchete: "M", legenda: "L", imagem: { mime: "image/jpeg", base64: "AAAA" } })),
+      ),
+    );
+    const cliente = await conectar();
+    const r = (await cliente.callTool({ name: "montar_post", arguments: { story_id: "s1" } })) as {
+      content: Array<{ type: string; data?: string; mimeType?: string; text?: string }>;
+    };
+    expect(r.content[0]).toMatchObject({ type: "image", data: "AAAA", mimeType: "image/jpeg" });
+    expect(r.content[1].text).toContain("MANCHETE: M");
+  });
+
+  it("entregar_tarefa manda o JSON da resposta no corpo, por POST", async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ ok: true, desfecho: "auditar" })));
+    vi.stubGlobal("fetch", fetcher);
+    const cliente = await conectar();
+    await cliente.callTool({ name: "entregar_tarefa", arguments: { id: "t1", resultado: { headline: "x" } } });
+    const [url, init] = fetcher.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(String(url)).toBe("https://plataforma.test/api/mcp/tarefa/entregar");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ id: "t1", resultado: { headline: "x" } });
   });
 
   it("sem URL ou token no ambiente, diz o que configurar", () => {

@@ -26,3 +26,24 @@ export function erroDaRota(rotulo: string, erro: unknown) {
 export function dataInvalida() {
   return NextResponse.json({ ok: false, error: "data inválida: use AAAA-MM-DD" }, { status: 400 });
 }
+
+/** O corpo JSON do pedido, ou objeto vazio. */
+export async function corpoDoPedido(req: NextRequest): Promise<Record<string, unknown>> {
+  const corpo = (await req.json().catch(() => null)) as unknown;
+  return corpo && typeof corpo === "object" && !Array.isArray(corpo) ? (corpo as Record<string, unknown>) : {};
+}
+
+/** A pauta e a data de um pedido de post, com a data no fuso do projeto quando falta. */
+export function pedidoDePost(
+  corpo: Record<string, unknown>,
+  projeto: Pick<Project, "timezone">,
+): { storyId: string; data: string } | null {
+  const storyId = typeof corpo.story_id === "string" ? corpo.story_id.trim() : "";
+  const data = typeof corpo.data === "string" && corpo.data ? corpo.data : projectToday(projeto);
+  if (!storyId || !/^\d{4}-\d{2}-\d{2}$/.test(data)) return null;
+  return { storyId, data };
+}
+
+export function pedidoInvalido(mensagem: string) {
+  return NextResponse.json({ ok: false, error: mensagem }, { status: 400 });
+}

@@ -21,6 +21,17 @@ const DATA = z
   .optional()
   .describe("Data da edição, AAAA-MM-DD, no fuso do projeto. Sem data, hoje.");
 
+const PAUTA = z.string().min(1).describe("O story_id da pauta, como `pautas_disponiveis` devolve.");
+
+const INSTRUCOES = [
+  "Você faz o trabalho de modelo do eua.journal: escreve, audita e corrige os posts, e a plataforma confere com as mesmas guardas da esteira automática.",
+  "O ciclo de um post: estado_do_dia, pautas_disponiveis, iniciar_post, depois proxima_tarefa e entregar_tarefa até o post ficar pronto, montar_post para ver a peça, e agendar_post.",
+  "Cada tarefa traz a instrução (system e user), o material e o esquema JSON da resposta. Siga a instrução ao pé da letra e entregue SÓ o JSON do esquema.",
+  "Quando a entrega volta com motivos, a tarefa está em reparo: peça a próxima tarefa e corrija só o apontado. Não invente para tapar buraco.",
+  "Audite numa conversa nova, sem o raciocínio da escrita: julgue só pelo pacote factual que vem na tarefa.",
+  "Você não aprova nem publica. Tudo o que agendar espera aprovação manual do dono no painel.",
+].join("\n");
+
 function texto(dados: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(dados, null, 2) }] };
 }
@@ -36,7 +47,15 @@ function falha(erro: unknown) {
 }
 
 export function criarServidor(config: ConfigDaPlataforma): McpServer {
-  const servidor = new McpServer({ name: "euajournal", version: "0.1.0" });
+  const servidor = new McpServer({ name: "euajournal", version: "0.2.0" }, { instructions: INSTRUCOES });
+
+  const ferramenta = (fn: () => Promise<unknown>) => async () => {
+    try {
+      return texto(await fn());
+    } catch (erro) {
+      return falha(erro);
+    }
+  };
 
   servidor.registerTool(
     "estado_do_dia",
@@ -74,6 +93,97 @@ export function criarServidor(config: ConfigDaPlataforma): McpServer {
         return falha(erro);
       }
     },
+  );
+
+  servidor.registerTool(
+    "pautas_disponiveis",
+    {
+      title: "Pautas disponíveis",
+      description: "Lista as pautas com pacote factual e foto que ainda não viraram post neste projeto.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    ferramenta(() => chamarPlataforma(config, "pautas")),
+  );
+
+  servidor.registerTool(
+    "iniciar_post",
+    {
+      title: "Iniciar um post",
+      description:
+        "Abre a tarefa de escrita do post de uma pauta. Depois, use proxima_tarefa para receber a instrução e entregar_tarefa para entregar.",
+      inputSchema: { story_id: PAUTA, data: DATA },
+    },
+    async ({ story_id, data }) =>
+      ferramenta(() => chamarPlataforma(config, "post/iniciar", { metodo: "POST", corpo: { story_id, data } }))(),
+  );
+
+  servidor.registerTool(
+    "proxima_tarefa",
+    {
+      title: "Próxima tarefa",
+      description:
+        "Devolve a próxima tarefa que espera você (reparo antes de nova), com instrução, material, esquema da resposta e, num reparo, os motivos.",
+      inputSchema: {
+        tipo: z.enum(["escrever_post", "auditar_post"]).optional().describe("Só tarefas deste tipo."),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ tipo }) => ferramenta(() => chamarPlataforma(config, "tarefa/proxima", { consulta: { tipo } }))(),
+  );
+
+  servidor.registerTool(
+    "entregar_tarefa",
+    {
+      title: "Entregar tarefa",
+      description:
+        "Entrega o resultado de uma tarefa: o JSON do esquema dela. A plataforma confere e responde o que vem em seguida: auditar, reparar, pronto ou descartado.",
+      inputSchema: {
+        id: z.string().min(1).describe("O id da tarefa."),
+        resultado: z.record(z.string(), z.unknown()).describe("O JSON da resposta, no esquema da tarefa."),
+      },
+    },
+    async ({ id, resultado }) =>
+      ferramenta(() => chamarPlataforma(config, "tarefa/entregar", { metodo: "POST", corpo: { id, resultado } }))(),
+  );
+
+  servidor.registerTool(
+    "montar_post",
+    {
+      title: "Montar o post",
+      description: "Renderiza a peça e a legenda de um post pronto, para você olhar antes de agendar. Não grava nada.",
+      inputSchema: { story_id: PAUTA, data: DATA },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ story_id, data }) => {
+      try {
+        const r = await chamarPlataforma<{ manchete: string; legenda: string; imagem: { mime: string; base64: string } }>(
+          config,
+          "post/montar",
+          { metodo: "POST", corpo: { story_id, data } },
+        );
+        return {
+          content: [
+            { type: "image" as const, data: r.imagem.base64, mimeType: r.imagem.mime },
+            { type: "text" as const, text: `MANCHETE: ${r.manchete}\n\nLEGENDA:\n${r.legenda}` },
+          ],
+        };
+      } catch (erro) {
+        return falha(erro);
+      }
+    },
+  );
+
+  servidor.registerTool(
+    "agendar_post",
+    {
+      title: "Agendar o post",
+      description:
+        "Congela a arte, grava o post na próxima vaga livre do Instagram e o põe na fila de aprovação. Ele só vai ao ar depois de o dono aprovar no painel.",
+      inputSchema: { story_id: PAUTA, data: DATA },
+    },
+    async ({ story_id, data }) =>
+      ferramenta(() => chamarPlataforma(config, "post/agendar", { metodo: "POST", corpo: { story_id, data } }))(),
   );
 
   return servidor;

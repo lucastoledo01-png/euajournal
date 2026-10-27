@@ -71,6 +71,37 @@ O token é segredo: não vai para o repositório, nem para print, nem para chat.
 |---|---|
 | `estado_do_dia` | o que falta no dia, e se a fila está aceitando entregas |
 | `ver_fila` | as peças na fila, com estado, motivo de reprovação e link do painel |
+| `pautas_disponiveis` | as pautas com pacote factual e foto que ainda não viraram post |
+| `iniciar_post` | abre a tarefa de escrita da pauta |
+| `proxima_tarefa` | a próxima tarefa (reparo antes de nova): instrução, material, esquema e motivos |
+| `entregar_tarefa` | entrega o JSON da tarefa; a plataforma confere e diz o que vem depois |
+| `montar_post` | a peça renderizada e a legenda, para olhar antes de agendar |
+| `agendar_post` | congela a arte, grava na próxima vaga e põe na fila de aprovação |
 
-As próximas (tarefas, foto, post, correções) entram uma por PR. O plano está
-em `docs/decisoes.md`.
+## O ciclo de um post
+
+```
+iniciar_post ─► escrever_post ─► auditar_post ─► guarda ─┬─ pronto ─► montar_post ─► agendar_post ─► fila
+                     ▲                                    ├─ reparar (até 2 vezes)
+                     └────────────────────────────────────┘─ descartado
+```
+
+- **A instrução é a da esteira.** `escrever_post` leva o mesmo pedido que a
+  OpenAI receberia, com a voz do post e a memória da fila do canal. A entrega
+  passa pela mesma limpeza, pela auditoria e pela guarda (`avaliarPostSocial`).
+- **A auditoria é tarefa separada**, com só o pacote e o texto. O ideal é
+  auditar numa conversa nova do Claude Desktop.
+- **Agendar não publica.** O post nasce `draft` na fila, em `aguardando`, e só
+  vai ao ar depois de aprovado no painel. Sem a fila e o Social V2 em
+  `enforce`, `agendar_post` recusa.
+
+## De onde vêm as pautas (por enquanto)
+
+Neste passo o Claude escreve; a pauta, o pacote factual e a foto vêm de um post
+que a esteira já produziu. `settings.mcp.pautas_de` diz de qual projeto (o
+projeto de teste lê o eua.journal, `desbuguei`), e a leitura é só leitura. A
+classificação, o pacote, a foto e a repetição entram como tarefas do Claude
+nos próximos passos do plano (`docs/decisoes.md`, "O motor Claude via MCP").
+
+Na v1 o post é peça única, no molde jornal, sem bolha: a bolha precisa de
+detecção de rosto, que ainda não virou tarefa.

@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { getProjectById, type Project } from "@/lib/server/projects";
 import { getSupabaseAdminClient } from "@/lib/server/supabase-admin";
 import { motorDoProjeto } from "./motor";
+import { enderecoDosMetadadosDoRecurso, origemDoPedido } from "./origem";
 
 /**
  * O token de quem conecta o Claude Desktop à plataforma (27/10/2026).
@@ -85,8 +86,16 @@ function depsPadrao(): DepsDoAcesso {
   return { tokens: tokensDoMcpSupabase(), projetoPorId: getProjectById };
 }
 
-function recusa(status: number, error: string) {
-  return { ok: false as const, resposta: NextResponse.json({ ok: false, error }, { status }) };
+function recusa(status: number, error: string, req?: Request) {
+  /*
+   * O 401 diz ao Claude onde fazer login (RFC 9728): é o que faz o Claude
+   * Desktop abrir a tela "Autorizar" do eua.journal sozinho, sem token colado.
+   */
+  const headers: Record<string, string> =
+    status === 401 && req
+      ? { "WWW-Authenticate": `Bearer resource_metadata="${enderecoDosMetadadosDoRecurso(origemDoPedido(req))}"` }
+      : {};
+  return { ok: false as const, resposta: NextResponse.json({ ok: false, error }, { status, headers }) };
 }
 
 /**
@@ -101,22 +110,22 @@ export async function requireTokenDoMcp(
   deps: DepsDoAcesso = depsPadrao(),
 ): Promise<{ ok: true; acesso: AcessoDoMcp } | { ok: false; resposta: NextResponse }> {
   const cabecalho = req.headers.get("authorization");
-  if (!cabecalho?.startsWith("Bearer ")) return recusa(401, "Não autorizado");
+  if (!cabecalho?.startsWith("Bearer ")) return recusa(401, "Não autorizado", req);
   const token = cabecalho.slice("Bearer ".length).trim();
-  if (!token.startsWith(PREFIXO_DO_TOKEN)) return recusa(401, "Não autorizado");
+  if (!token.startsWith(PREFIXO_DO_TOKEN)) return recusa(401, "Não autorizado", req);
 
   let linha: LinhaDoToken | null;
   let projeto: Project | null;
   try {
     linha = await deps.tokens.porResumo(resumoDoToken(token));
-    if (!linha || linha.revogadoEm) return recusa(401, "Não autorizado");
+    if (!linha || linha.revogadoEm) return recusa(401, "Não autorizado", req);
     projeto = await deps.projetoPorId(linha.projectId);
   } catch (erro) {
     console.error("[MCP] Leitura do token ou do projeto falhou:", erro);
     return recusa(503, "A plataforma não conseguiu conferir o token agora. Tente de novo.");
   }
 
-  if (!projeto) return recusa(401, "Não autorizado");
+  if (!projeto) return recusa(401, "Não autorizado", req);
   if (motorDoProjeto(projeto) !== "claude_mcp") {
     return recusa(403, `O projeto ${projeto.slug} não está com o motor Claude via MCP.`);
   }
@@ -185,3 +194,13 @@ export function rotuloValido(bruto: unknown): string | null {
     .replace(/^-+|-+$/g, "");
   return r.length >= 2 && r.length <= 40 ? r : null;
 }
+
+/** Ainda vale? Revogado ou inexistente é `false`; falha de leitura LANÇA. */
+export async function tokenAtivo(id: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdminClient().from("tokens_do_mcp").select("revogado_em").eq("id", id).maybeSingle();
+  if (error) throw new Error(`tokens_do_mcp, leitura falhou: ${error.message}`);
+  return Boolean(data) && !(data as { revogado_em: string | null }).revogado_em;
+}
+
+/** Os acessos que o OAuth emite são tokens desta tabela: mesma lista, mesmo "Revogar". */
+export const acessosDoMcp = { criar: criarToken, ativo: tokenAtivo, revogar: revogarToken };

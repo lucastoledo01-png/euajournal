@@ -55,7 +55,7 @@ describe("o painel recusa o pedido malformado com a frase certa", () => {
   it("a visão vazia vem com os modos e a taxa", async () => {
     const v = await visaoDaFila(projeto, deps());
     expect(v.modo).toBe("enforce");
-    expect(v.ramos).toEqual({ newsletter: "manual", artigo: "manual", post: "manual" });
+    expect(v.ramos).toEqual({ newsletter: "manual", artigo: "manual", post: "manual", plano: "manual" });
     expect(v.fila).toEqual([]);
     expect(v.taxa.every((t) => t.taxa === null)).toBe(true);
   });

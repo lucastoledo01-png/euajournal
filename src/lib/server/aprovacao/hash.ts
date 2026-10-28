@@ -24,11 +24,14 @@ export type ConteudoDaNewsletter = { assunto: string; html: string };
  * hash do artigo sem capa continuar exatamente o de antes.
  */
 export type ConteudoDoArtigo = { titulo: string; html: string; capa?: string };
+/** O plano do dia (29/10/2026): os itens, que são o que a aprovação libera para produzir. */
+export type ConteudoDoPlano = { itens: unknown };
 
 export type ConteudoDaPeca =
   | { ramo: "post"; conteudo: ConteudoDoPost }
   | { ramo: "newsletter"; conteudo: ConteudoDaNewsletter }
-  | { ramo: "artigo"; conteudo: ConteudoDoArtigo };
+  | { ramo: "artigo"; conteudo: ConteudoDoArtigo }
+  | { ramo: "plano"; conteudo: ConteudoDoPlano };
 
 /**
  * JSON com as chaves em ordem fixa.
@@ -123,4 +126,8 @@ export function hashDoArtigo(
 
 export function ramoDoConteudo(peca: ConteudoDaPeca): Ramo {
   return peca.ramo;
+}
+
+export function hashDoPlano(itens: unknown): string {
+  return hashDaPeca({ ramo: "plano", conteudo: { itens: itens ?? {} } });
 }

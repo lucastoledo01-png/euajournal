@@ -11,8 +11,7 @@ import { depsDoPost, projetoDaFonte } from "./post/deps";
 import { entregarTarefaDoPost, iniciarPost } from "./post/fluxo";
 import { pautasDisponiveis } from "./post/material";
 import { ehTipoDeTarefa, tarefasSupabase } from "./tarefas-store";
-import { entregarEscritaDoReel, TIPO_DA_ESCRITA_DO_REEL } from "./reels/tarefa";
-import { candidatosSupabase } from "@/lib/server/social/reels/candidatos";
+import { entregarDoDia, proximoSeHouverDia, tarefaParaOClaude } from "./dia/servico";
 import type { AcessoDoMcp } from "./tokens";
 
 /**
@@ -98,7 +97,10 @@ export async function proximaTarefa(acesso: AcessoDoMcp, args: { tipo?: unknown 
     return recusa(400, `tipo de tarefa desconhecido: ${String(tipo)}`);
   }
   const tarefa = await tarefasSupabase(client).proxima(acesso.projeto.id, ehTipoDeTarefa(tipo) ? tipo : undefined);
-  return { ok: true, tarefa };
+  if (!tarefa) return { ok: true, tarefa: null };
+  // A foto vai como imagem, e o material pesado fica na plataforma (29/10/2026).
+  const { tarefa: compacta, imagens } = await tarefaParaOClaude(tarefa);
+  return { ok: true, tarefa: compacta, imagens };
 }
 
 export async function entregar(acesso: AcessoDoMcp, args: { id?: unknown; resultado?: unknown }, client: SupabaseClient = getSupabaseAdminClient()): Promise<Resposta> {
@@ -106,13 +108,18 @@ export async function entregar(acesso: AcessoDoMcp, args: { id?: unknown; result
   if (!id || args.resultado === undefined) return recusa(400, "informe id e resultado");
   const tarefas = tarefasSupabase(client);
   const tarefa = await tarefas.porId(id);
-  if (tarefa?.tipo === TIPO_DA_ESCRITA_DO_REEL) {
+  if (tarefa && tarefa.tipo !== "escrever_post" && tarefa.tipo !== "auditar_post") {
     if (tarefa.projectId !== acesso.projeto.id) return recusa(422, "tarefa não encontrada neste projeto");
     if (tarefa.estado !== "aberta" && tarefa.estado !== "reparar") return recusa(422, `a tarefa está "${tarefa.estado}" e não aceita entrega`);
-    return { ...(await entregarEscritaDoReel(tarefa, args.resultado, acesso.quem, { tarefas, candidatos: candidatosSupabase(client) })) };
+    // As tarefas do dia (29/10/2026): triagem, plano, fotos, pacotes, matéria, newsletter e Reel.
+    const r = await entregarDoDia(acesso, tarefa, args.resultado, client);
+    if (r) return r;
+    return recusa(422, `a entrega de "${tarefa.tipo}" ainda não existe`);
   }
   const r = await entregarTarefaDoPost(acesso.projeto, { id, resultado: args.resultado, quem: acesso.quem }, depsDoPost(client));
-  return r.ok ? { ...r } : recusa(422, r.error);
+  if (!r.ok) return recusa(422, r.error);
+  const proximo = tarefa ? await proximoSeHouverDia(acesso, tarefa.editionDate, client) : null;
+  return { ...r, ...(proximo ? { proximo } : {}) };
 }
 
 export async function montar(acesso: AcessoDoMcp, args: Record<string, unknown>, client: SupabaseClient = getSupabaseAdminClient()): Promise<Resposta> {

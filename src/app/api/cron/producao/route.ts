@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ehMotorClaude } from "@/lib/server/mcp/motor";
 import type { NextRequest } from "next/server";
 import { requireCron } from "@/lib/server/api-auth";
 import { formatError, pingHealthcheck, sendAlert } from "@/lib/server/alerts";
@@ -89,6 +90,12 @@ async function handle(req: NextRequest) {
     if (!hora.naJanela) {
       return NextResponse.json({ ok: true, produzido: false, motivo: "FORA_DO_HORARIO", ...hora }, { status: 200 });
     }
+  }
+
+  // No motor Claude (29/10/2026) a produção é o "faça o dia" do MCP: o cron não escreve nada.
+  const doMotor = await getProjectById(projetoId).catch(() => null);
+  if (ehMotorClaude(doMotor)) {
+    return NextResponse.json({ ok: true, produzido: false, motivo: "MOTOR_CLAUDE" }, { status: 200 });
   }
 
   void pingHealthcheck(healthcheck, "start");

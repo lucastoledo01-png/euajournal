@@ -93,6 +93,7 @@ export const TIPOS_DE_EXEMPLO: Record<Ramo, ReadonlyArray<{ tipo: string; rotulo
     { tipo: "titulo", rotulo: "Títulos de matéria aprovados", teto: 140 },
     { tipo: "linha_fina", rotulo: "Linhas finas aprovadas", teto: 220 },
   ],
+  plano: [],
 };
 
 export type ExemploAprovado = { tipo: string; texto: string; aprovadoEm: string };
@@ -101,6 +102,7 @@ export const ROTULO_DO_RAMO: Record<Ramo, string> = {
   newsletter: "Newsletter",
   artigo: "Portal",
   post: "Instagram",
+  plano: "Plano do dia",
 };
 
 export type ChaveDaMemoria = { ramo: Ramo; etapa: Etapa };

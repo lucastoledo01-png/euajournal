@@ -196,7 +196,7 @@ export function temVariasFontes(pacote: Pick<PacoteFactual, "fontes">): pacote i
   return Array.isArray(pacote.fontes) && pacote.fontes.length > 1;
 }
 
-function montarUserDoArtigo(pauta: PautaDoArtigo, pacote: PacoteFactual): string {
+export function montarUserDoArtigo(pauta: PautaDoArtigo, pacote: PacoteFactual): string {
   if (temVariasFontes(pacote)) {
     return [
       `PAÍS: ${pauta.classificacao.pais}`,
@@ -473,13 +473,23 @@ export function unidadesDoTrecho(trecho: string, unidades: Unidade[]): Unidade[]
 export async function auditarArtigo(
   artigo: Artigo,
   pacote: PacoteFactual,
-  opcoes: { env?: Record<string, string | undefined>; fetcher?: typeof fetch; livro?: LivroDeCustos } = {},
+  opcoes: {
+    env?: Record<string, string | undefined>;
+    fetcher?: typeof fetch;
+    livro?: LivroDeCustos;
+    /**
+     * O auditor de conclusões, trocável (29/10/2026): no motor Claude o
+     * veredito vem da tarefa `auditar_artigo`, e o resto da conferência é este
+     * mesmo código.
+     */
+    auditor?: typeof auditarClaims;
+  } = {},
 ): Promise<VeredictoDoArtigo> {
   const unidades = unidadesDoArtigo(artigo);
-  const texto = unidades.map((u) => u.texto).join("\n");
+  const texto = textoAuditavelDoArtigo(artigo);
   const anc = validarAncoragem(texto, pacote);
 
-  const claims = await auditarClaims(
+  const claims = await (opcoes.auditor ?? auditarClaims)(
     [{ indice: 0, titulo: artigo.titulo, texto, pacote }],
     opcoes.env ?? process.env,
     opcoes.fetcher ?? fetch,
@@ -717,6 +727,44 @@ export type ResultadoDoArtigo = {
 };
 
 /**
+ * A poda e a indexação depois da última auditoria (extraído em 29/10/2026 para
+ * a matéria do Claude terminar pelo mesmo caminho).
+ */
+export function concluirArtigo(artigo: Artigo, veredicto: VeredictoDoArtigo, pacote: PacoteFactual, tentativas: number): ResultadoDoArtigo {
+  // A poda roda sempre: além do que o auditor reprovou, ela confere cada
+  // resposta contra o corpo e tira o bloco de significado que só repete.
+  const poda = podarArtigo(artigo, veredicto);
+  if (poda.bloqueios.length > 0) {
+    return {
+      artigo,
+      veredicto: { ...veredicto, bloqueios: [...veredicto.bloqueios, ...poda.bloqueios] },
+      tentativas,
+      erro: null,
+      removidas: poda.removidas,
+    };
+  }
+  // Os assuntos que o redator propôs passam pelo validador antes de sair daqui.
+  const indexacao = indexacaoDoArtigoEscrito(poda.artigo, pacote);
+  return {
+    artigo: { ...poda.artigo, assuntos: indexacao.assuntos },
+    veredicto: {
+      ...veredicto,
+      aprovado: true,
+      bloqueios: [],
+      avisos: [
+        ...veredicto.avisos,
+        ...poda.removidas.map((r) => `APAGADO ${r.id}: ${r.motivo}`),
+        ...descreverDescartes(indexacao.descartados),
+        ...(indexacao.abaixoDoMinimo ? [`ASSUNTOS ABAIXO DO MÍNIMO: ${indexacao.assuntos.length} de ${MINIMO_DE_ASSUNTOS}, o texto não sustenta mais`] : []),
+      ],
+    },
+    tentativas,
+    erro: null,
+    removidas: poda.removidas,
+  };
+}
+
+/**
  * Escreve, audita, tenta UM reparo e poda.
  *
  * Um reparo, e não dois como a newsletter: aqui a peça é uma matéria só. O que
@@ -724,6 +772,28 @@ export type ResultadoDoArtigo = {
  * quando a poda não resolve (título sem lastro, conclusão sem lugar, nada que
  * se sustente).
  */
+/** O texto que o auditor de conclusões lê: as unidades da matéria, em ordem. */
+export function textoAuditavelDoArtigo(artigo: Artigo): string {
+  return unidadesDoArtigo(artigo)
+    .map((u) => u.texto)
+    .join("\n");
+}
+
+/** O pedido de reparo da matéria, o mesmo da esteira, para quem reescreve fora dela. */
+export function instrucaoDeReparoDoArtigo(bloqueios: string[], artigo: Artigo): string {
+  return `
+A matéria abaixo foi reprovada na conferência de fatos. Reescreva SOMENTE o necessário e devolva o JSON inteiro.
+
+APONTAMENTOS:
+${bloqueios.map((b) => `- ${b}`).join("\n")}
+
+COMO CORRIGIR: remova a afirmação ou troque pelo que o pacote diz. Nome, número ou data fora do pacote saem, sem substituto. Se faltar informação depois disso, a matéria fica mais curta, e está certo.
+
+MATÉRIA ATUAL:
+${JSON.stringify(artigo, null, 2)}
+`.trim();
+}
+
 export async function escreverArtigoDaPauta(
   pauta: PautaDoArtigo,
   pacote: PacoteFactual,
@@ -775,17 +845,7 @@ export async function escreverArtigoDaPauta(
 
   if (!veredicto.aprovado) {
     tentativas += 1;
-    const reparo = `
-A matéria abaixo foi reprovada na conferência de fatos. Reescreva SOMENTE o necessário e devolva o JSON inteiro.
-
-APONTAMENTOS:
-${veredicto.bloqueios.map((b) => `- ${b}`).join("\n")}
-
-COMO CORRIGIR: remova a afirmação ou troque pelo que o pacote diz. Nome, número ou data fora do pacote saem, sem substituto. Se faltar informação depois disso, a matéria fica mais curta, e está certo.
-
-MATÉRIA ATUAL:
-${JSON.stringify(artigo, null, 2)}
-`.trim();
+    const reparo = instrucaoDeReparoDoArtigo(veredicto.bloqueios, artigo);
     try {
       artigo = await escrever(reparo);
       veredicto = await auditarArtigo(artigo, pacote, opcoes);
@@ -799,37 +859,7 @@ ${JSON.stringify(artigo, null, 2)}
     }
   }
 
-  // A poda roda sempre: além do que o auditor reprovou, ela confere cada
-  // resposta contra o corpo e tira o bloco de significado que só repete.
-  const poda = podarArtigo(artigo, veredicto);
-  if (poda.bloqueios.length > 0) {
-    return {
-      artigo,
-      veredicto: { ...veredicto, bloqueios: [...veredicto.bloqueios, ...poda.bloqueios] },
-      tentativas,
-      erro: null,
-      removidas: poda.removidas,
-    };
-  }
-  // Os assuntos que o redator propôs passam pelo validador antes de sair daqui.
-  const indexacao = indexacaoDoArtigoEscrito(poda.artigo, pacote);
-  return {
-    artigo: { ...poda.artigo, assuntos: indexacao.assuntos },
-    veredicto: {
-      ...veredicto,
-      aprovado: true,
-      bloqueios: [],
-      avisos: [
-        ...veredicto.avisos,
-        ...poda.removidas.map((r) => `APAGADO ${r.id}: ${r.motivo}`),
-        ...descreverDescartes(indexacao.descartados),
-        ...(indexacao.abaixoDoMinimo ? [`ASSUNTOS ABAIXO DO MÍNIMO: ${indexacao.assuntos.length} de ${MINIMO_DE_ASSUNTOS}, o texto não sustenta mais`] : []),
-      ],
-    },
-    tentativas,
-    erro: null,
-    removidas: poda.removidas,
-  };
+  return concluirArtigo(artigo, veredicto, pacote, tentativas);
 }
 
 /* ------------------------------------------------------------------ */

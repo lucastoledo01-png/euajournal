@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Aprovacao, Ramo } from "./contrato";
-import { hashDaNewsletter, hashDoArtigo, hashDoPostDaLinha } from "./hash";
+import { hashDaNewsletter, hashDoArtigo, hashDoPlano, hashDoPostDaLinha } from "./hash";
 
 /**
  * O que vai ao ar, lido da tabela da peça, para a fila mostrar a PEÇA e não
@@ -62,7 +62,17 @@ export type PreviaDoPost = {
   hashConfere: boolean;
 };
 
-export type PreviaDaPeca = PreviaDaNewsletter | PreviaDoArtigo | PreviaDoPost | { ramo: Ramo; ausente: true };
+/** O plano do dia (29/10/2026): os itens por canal, com o título de cada pauta e o porquê do Claude. */
+export type PreviaDoPlano = {
+  ramo: "plano";
+  data: string;
+  itens: Record<string, unknown>;
+  canais: Array<{ canal: "newsletter" | "artigos" | "posts" | "reels"; itens: Array<{ id: string; titulo: string; porque: string; link: string | null }> }>;
+  noAr: false;
+  hashConfere: boolean;
+};
+
+export type PreviaDaPeca = PreviaDaNewsletter | PreviaDoArtigo | PreviaDoPost | PreviaDoPlano | { ramo: Ramo; ausente: true };
 
 type Linha = Record<string, unknown>;
 
@@ -196,7 +206,12 @@ export async function previasDaFila(
   ]);
 
   const saida: Record<string, PreviaDaPeca> = {};
-  for (const a of fila) {
+  const planos = await lerLinhas(client, "planos_do_dia", "id, data, itens", projectId, ids("plano"));
+  for (const a of fila.filter((x) => x.ramo === "plano")) {
+    const linha = planos.get(a.pecaId);
+    saida[a.id] = linha ? await previaDoPlano(client, projectId, linha, a) : { ramo: "plano", ausente: true };
+  }
+  for (const a of fila.filter((x) => x.ramo !== "plano")) {
     const linha = (a.ramo === "post" ? posts : a.ramo === "artigo" ? artigos : edicoes).get(a.pecaId);
     if (!linha) {
       saida[a.id] = { ramo: a.ramo, ausente: true };
@@ -210,4 +225,39 @@ export async function previasDaFila(
           : previaDaNewsletter(linha, a, modo, agoraMs);
   }
   return saida;
+}
+
+const CANAIS_DO_PLANO = ["newsletter", "artigos", "posts", "reels"] as const;
+
+export async function previaDoPlano(
+  client: SupabaseClient,
+  projectId: string,
+  linha: Linha,
+  a: Pick<Aprovacao, "hashArtefato">,
+): Promise<PreviaDoPlano> {
+  const itens = (linha.itens ?? {}) as Record<string, unknown>;
+  const lista = (c: string) => (Array.isArray(itens[c]) ? (itens[c] as unknown[]).map(String) : []);
+  const porque = (itens.porque ?? {}) as Record<string, string>;
+  const pautas = [...new Set(["newsletter", "artigos", "posts"].flatMap(lista))];
+  const reels = lista("reels");
+  const [p, r] = await Promise.all([
+    pautas.length
+      ? client.from("news_candidates").select("story_id, title, url").eq("project_id", projectId).in("story_id", pautas)
+      : Promise.resolve({ data: [] }),
+    reels.length ? client.from("reels_candidatos").select("id, titulo, permalink").in("id", reels) : Promise.resolve({ data: [] }),
+  ]);
+  const titulos = new Map<string, { titulo: string; link: string | null }>();
+  for (const l of (p.data ?? []) as Linha[]) titulos.set(s(l.story_id), { titulo: s(l.title), link: s(l.url) || null });
+  for (const l of (r.data ?? []) as Linha[]) titulos.set(s(l.id), { titulo: s(l.titulo), link: s(l.permalink) || null });
+  return {
+    ramo: "plano",
+    data: s(linha.data),
+    itens,
+    canais: CANAIS_DO_PLANO.map((canal) => ({
+      canal,
+      itens: lista(canal).map((id) => ({ id, titulo: titulos.get(id)?.titulo || id, porque: porque[id] ?? "", link: titulos.get(id)?.link ?? null })),
+    })),
+    noAr: false,
+    hashConfere: hashDoPlano(linha.itens) === a.hashArtefato,
+  };
 }

@@ -170,93 +170,12 @@ export async function rodarRamoDoPortal(e: EntradaDoRamoDoPortal): Promise<Resul
       continue;
     }
 
-    /*
-     * A capa é a foto que a seleção já conferiu, lida da memória do dia: a
-     * mesma resposta, sem resolver de novo. Só a foto real vira capa; a
-     * bandeira nunca (a seleção acima já tirou a pauta que só tinha ela).
-     */
-    let capa: string | null = null;
-    let cabecaDaCapa = "";
-    if (e.fotos) {
-      const { visual } = await e.fotos.resultado(pauta);
-      /*
-       * Desde 06/10/2026 a capa é gravada limpa de `&amp;`, e leva no corpo a
-       * legenda e o crédito (autor, licença e link, do asset que o resolvedor
-       * escolheu), que a página desenha embaixo dela.
-       */
-      capa = temFotoDaPauta(visual) ? enderecoLimpoDaImagem(visual?.asset?.imageUrl) || null : null;
-      if (capa) {
-        const credito = creditoDoAsset(visual?.asset ?? null, `acervo ${MARCA.nome}`);
-        let descricao: string | null = null;
-        if (e.descreverCapa) {
-          try {
-            descricao = await e.descreverCapa(capa);
-          } catch {
-            descricao = null;
-          }
-        }
-        const legenda = legendaDaFoto(descricao, pacote) ?? legendaNeutra((r.artigo.assuntos ?? [])[0]);
-        cabecaDaCapa = `${htmlDaLegenda(legenda)}${credito ? htmlDoCredito(credito) : ""}`;
-      }
-    }
-
-    const fonte = { nome: pauta.grupo.primary.source_name, url: enderecoLimpoDaImagem(pauta.grupo.primary.url) };
-    // Todas as fontes usadas, na seção "Fontes" e no link de cada uma dentro do texto.
-    const fontesDoPacote = pacote.fontes?.length ? pacote.fontes : null;
-    const slug = slugDoArtigo(r.artigo.titulo, e.data);
-    const categoria = categoriaDoArtigo(pauta, r.artigo.titulo);
-    const editoria = editoriaPeloNome(categoria);
-    let relacionadas: MateriaRelacionada[] = [];
-    if (e.buscarRelacionadas) {
-      try {
-        relacionadas = await e.buscarRelacionadas({
-          slug,
-          categoria,
-          texto: [r.artigo.titulo, ...(r.artigo.assuntos ?? [])].join(" "),
-        });
-      } catch (erro) {
-        linhas.push(`[RAMO artigo] leia também não lido: ${(erro as Error).message}`);
-      }
-    }
-    const conteudo: ConteudoDoArtigo = {
-      origem: {
-        storyId: pauta.storyId,
-        titulo: pauta.grupo.primary.title,
-        resumo: pauta.enriquecimento?.texto ?? "",
-        eixo: String(pauta.classificacao.eixo ?? ""),
-        pais: String(pauta.classificacao.pais ?? ""),
-        atores: pauta.classificacao.atores ?? [],
-        lugares: pauta.classificacao.lugares ?? [],
-        acontecimento: pauta.classificacao.acontecimento ?? [],
-        fonteNome: pauta.grupo.primary.source_name,
-        fonteUrl: pauta.grupo.primary.url,
-        pacote,
-      },
-      artigo: r.artigo,
-      html: `${cabecaDaCapa}${renderizarArtigoHtml(r.artigo, fonte, {
-        fontes: fontesDoPacote ? fontesDoPacote.map((f) => ({ nome: f.nome, url: f.url })) : [fonte],
-        ...(fontesDoPacote ? { fontesDoTexto: fontesDoPacote.map((f) => ({ id: f.id, nome: f.nome, url: f.url })) } : {}),
-        relacionadas,
-        ...(editoria ? { editoria: { nome: editoria.nome, href: hrefDaEditoria(editoria.id) } } : {}),
-      })}`,
-      categoria,
-      // Entidades só as que o texto final nomeia; assuntos pelo validador (06/10/2026).
-      tags: (() => {
-        const ix = indexacaoDoArtigoEscrito(r.artigo, pacote, { editoria: categoria });
-        return tagsDeIndexacao({ assuntos: ix.assuntos, entidades: ix.entidades });
-      })(),
-      fonte,
-      sourceUrls: pacote.source_urls.map((u) => enderecoLimpoDaImagem(u)).filter(Boolean),
-      capa,
-      publicarEm: horarios[i],
-      slug,
-      poolDoDia: e.pool.map((p) => p.storyId),
-    };
+    const conteudo = await materiaDaPauta(e, pauta, pacote, { ...r, artigo: r.artigo }, horarios[i], linhas);
 
     pecas.push(
       montarPeca({
         ramo: "artigo",
-        referenciaId: slug,
+        referenciaId: conteudo.slug,
         storyIds: [pauta.storyId],
         titulo: r.artigo.titulo,
         conteudo,
@@ -272,4 +191,103 @@ export async function rodarRamoDoPortal(e: EntradaDoRamoDoPortal): Promise<Resul
   }
 
   return { selecao, semFoto, pecas, linhasDeLog: linhas };
+}
+
+/**
+ * A matéria montada a partir do texto escrito e auditado: capa, legenda,
+ * crédito, fontes, "Leia também", tags e horário (extraído em 29/10/2026 para
+ * a matéria do Claude sair pelo mesmo caminho da esteira).
+ */
+export async function materiaDaPauta(
+  e: Pick<EntradaDoRamoDoPortal, "fotos" | "descreverCapa" | "data" | "buscarRelacionadas" | "pool">,
+  pauta: PautaAvaliada,
+  pacote: PacoteFactual,
+  r: ResultadoDoArtigo & { artigo: NonNullable<ResultadoDoArtigo["artigo"]> },
+  publicarEm: string,
+  linhas: string[],
+): Promise<ConteudoDoArtigo> {
+  /*
+   * A capa é a foto que a seleção já conferiu, lida da memória do dia: a
+   * mesma resposta, sem resolver de novo. Só a foto real vira capa; a
+   * bandeira nunca (a seleção acima já tirou a pauta que só tinha ela).
+   */
+  let capa: string | null = null;
+  let cabecaDaCapa = "";
+  if (e.fotos) {
+    const { visual } = await e.fotos.resultado(pauta);
+    /*
+     * Desde 06/10/2026 a capa é gravada limpa de `&amp;`, e leva no corpo a
+     * legenda e o crédito (autor, licença e link, do asset que o resolvedor
+     * escolheu), que a página desenha embaixo dela.
+     */
+    capa = temFotoDaPauta(visual) ? enderecoLimpoDaImagem(visual?.asset?.imageUrl) || null : null;
+    if (capa) {
+      const credito = creditoDoAsset(visual?.asset ?? null, `acervo ${MARCA.nome}`);
+      let descricao: string | null = null;
+      if (e.descreverCapa) {
+        try {
+          descricao = await e.descreverCapa(capa);
+        } catch {
+          descricao = null;
+        }
+      }
+      const legenda = legendaDaFoto(descricao, pacote) ?? legendaNeutra((r.artigo.assuntos ?? [])[0]);
+      cabecaDaCapa = `${htmlDaLegenda(legenda)}${credito ? htmlDoCredito(credito) : ""}`;
+    }
+  }
+
+  const fonte = { nome: pauta.grupo.primary.source_name, url: enderecoLimpoDaImagem(pauta.grupo.primary.url) };
+  // Todas as fontes usadas, na seção "Fontes" e no link de cada uma dentro do texto.
+  const fontesDoPacote = pacote.fontes?.length ? pacote.fontes : null;
+  const slug = slugDoArtigo(r.artigo.titulo, e.data);
+  const categoria = categoriaDoArtigo(pauta, r.artigo.titulo);
+  const editoria = editoriaPeloNome(categoria);
+  let relacionadas: MateriaRelacionada[] = [];
+  if (e.buscarRelacionadas) {
+    try {
+      relacionadas = await e.buscarRelacionadas({
+        slug,
+        categoria,
+        texto: [r.artigo.titulo, ...(r.artigo.assuntos ?? [])].join(" "),
+      });
+    } catch (erro) {
+      linhas.push(`[RAMO artigo] leia também não lido: ${(erro as Error).message}`);
+    }
+  }
+  const conteudo: ConteudoDoArtigo = {
+    origem: {
+      storyId: pauta.storyId,
+      titulo: pauta.grupo.primary.title,
+      resumo: pauta.enriquecimento?.texto ?? "",
+      eixo: String(pauta.classificacao.eixo ?? ""),
+      pais: String(pauta.classificacao.pais ?? ""),
+      atores: pauta.classificacao.atores ?? [],
+      lugares: pauta.classificacao.lugares ?? [],
+      acontecimento: pauta.classificacao.acontecimento ?? [],
+      fonteNome: pauta.grupo.primary.source_name,
+      fonteUrl: pauta.grupo.primary.url,
+      pacote,
+    },
+    artigo: r.artigo,
+    html: `${cabecaDaCapa}${renderizarArtigoHtml(r.artigo, fonte, {
+      fontes: fontesDoPacote ? fontesDoPacote.map((f) => ({ nome: f.nome, url: f.url })) : [fonte],
+      ...(fontesDoPacote ? { fontesDoTexto: fontesDoPacote.map((f) => ({ id: f.id, nome: f.nome, url: f.url })) } : {}),
+      relacionadas,
+      ...(editoria ? { editoria: { nome: editoria.nome, href: hrefDaEditoria(editoria.id) } } : {}),
+    })}`,
+    categoria,
+    // Entidades só as que o texto final nomeia; assuntos pelo validador (06/10/2026).
+    tags: (() => {
+      const ix = indexacaoDoArtigoEscrito(r.artigo, pacote, { editoria: categoria });
+      return tagsDeIndexacao({ assuntos: ix.assuntos, entidades: ix.entidades });
+    })(),
+    fonte,
+    sourceUrls: pacote.source_urls.map((u) => enderecoLimpoDaImagem(u)).filter(Boolean),
+    capa,
+    publicarEm,
+    slug,
+    poolDoDia: e.pool.map((p) => p.storyId),
+  };
+
+  return conteudo;
 }

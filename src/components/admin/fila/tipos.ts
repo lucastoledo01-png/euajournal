@@ -29,8 +29,9 @@ export type Visao = {
 export type Agir = (corpo: Record<string, unknown>, sucesso: string) => Promise<boolean>;
 
 /** O canal como o dono o chama. O ramo `artigo` é o portal. */
-export const NOME_DO_CANAL: Record<Ramo, string> = { newsletter: "Newsletter", artigo: "Portal", post: "Instagram" };
-export const ORDEM_DOS_CANAIS: Ramo[] = ["newsletter", "artigo", "post"];
+export const NOME_DO_CANAL: Record<Ramo, string> = { newsletter: "Newsletter", artigo: "Portal", post: "Instagram", plano: "Plano do dia" };
+// O plano vem primeiro: aprová-lo é o que libera a produção das outras peças.
+export const ORDEM_DOS_CANAIS: Ramo[] = ["plano", "newsletter", "artigo", "post"];
 
 const FUSO = "America/Sao_Paulo";
 

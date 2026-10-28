@@ -12,7 +12,7 @@ import {
 import { agruparAvisos, type AvisoLegivel } from "@/lib/server/aprovacao/avisos-legiveis";
 import { acoesDaPeca, ROTULO_DA_SITUACAO, situacaoDaPeca, type SituacaoDaPeca } from "@/lib/server/aprovacao/situacao";
 import type { PreviaDaPeca } from "@/lib/server/aprovacao/previa";
-import { CorpoDaNewsletter, CorpoDoArtigo, CorpoDoPost, type Edicao } from "./CorpoDaPeca";
+import { CorpoDaNewsletter, CorpoDoArtigo, CorpoDoPlano, CorpoDoPost, type Edicao } from "./CorpoDaPeca";
 import { fraseDoHorario, horaCurta, NOME_DO_CANAL, type Agir } from "./tipos";
 
 /**
@@ -395,8 +395,16 @@ export function CartaoDaPeca({
   const resumo = resumoDaSituacao(a, situacao, previa, agoraIso);
 
   const edicao: Edicao = {
-    rotulo: a.ramo === "newsletter" ? "Assunto" : a.ramo === "artigo" ? "Título" : "Legenda",
-    valor: real ? (real.ramo === "newsletter" ? real.assunto : real.ramo === "artigo" ? real.titulo : real.legenda) : (a.resumo.texto ?? ""),
+    rotulo: a.ramo === "newsletter" ? "Assunto" : a.ramo === "artigo" ? "Título" : a.ramo === "plano" ? "Plano" : "Legenda",
+    valor: real
+      ? real.ramo === "newsletter"
+        ? real.assunto
+        : real.ramo === "artigo"
+          ? real.titulo
+          : real.ramo === "plano"
+            ? JSON.stringify(real.itens, null, 2)
+            : real.legenda
+      : (a.resumo.texto ?? ""),
     pode: acoes.editar,
     ocupado,
     salvar: (texto) => agir({ acao: "editar", id: a.id, texto }, "Texto editado: a versão nova voltou para a fila, aguardando você."),
@@ -412,6 +420,8 @@ export function CartaoDaPeca({
     <CorpoDaNewsletter a={a} previa={real} slug={slug} edicao={edicao} />
   ) : real.ramo === "artigo" ? (
     <CorpoDoArtigo a={a} previa={real} slug={slug} edicao={edicao} />
+  ) : real.ramo === "plano" ? (
+    <CorpoDoPlano previa={real} edicao={edicao} />
   ) : (
     <CorpoDoPost a={a} previa={real} edicao={edicao} />
   );

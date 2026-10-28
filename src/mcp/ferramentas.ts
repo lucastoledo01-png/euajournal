@@ -30,6 +30,8 @@ export const NOMES_DAS_FERRAMENTAS = [
   "reels_sugeridos",
   "produzir_reel",
   "ver_reel",
+  "fazer_o_dia",
+  "aguardar",
 ] as const;
 
 export type NomeDaFerramenta = (typeof NOMES_DAS_FERRAMENTAS)[number];
@@ -55,6 +57,7 @@ const DATA = z
 const PAUTA = z.string().min(1).describe("O story_id da pauta, como `pautas_disponiveis` devolve.");
 
 export const INSTRUCOES_DO_MCP = [
+  "PARA FAZER O DIA INTEIRO SOZINHO: chame fazer_o_dia. Ele devolve UM passo: uma tarefa (faça e entregue com entregar_tarefa; a resposta já traz o passo seguinte em `proximo`), \"aguardar\" (chame aguardar e repita até mudar; é o dono aprovando o plano no painel) ou \"pronto\". Siga até \"pronto\" sem esperar nova ordem. Se a conversa encher, abra outra e chame fazer_o_dia: o dia continua de onde parou.",
   "Você faz o trabalho de modelo do eua.journal: escreve, audita e corrige os posts, e a plataforma confere com as mesmas guardas da esteira automática.",
   "O ciclo de um post: estado_do_dia, pautas_disponiveis, iniciar_post, depois proxima_tarefa e entregar_tarefa até o post ficar pronto, montar_post para ver a peça, e agendar_post.",
   "Cada tarefa traz a instrução (system e user), o material e o esquema JSON da resposta. Siga a instrução ao pé da letra e entregue SÓ o JSON do esquema.",
@@ -64,8 +67,31 @@ export const INSTRUCOES_DO_MCP = [
   "Você não aprova nem publica. Tudo o que agendar espera aprovação manual do dono no painel.",
 ].join("\n");
 
+type ImagemDaResposta = { mime: string; base64: string };
+
+/**
+ * A resposta em texto, com as fotos à parte como imagem (29/10/2026): a
+ * tarefa `escolher_foto` precisa que o Claude VEJA as candidatas, e base64
+ * dentro do JSON seria só texto para ele.
+ */
 function texto(dados: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(dados, null, 2) }] };
+  const imagens: ImagemDaResposta[] = [];
+  const tirar = (o: unknown) => {
+    if (!o || typeof o !== "object") return;
+    const r = o as { imagens?: unknown; proximo?: unknown };
+    if (Array.isArray(r.imagens)) {
+      imagens.push(...(r.imagens as ImagemDaResposta[]));
+      delete r.imagens;
+    }
+    tirar(r.proximo);
+  };
+  tirar(dados);
+  return {
+    content: [
+      ...imagens.map((i) => ({ type: "image" as const, data: i.base64, mimeType: i.mime })),
+      { type: "text" as const, text: JSON.stringify(dados, null, 2) },
+    ],
+  };
 }
 
 function falha(erro: unknown) {
@@ -146,7 +172,22 @@ export function criarServidorMcp(backend: Backend, versao = "0.4.0"): McpServer 
       description:
         "Devolve a próxima tarefa que espera você (reparo antes de nova), com instrução, material, esquema da resposta e, num reparo, os motivos.",
       inputSchema: {
-        tipo: z.enum(["escrever_post", "auditar_post", "escrever_reel"]).optional().describe("Só tarefas deste tipo."),
+        tipo: z
+          .enum([
+            "classificar",
+            "propor_plano",
+            "escolher_foto",
+            "extrair_pacote",
+            "escrever_post",
+            "auditar_post",
+            "escrever_artigo",
+            "auditar_artigo",
+            "escrever_newsletter",
+            "auditar_newsletter",
+            "escrever_reel",
+          ])
+          .optional()
+          .describe("Só tarefas deste tipo."),
       },
       annotations: { readOnlyHint: true },
     },
@@ -203,6 +244,30 @@ export function criarServidorMcp(backend: Backend, versao = "0.4.0"): McpServer 
       inputSchema: { story_id: PAUTA, data: DATA },
     },
     ({ story_id, data }) => chamar("agendar_post", { story_id, data }),
+  );
+
+  servidor.registerTool(
+    "fazer_o_dia",
+    {
+      title: "Fazer o dia",
+      description:
+        "Começa ou retoma o dia inteiro: triagem das notícias, plano do dia (que o dono aprova no painel), fotos, fatos, posts, Reels, " +
+        "matérias e newsletter. Devolve o próximo passo: uma tarefa, aguardar, ou pronto. Siga os passos até pronto.",
+      inputSchema: { data: DATA },
+    },
+    ({ data }) => chamar("fazer_o_dia", { data }),
+  );
+
+  servidor.registerTool(
+    "aguardar",
+    {
+      title: "Aguardar o dono",
+      description:
+        "Espera até 50 segundos o dono aprovar o plano no painel e devolve o próximo passo. Repita enquanto o passo for aguardar.",
+      inputSchema: { data: DATA, segundos: z.number().int().min(5).max(50).optional() },
+      annotations: { readOnlyHint: true },
+    },
+    ({ data, segundos }) => chamar("aguardar", { data, segundos }),
   );
 
   servidor.registerTool(

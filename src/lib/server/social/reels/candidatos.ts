@@ -68,6 +68,8 @@ export type CandidatosDeReel = {
   sugeridos(projectId: string, limite: number): Promise<CandidatoDeReel[]>;
   /** Marca `escolhida` só se estava `nova`; devolve se conseguiu. */
   escolher(id: string): Promise<boolean>;
+  /** O que falhou volta a `escolhida`, com o preparo e o texto que já tinha: o worker tenta de novo. */
+  tentarDeNovo(id: string): Promise<boolean>;
   filaDePreparo(limite: number): Promise<CandidatoDeReel[]>;
   filaDeRender(limite: number): Promise<CandidatoDeReel[]>;
   /** `escolhida` para `renderizando`, só se ninguém pegou antes. */
@@ -156,6 +158,7 @@ export function candidatosSupabase(client: SupabaseClient): CandidatosDeReel {
     sugeridos: (projectId, limite) =>
       lista(tabela().select("*").eq("project_id", projectId).eq("estado", "nova").order("nota", { ascending: false }).limit(limite)),
     escolher: (id) => mudar(id, { estado: "escolhida", motivo: null }, "nova"),
+    tentarDeNovo: (id) => mudar(id, { estado: "escolhida", motivo: null }, "falhou"),
     filaDePreparo: (limite) =>
       lista(tabela().select("*").eq("estado", "escolhida").is("preparo", null).order("atualizada_em").limit(limite)),
     filaDeRender: (limite) =>
@@ -205,6 +208,7 @@ export function candidatosEmMemoria(iniciais: CandidatoDeReel[] = []): Candidato
     sugeridos: async (projectId, limite) =>
       todos.filter((c) => c.projectId === projectId && c.estado === "nova").sort((a, b) => b.nota - a.nota).slice(0, limite),
     escolher: async (id) => mudar(id, { estado: "escolhida", motivo: null }, "nova"),
+    tentarDeNovo: async (id) => mudar(id, { estado: "escolhida", motivo: null }, "falhou"),
     filaDePreparo: async (limite) => todos.filter((c) => c.estado === "escolhida" && !c.preparo).slice(0, limite),
     filaDeRender: async (limite) => todos.filter((c) => c.estado === "escolhida" && c.texto).slice(0, limite),
     reivindicar: async (id) => mudar(id, { estado: "renderizando" }, "escolhida"),

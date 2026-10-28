@@ -1,3 +1,5 @@
+import { modoDoTermometro, pautasAtrasadas, termometroDoDia } from "../editorial/termometro-do-dia";
+import type { EstadoAtual } from "../editorial/termometro";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PautaAvaliada } from "../editorial/guarda";
 import type { RegistroHistorico } from "../editorial/history";
@@ -465,6 +467,32 @@ async function cicloSocialDoDia(
     }
   }
 
+  /*
+   * O termômetro (28/10/2026): o estado atual da história de cada pauta, para
+   * a guarda do post segurar a etapa superada ("viaja" quando já "chegou").
+   * Em `dry_run` só diz no log quais pautas a trava seguraria pela manchete de
+   * origem; em `enforce` o estado vai para a guarda. Falha nunca derruba o dia.
+   */
+  let estadosAtuais: Map<string, EstadoAtual> | undefined;
+  const modoTermometro = modoDoTermometro(opcoes.projeto);
+  if (modoTermometro !== "off") {
+    try {
+      const t = await termometroDoDia(
+        approvedEditorialPool,
+        opcoes.fontesDoCalor ??
+          fontesPadraoDoCalor({ client: opcoes.client, projectId: opcoes.projectId, env, fetcher, agoraMs: opcoes.agoraMs }),
+        opcoes.agoraMs,
+      );
+      for (const l of t.linhas) console.log(l);
+      for (const a of pautasAtrasadas(approvedEditorialPool, t.estados)) {
+        console.log(`[TERMOMETRO] ${modoTermometro === "enforce" ? "segura" : "seguraria"} ${a.storyId}: ${a.motivo}`);
+      }
+      if (modoTermometro === "enforce") estadosAtuais = t.estados;
+    } catch (erro) {
+      console.warn(`[TERMOMETRO] não rodou, a trava fica de fora hoje: ${(erro as Error)?.message ?? erro}`);
+    }
+  }
+
   const candidatosStore = criarCandidatosStore(opcoes.client);
 
   /*
@@ -751,6 +779,7 @@ async function cicloSocialDoDia(
 
   const ciclo = await rodarCicloSocial(doPool.pool, {
     projectId: opcoes.projectId,
+    estadosAtuais,
     /*
      * Os moldes saem do projeto, do mesmo `settings` de onde saem as
      * capacidades, e por isso nenhum chamador precisou mudar. Projeto ausente

@@ -1,4 +1,5 @@
 import type { PacoteFactual } from "../editorial/pacote-factual";
+import type { EstadoAtual } from "../editorial/termometro";
 import type { PautaAvaliada } from "../editorial/guarda";
 import type { CandidataPersistida } from "../editorial/candidatos-store";
 import { gerarCopyDoPost, levaCta, montarLegenda, repararCopyDoPost } from "./copy";
@@ -124,6 +125,8 @@ export type OpcoesDoGerador = {
    * conferência determinística não tem como conferir e que pode ser enorme.
    */
   verificarClaims?: (entrada: EntradaDaVerificacao) => Promise<AuditoriaDoCarrossel>;
+  /** O estado atual da história de cada pauta (termômetro), para a trava da guarda. Ausente, nada muda. */
+  estadosAtuais?: Map<string, EstadoAtual>;
 };
 
 export type EntradaDaVerificacao = {
@@ -160,6 +163,7 @@ export async function gerarPostDaPauta(
     fechamentoDaNewsletter: env.NEWSLETTER_FINAL_LINE,
     // `settings.instagram.hashtags`, desligado por padrão desde 06/10/2026.
     hashtags: opcoes.marca.hashtags === true,
+    estadoAtual: opcoes.estadosAtuais?.get(pauta.storyId) ?? null,
   };
 
   let tokens = 0;

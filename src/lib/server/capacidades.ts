@@ -109,6 +109,14 @@ export const CAPACIDADES = [
    */
   "radar",
   /**
+   * O termômetro de pauta (28/10/2026): agrupa as matérias do dia por
+   * história, acha o capítulo mais novo e trava o post que conta uma etapa já
+   * superada ("viaja" quando a história já está em "chega"). `dry_run` calcula,
+   * avisa no log e grava o ranking; `enforce` também segura o post e manda o
+   * alerta do assunto que acelera. Ausente vale `off`. Ver `editorial/termometro.ts`.
+   */
+  "termometro",
+  /**
    * A notícia quente no mesmo dia (06/10/2026): um ciclo da tarde, só do
    * Instagram, que coleta de novo e preenche as vagas livres de hoje com a
    * pauta nova e quente. Sem fallback de ambiente: ausente vale `off`. Ver

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { pautaDeTeste } from "./calor.fixture";
 import {
+  BONUS_BRASIL_EUA,
+  BONUS_DE_ACELERACAO,
+  acelerando,
   andamentoDaHistoria,
   bonusDoCalor,
   contarVeiculos,
@@ -84,6 +87,8 @@ describe("os sinais do calor", () => {
       horas: 2,
       numeroForte: "670",
       veiculos3h: 5,
+      // 5 em 3h depois de 3 nas 3h anteriores não é aceleração forte: os 100 são só dos sinais.
+      veiculosAntes3h: 3,
     });
     expect(quente.total).toBe(100);
     expect(bonusDoCalor(quente)).toBe(Math.round(100 * PESO_DO_CALOR));
@@ -251,5 +256,28 @@ describe("a fama no Wikidata", () => {
     // Estado americano: instância de estado (Q35657), sem sede nem setor.
     const f = fetcherFalso("Virgínia Ocidental", "Q1371", ["enwiki", "ptwiki", "eswiki"], "Q35657");
     expect(await famaNoWikidata("Virgínia Ocidental", f, "teste")).toBeNull();
+  });
+});
+
+describe("os extras do termômetro (28/10/2026)", () => {
+  const base = { veiculos: 3, tendencias: [], fama: null, horas: 1, numeroForte: null };
+
+  it("acelera quando a janela de 3h mais nova tem 3 ou mais veículos e ao menos o dobro da anterior", () => {
+    expect(acelerando(3, 0)).toBe(true);
+    expect(acelerando(4, 2)).toBe(true);
+    expect(acelerando(4, 3)).toBe(false);
+    expect(acelerando(2, 0)).toBe(false);
+    const comAceleracao = pontuarCalor({ ...base, veiculos3h: 4, veiculosAntes3h: 1 });
+    const semAceleracao = pontuarCalor({ ...base, veiculos3h: 4, veiculosAntes3h: 3 });
+    expect(comAceleracao.total - semAceleracao.total).toBe(BONUS_DE_ACELERACAO);
+    expect(comAceleracao.explicacao).toMatch(/acel/);
+  });
+
+  it("Brasil × EUA soma o peso extra, e a etapa superada corta o total pela metade", () => {
+    const so = pontuarCalor({ ...base, veiculos3h: 2, veiculosAntes3h: 2 });
+    const cruzado = pontuarCalor({ ...base, veiculos3h: 2, veiculosAntes3h: 2, brasilEua: true });
+    expect(cruzado.total - so.total).toBe(BONUS_BRASIL_EUA);
+    const superada = pontuarCalor({ ...base, veiculos3h: 2, veiculosAntes3h: 2, brasilEua: true, superada: true });
+    expect(superada.total).toBe(Math.round(cruzado.total / 2));
   });
 });

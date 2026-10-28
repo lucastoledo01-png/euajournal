@@ -1,6 +1,7 @@
 import type { PautaAvaliada } from "../editorial/guarda";
 import type { RegistroHistorico } from "../editorial/history";
 import type { PacoteFactual } from "../editorial/pacote-factual";
+import type { EstadoAtual } from "../editorial/termometro";
 import type { CandidataPersistida } from "../editorial/candidatos-store";
 import type { ResultadoVisual } from "../visual/tipos";
 import { comporFeedSocial, carregarConfigSocial, topicoDaPauta } from "./selecao";
@@ -121,6 +122,8 @@ function chapeuDoPost(post: PostGerado): string {
 
 export type OpcoesDoCiclo = {
   projectId: string;
+  /** O estado atual da história de cada pauta (termômetro em `enforce`). Ausente, a trava não roda. */
+  estadosAtuais?: Map<string, EstadoAtual>;
   /**
    * Quais moldes de arte o feed pode usar.
    *
@@ -430,6 +433,7 @@ export async function rodarCicloSocial(
       fetcher: opcoes.fetcher,
       decidirCarrossel: opcoes.decidirCarrossel,
       verificarClaims: opcoes.verificarClaims,
+      estadosAtuais: opcoes.estadosAtuais,
     },
   );
   linhas.push(...geracao.linhasDeLog);

@@ -148,6 +148,7 @@ export async function calcularCalorDoDia(pool: PautaAvaliada[], opcoes: OpcoesDo
       pontuarCalor({
         veiculos: contarVeiculos(vetorDaPauta(i), dominiosDaPauta(p), vizinhas, limiar, agoraMs),
         veiculos3h: andamento.veiculos3h,
+        veiculosAntes3h: andamento.veiculosAntes3h,
         superada: andamento.superada,
         tendencias: tendenciasQueCasam(texto, termos),
         fama,
@@ -234,6 +235,8 @@ export function registroDoCalor(pool: PautaAvaliada[], porStory: Map<string, Cal
       partes: c!.partes,
       veiculos: c!.sinais.veiculos,
       veiculos3h: c!.sinais.veiculos3h ?? 0,
+      veiculosAntes3h: c!.sinais.veiculosAntes3h ?? 0,
+      brasilEua: c!.sinais.brasilEua ?? false,
       superada: c!.sinais.superada ?? false,
       tendencias: c!.sinais.tendencias.slice(0, 3),
       fama: c!.sinais.fama,
@@ -323,14 +326,26 @@ export function fontesPadraoDoCalor(entrada: {
     async publicadasNoDia() {
       if (!entrada.client) return [];
       const desde = new Date(agoraMs - 24 * 3600 * 1000).toISOString();
-      const { data, error } = await (entrada.client as SupabaseClient)
-        .from("news_candidates")
-        .select("title,source_domain,url,published_at")
-        .eq("project_id", entrada.projectId)
-        .gte("published_at", desde)
-        .limit(3000);
-      if (error) throw new Error(error.message);
-      return (data ?? []).map((l: Record<string, unknown>) => ({
+      /*
+       * Em páginas de 1000: o PostgREST devolve no máximo 1000 linhas por
+       * pedido, e o `limit(3000)` de antes parava em 1000 sem avisar. Medido
+       * no ensaio de 28/10/2026: o dia tinha mais que isso, e o calor contava
+       * veículos sobre uma fatia.
+       */
+      const data: Array<Record<string, unknown>> = [];
+      for (let de = 0; de < 3000; de += 1000) {
+        const { data: pagina, error } = await (entrada.client as SupabaseClient)
+          .from("news_candidates")
+          .select("title,source_domain,url,published_at")
+          .eq("project_id", entrada.projectId)
+          .gte("published_at", desde)
+          .order("published_at", { ascending: false })
+          .range(de, de + 999);
+        if (error) throw new Error(error.message);
+        data.push(...((pagina ?? []) as Array<Record<string, unknown>>));
+        if ((pagina ?? []).length < 1000) break;
+      }
+      return data.map((l: Record<string, unknown>) => ({
         titulo: String(l.title ?? ""),
         dominio: String(l.source_domain ?? "") || dominioSimples(String(l.url ?? "")),
         publicadoEm: String(l.published_at ?? ""),

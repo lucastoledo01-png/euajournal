@@ -13,6 +13,12 @@ export type NewsCandidate = {
   content: string;
   category: string;
   image_url?: string;
+  /**
+   * O veículo de verdade quando o item vem de um agregador (28/10/2026). O
+   * Google Notícias publica o link dele, e o `<source url>` diz quem escreveu:
+   * é isso que deixa o termômetro contar veículos pela busca por assunto.
+   */
+  publisher_url?: string;
   score: number;
   dedupe_key: string;
   window_hours: number;
@@ -124,8 +130,8 @@ function generateDedupeKey(title: string, url: string): string {
  */
 export function parseRSSItems(
   xml: string
-): Array<{ title: string; url: string; publishedAt: string; description: string; content: string; author?: string; imageUrl?: string }> {
-  const items: Array<{ title: string; url: string; publishedAt: string; description: string; content: string; author?: string; imageUrl?: string }> = [];
+): Array<{ title: string; url: string; publishedAt: string; description: string; content: string; author?: string; imageUrl?: string; publisherUrl?: string }> {
+  const items: Array<{ title: string; url: string; publishedAt: string; description: string; content: string; author?: string; imageUrl?: string; publisherUrl?: string }> = [];
 
   const itemMatches = xml.match(/<(?:item|entry)[\s\S]*?<\/(?:item|entry)>/gi) || [];
 
@@ -174,8 +180,8 @@ export function parseRSSItems(
     }
 
     if (rawTitle && rawLink) {
-      const pubDate = rawDate ? new Date(rawDate) : new Date();
-      const validDate = isNaN(pubDate.getTime()) ? new Date() : pubDate;
+      const validDate = lerDataDoFeed(rawDate) ?? new Date();
+      const publicador = rawItem.match(/<source[^>]*\burl=["']([^"']+)["']/i)?.[1];
 
       const titulo = cleanText(rawTitle);
       const corpo = corpoUtil(cleanText(rawDesc), titulo);
@@ -188,11 +194,41 @@ export function parseRSSItems(
         content: corpo.slice(0, 1500),
         author: rawAuthor ? cleanText(rawAuthor) : undefined,
         imageUrl: extractedImgUrl || "",
+        ...(publicador ? { publisherUrl: publicador } : {}),
       });
     }
   }
 
   return items;
+}
+
+const MESES_EM_PORTUGUES: Record<string, string> = {
+  jan: "Jan", fev: "Feb", mar: "Mar", abr: "Apr", mai: "May", jun: "Jun",
+  jul: "Jul", ago: "Aug", set: "Sep", out: "Oct", nov: "Nov", dez: "Dec",
+};
+
+/**
+ * A data do item, também quando o feed escreve em português (28/10/2026).
+ *
+ * O UOL publica "Qua, 28 Out 2026 13:19:00 -0300", e `new Date()` não entende:
+ * a matéria ficava com a hora da COLETA. Uma vez por dia isso passava; com o
+ * radar de 15 em 15 minutos, toda matéria do UOL pareceria publicada agora, e
+ * a velocidade e a recência do termômetro mentiriam. Traduz dia e mês para o
+ * inglês do RFC 822 e tenta de novo. Ilegível continua `null`, e quem chama
+ * decide (o coletor usa a hora da coleta, como antes).
+ */
+export function lerDataDoFeed(bruta: string): Date | null {
+  const t = (bruta ?? "").trim();
+  if (!t) return null;
+  const direta = new Date(t);
+  if (!Number.isNaN(direta.getTime())) return direta;
+  const traduzida = t
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^[A-Za-z]{3}[a-z]*,?\s*/, "")
+    .replace(/\b([A-Za-z]{3})[a-z]*\b/g, (m, tres: string) => MESES_EM_PORTUGUES[tres.toLowerCase()] ?? m);
+  const segunda = new Date(traduzida);
+  return Number.isNaN(segunda.getTime()) ? null : segunda;
 }
 
 type RawItem = {
@@ -203,6 +239,7 @@ type RawItem = {
   content: string;
   author?: string;
   imageUrl?: string;
+  publisherUrl?: string;
 };
 
 /**
@@ -342,6 +379,7 @@ export async function collectFromSource(
       content: item.content,
       category: source.category,
       image_url: item.imageUrl || "",
+      ...("publisherUrl" in item && item.publisherUrl ? { publisher_url: item.publisherUrl } : {}),
       score: source.priority === 1 ? 75 : 60,
       dedupe_key: generateDedupeKey(item.title, item.url),
       window_hours: 24,

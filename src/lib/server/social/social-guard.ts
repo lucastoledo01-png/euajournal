@@ -1,3 +1,4 @@
+import { contradizEstadoAtual, type EstadoAtual } from "../editorial/termometro";
 import type { PacoteFactual } from "../editorial/pacote-factual";
 import { citacoesSemAtribuicao, validarAncoragem } from "../editorial/pacote-factual";
 import type { PautaAvaliada } from "../editorial/guarda";
@@ -26,6 +27,8 @@ import { conferirContextoDaManchete } from "./manchete-com-contexto";
  */
 
 export const MOTIVOS_DO_SOCIAL_GUARD = {
+  /** O post conta uma etapa que a história já passou (termômetro, 28/10/2026). */
+  ETAPA_SUPERADA: "SOCIAL_REJECT_STALE_STAGE",
   HEADLINE_SEM_ANCORAGEM: "SOCIAL_REJECT_HEADLINE",
   CAPTION_SEM_ANCORAGEM: "SOCIAL_REJECT_GROUNDING",
   EUA_NEGATIVO: "SOCIAL_REJECT_US_NEGATIVE",
@@ -257,6 +260,11 @@ export type ContextoDoPost = {
    * padrão, a legenda sai sem hashtag e ter poucas deixa de ser problema.
    */
   hashtags?: boolean;
+  /**
+   * O que a matéria MAIS NOVA da história diz agora (termômetro, 28/10/2026).
+   * Presente só com a capacidade `termometro` em `enforce`; ausente, nada muda.
+   */
+  estadoAtual?: EstadoAtual | null;
 };
 
 export type VeredictoDoPost = {
@@ -300,6 +308,17 @@ export function avaliarPostSocial(
         reparavel: false,
       });
     }
+  }
+
+  /*
+   * A trava do termômetro: o post não pode contar uma etapa que a história já
+   * passou. Não é reparável, porque o pacote factual é o do capítulo velho:
+   * reescrever com "chegou" seria afirmar o que a fonte dele não diz. O certo é
+   * a pauta do capítulo novo, que o termômetro já pôs no topo.
+   */
+  const contradicao = contradizEstadoAtual(`${copy.headline} ${copy.gancho ?? ""}`, contexto.estadoAtual);
+  if (contradicao) {
+    problemas.push({ motivo: MOTIVOS_DO_SOCIAL_GUARD.ETAPA_SUPERADA, detalhe: contradicao, reparavel: false });
   }
 
   // Negatividade sobre os EUA: regra da casa, e não do texto.

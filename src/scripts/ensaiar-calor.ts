@@ -12,6 +12,11 @@
  *
  * Criado em 06/10/2026 junto com a capacidade `calor`, para o dono ver o que
  * ela faria antes de pôr o projeto em `dry_run`.
+ *
+ * Desde 28/10/2026 imprime também o TERMÔMETRO: o ranking do momento por
+ * história, com a etapa atual, os veículos das últimas 3h e o título mais novo;
+ * os alertas; e o que a trava seguraria, nas pautas aprovadas e nos posts das
+ * últimas 24h. Continua só lendo o banco.
  */
 
 import fs from "node:fs";
@@ -20,6 +25,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { PautaAvaliada } from "../lib/server/editorial/guarda";
 import { calcularCalorDoDia, fontesPadraoDoCalor } from "../lib/server/editorial/calor-do-dia";
 import { bonusDoCalor } from "../lib/server/editorial/calor";
+import { pautasAtrasadas, termometroDoDia } from "../lib/server/editorial/termometro-do-dia";
 
 function carregarEnv() {
   const arquivo = path.resolve(process.cwd(), ".env");
@@ -69,7 +75,8 @@ async function main() {
     });
   }
 
-  const calor = await calcularCalorDoDia(pool, { fontes: fontesPadraoDoCalor({ client, projectId }) });
+  const fontes = fontesPadraoDoCalor({ client, projectId });
+  const calor = await calcularCalorDoDia(pool, { fontes });
   for (const l of calor.linhas) console.log(l);
 
   const linhas = pool.map((p) => {
@@ -88,6 +95,40 @@ async function main() {
         `calor ${l.c.total} :: ${l.p.grupo.primary.title.slice(0, 90)}\n      ${l.c.explicacao}`,
     );
   });
+
+  // O termômetro: o dia inteiro, aprovado ou não, por história.
+  const { data: posts } = await client
+    .from("social_posts")
+    .select("id,title,status,scheduled_at")
+    .eq("project_id", projectId)
+    .gte("created_at", desde)
+    .in("status", ["draft", "scheduled", "published"])
+    .limit(50);
+  const comoPauta = (id: string, titulo: string) =>
+    ({ storyId: id, grupo: { primary: { title: titulo }, secondary_urls: [] } }) as unknown as PautaAvaliada;
+  const doPost = (posts ?? []).filter((x) => x.title).map((x) => comoPauta(`post:${x.id}`, String(x.title)));
+  const t = await termometroDoDia([...pool, ...doPost], fontes);
+  for (const l of t.linhas) console.log(`\n${l}`);
+
+  console.log("\nTERMÔMETRO: o mais quente agora | etapa atual | veículos em 3h (3h antes) | título mais novo");
+  t.ranking.slice(0, 15).forEach((l, i) => {
+    const marcas = [l.alerta ? "ALERTA" : "", l.brasilEua ? "BR×EUA" : "", l.superadoPor ? "SUPERADA" : ""].filter(Boolean).join(" ");
+    console.log(
+      `${String(i + 1).padStart(2)}. calor ${String(l.calor.total).padStart(3)} | ${(l.etapaAtual ?? "-").padEnd(12)} | ` +
+        `${l.veiculos3h} (${l.veiculosAntes3h}) | ${l.tituloMaisNovo.slice(0, 85)} [${l.dominioMaisNovo}] ${marcas}` +
+        (l.superadoPor ? `\n      superada por: ${l.superadoPor.slice(0, 90)}` : "") +
+        `\n      ${l.calor.explicacao}`,
+    );
+  });
+
+  const alertas = t.ranking.filter((l) => l.alerta);
+  console.log(`\nALERTAS (acelera e casa com o nicho): ${alertas.length}`);
+  for (const l of alertas) console.log(`  - ${l.tituloMaisNovo} [${l.dominioMaisNovo}] ${l.veiculos3h} em 3h, ${l.veiculosAntes3h} antes`);
+
+  const atrasadas = pautasAtrasadas([...pool, ...doPost], t.estados);
+  console.log(`\nTRAVA: o que seria segurado por contar etapa superada: ${atrasadas.length}`);
+  for (const a of atrasadas) console.log(`  - ${a.storyId.startsWith("post:") ? "post" : "pauta"} "${a.titulo.slice(0, 80)}": ${a.motivo}`);
+  console.log(`\nEstados atuais encontrados: ${t.estados.size} de ${pool.length + doPost.length} pauta(s) e post(s)`);
 }
 
 main().catch((e) => {

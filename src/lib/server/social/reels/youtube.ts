@@ -14,6 +14,21 @@ const API = "https://www.googleapis.com/youtube/v3";
 
 export type LeituraDoYoutube = { consulta: string; ok: boolean; mensagem: string | null; videos: VideoAchado[] };
 
+/**
+ * Português, e não humor (28/10/2026, primeira rodada real): a busca com
+ * `relevanceLanguage=pt` ainda trouxe vídeo em espanhol, pegadinha feita com IA
+ * e palavrão. O idioma vem do áudio declarado pelo canal; sem declaração, do
+ * título, pelas marcas que só o português tem.
+ */
+const MARCAS_DO_PORTUGUES = /(ção|ções|ões|ã|õ|\b(não|você|são|está|também|após|até)\b)/i;
+const NAO_E_NOTICIA = /(#ai\b|#ia\b|prank|pegadinha|com[eé]dia|comedy|humor|meme|par[oó]dia|parody|funny|engra[cç]ad|\*\*|#fun)/i;
+
+export function serveParaOReel(v: { titulo: string; legenda: string; idioma: string | null }): boolean {
+  if (NAO_E_NOTICIA.test(`${v.titulo} ${v.legenda.slice(0, 300)}`)) return false;
+  if (v.idioma) return v.idioma.toLowerCase().startsWith("pt");
+  return MARCAS_DO_PORTUGUES.test(v.titulo);
+}
+
 /** "PT1M5S" em segundos. */
 export function segundosDaDuracao(iso: string): number | null {
   const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
@@ -67,7 +82,14 @@ export async function videosDoYoutube(
       error?: { message?: string };
       items?: Array<{
         id: string;
-        snippet?: { title?: string; description?: string; channelTitle?: string; publishedAt?: string };
+        snippet?: {
+          title?: string;
+          description?: string;
+          channelTitle?: string;
+          publishedAt?: string;
+          defaultAudioLanguage?: string;
+          defaultLanguage?: string;
+        };
         statistics?: { viewCount?: string; likeCount?: string; commentCount?: string };
         contentDetails?: { duration?: string };
       }>;
@@ -83,6 +105,13 @@ export async function videosDoYoutube(
         return { v, publicado, horas, views, segundos };
       })
       .filter((x) => Number.isFinite(x.horas) && (x.segundos === null || x.segundos <= (opcoes.duracaoMaxima ?? 180)))
+      .filter(({ v }) =>
+        serveParaOReel({
+          titulo: v.snippet?.title ?? "",
+          legenda: v.snippet?.description ?? "",
+          idioma: v.snippet?.defaultAudioLanguage ?? v.snippet?.defaultLanguage ?? null,
+        }),
+      )
       .map(({ v, publicado, horas, views, segundos }) => ({
         fonte: "youtube" as const,
         origemId: v.id,

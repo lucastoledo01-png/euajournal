@@ -59,7 +59,8 @@ const PAUTA = z.string().min(1).describe("O story_id da pauta, como `pautas_disp
 export const INSTRUCOES_DO_MCP = [
   "PARA FAZER O DIA INTEIRO SOZINHO: chame fazer_o_dia. Ele devolve UM passo: uma tarefa (faça e entregue com entregar_tarefa; a resposta já traz o passo seguinte em `proximo`), \"aguardar\" (chame aguardar e repita até mudar; é o dono aprovando o plano no painel) ou \"pronto\". Siga até \"pronto\" sem esperar nova ordem. Se a conversa encher, abra outra e chame fazer_o_dia: o dia continua de onde parou.",
   "Você faz o trabalho de modelo do eua.journal: escreve, audita e corrige os posts, e a plataforma confere com as mesmas guardas da esteira automática.",
-  "O ciclo de um post: estado_do_dia, pautas_disponiveis, iniciar_post, depois proxima_tarefa e entregar_tarefa até o post ficar pronto, montar_post para ver a peça, e agendar_post.",
+  "Quando o dono pedir o dia, as pautas, o que produzir hoje ou \"faça o dia\", use SEMPRE fazer_o_dia: a triagem lê as notícias das últimas 24 horas. Não use pautas_disponiveis para isso.",
+  "Caminho avulso, só se o dono pedir um post de uma pauta específica: pautas_disponiveis, iniciar_post, proxima_tarefa e entregar_tarefa até ficar pronto, montar_post, agendar_post.",
   "Cada tarefa traz a instrução (system e user), o material e o esquema JSON da resposta. Siga a instrução ao pé da letra e entregue SÓ o JSON do esquema.",
   "Quando a entrega volta com motivos, a tarefa está em reparo: peça a próxima tarefa e corrija só o apontado. Não invente para tapar buraco.",
   "Na auditoria, julgue só pelo pacote factual que vem na tarefa, como se não tivesse escrito o texto; se puder, audite numa conversa separada.",
@@ -121,7 +122,7 @@ export function criarServidorMcp(backend: Backend, versao = "0.4.0"): McpServer 
       title: "Estado do dia",
       description:
         "Mostra o que falta fazer no dia: peças reprovadas pelo dono esperando correção, tarefas abertas e em reparo, " +
-        "e se a fila de aprovação está aceitando entregas. Comece sempre por aqui.",
+        "e se a fila de aprovação está aceitando entregas. Para produzir o dia, use fazer_o_dia.",
       inputSchema: { data: DATA },
       annotations: { readOnlyHint: true },
     },
@@ -145,9 +146,11 @@ export function criarServidorMcp(backend: Backend, versao = "0.4.0"): McpServer 
     "pautas_disponiveis",
     {
       title: "Pautas disponíveis",
-      description: "Lista as pautas com pacote factual e foto que ainda não viraram post neste projeto.",
+      description:
+        "Caminho avulso: lista os posts que a esteira já produziu (com pacote e foto) e que o Claude pode refazer. " +
+        "Não é a pauta do dia: para o dia, use fazer_o_dia.",
       inputSchema: {
-        dias: z.number().int().min(1).max(60).optional().describe("Quantos dias para trás procurar. Padrão 30."),
+        dias: z.number().int().min(1).max(60).optional().describe("Quantos dias para trás procurar. Padrão 2."),
       },
       annotations: { readOnlyHint: true },
     },

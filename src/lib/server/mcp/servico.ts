@@ -77,8 +77,9 @@ export async function verFila(acesso: AcessoDoMcp, client: SupabaseClient = getS
 export async function pautas(acesso: AcessoDoMcp, args: { dias?: unknown }, client: SupabaseClient = getSupabaseAdminClient()): Promise<Resposta> {
   const fonte = await projetoDaFonte(acesso.projeto);
   if (!fonte) return recusa(404, "o projeto de pautas declarado não existe");
-  const pedidos = Number(args.dias ?? 30);
-  const dias = Number.isFinite(pedidos) ? Math.min(60, Math.max(1, Math.round(pedidos))) : 30;
+  // Dois dias por padrão (29/10/2026): com 30, o Claude oferecia pauta de semanas atrás como se fosse do dia.
+  const pedidos = Number(args.dias ?? 2);
+  const dias = Number.isFinite(pedidos) ? Math.min(60, Math.max(1, Math.round(pedidos))) : 2;
   const desdeIso = new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString();
   const lista = await pautasDisponiveis(client, { projectIdDaFonte: fonte.id, projectIdDoClaude: acesso.projeto.id, desdeIso });
   return { ok: true, fonte: fonte.slug, dias, pautas: lista };

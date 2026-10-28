@@ -44,7 +44,7 @@ export type VisaoNaTela = {
 };
 
 const RAMOS_NA_TELA: Ramo[] = ["newsletter", "artigo", "post"];
-const ROTULO_DO_CANAL: Record<Ramo, string> = { newsletter: "Newsletter", artigo: "Portal", post: "Instagram" };
+const ROTULO_DO_CANAL: Record<Ramo, string> = { newsletter: "Newsletter", artigo: "Portal", post: "Instagram", plano: "Plano do dia" };
 const ROTULO_DA_ORIGEM = { reprovacoes: "reprovações repetidas", edicoes: "edições à mão" } as const;
 
 function diaMes(data: string): string {

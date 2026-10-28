@@ -35,6 +35,8 @@ function chamadasFalsas(registro: Array<{ nome: string; args: Record<string, unk
     reels_sugeridos: ok("reels_sugeridos", { reels: [] }),
     produzir_reel: ok("produzir_reel", { candidato_id: "c1" }),
     ver_reel: ok("ver_reel", { estado: "nova", imagem: { mime: "image/jpeg", base64: "AAAA" } }),
+    fazer_o_dia: ok("fazer_o_dia", { passo: "tarefa", imagens: [{ mime: "image/jpeg", base64: "BBBB" }], tarefa: { id: "t1" } }),
+    aguardar: ok("aguardar", { passo: "aguardar" }),
   };
 }
 
@@ -95,5 +97,15 @@ describe("o MCP online", () => {
     expect(r.content[0]).toMatchObject({ type: "image", data: "AAAA" });
     expect(r.content[1].text).toContain('"estado": "nova"');
     expect(r.content[1].text).not.toContain("base64");
+  });
+
+  it("fazer_o_dia manda as fotos como imagem, fora do JSON", async () => {
+    const cliente = await conectar([]);
+    const r = (await cliente.callTool({ name: "fazer_o_dia", arguments: {} })) as {
+      content: Array<{ type: string; data?: string; text?: string }>;
+    };
+    expect(r.content[0]).toMatchObject({ type: "image", data: "BBBB" });
+    expect(r.content[1].text).toContain('"passo": "tarefa"');
+    expect(r.content[1].text).not.toContain("BBBB");
   });
 });

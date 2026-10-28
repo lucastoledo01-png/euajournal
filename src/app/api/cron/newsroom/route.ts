@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ehMotorClaude } from "@/lib/server/mcp/motor";
 import type { NextRequest } from "next/server";
 import { requireCron } from "@/lib/server/api-auth";
 import { anexarDesfechoDoAlerta, runNewsroom } from "@/lib/server/newsroom/newsroom-service";
@@ -151,6 +152,14 @@ async function handle(req: NextRequest) {
    */
   if (!chave) {
     const projeto = await getProjectById(DEFAULT_PROJECT_ID).catch(() => null);
+    /*
+     * No motor Claude (29/10/2026) quem escreve é o Claude, pelo "faça o dia"
+     * do MCP: a redação do cron não roda, e nenhuma chamada à OpenAI sai.
+     */
+    if (ehMotorClaude(projeto)) {
+      await pingHealthcheck(healthcheck);
+      return NextResponse.json({ ok: true, skipped: true, motivo: "MOTOR_CLAUDE", message: "O dia deste projeto é feito pelo Claude, no MCP." });
+    }
     if (cicloDasSeisCede(projeto)) {
       console.log("[CRON NEWSROOM] produção na véspera em enforce: o ciclo das 06:03 não produz hoje.");
       await pingHealthcheck(healthcheck);

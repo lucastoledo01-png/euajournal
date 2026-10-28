@@ -119,7 +119,7 @@ export type OpcoesDeConferencia = {
  */
 const PISO_PADRAO = 70;
 
-const SISTEMA = `Você confere se uma fotografia pode ilustrar uma notícia.
+export const SISTEMA_DA_CONFERENCIA = `Você confere se uma fotografia pode ilustrar uma notícia.
 
 A publicação é brasileira, escreve em português e cobre os Estados Unidos.
 
@@ -250,7 +250,7 @@ export async function conferirImagem(
     .join("\n");
 
   const mensagens = [
-    { role: "system" as const, content: SISTEMA },
+    { role: "system" as const, content: SISTEMA_DA_CONFERENCIA },
     {
       role: "user" as const,
       content: [

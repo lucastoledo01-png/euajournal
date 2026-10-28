@@ -14,7 +14,12 @@ import type { PacoteFactual } from "../editorial/pacote-factual";
  * confere que o que vai ao ar ainda é ele. Ver `portao.ts`.
  */
 
-export const RAMOS = ["newsletter", "artigo", "post"] as const;
+/**
+ * `plano` (29/10/2026): o plano do dia do Claude (`mcp/dia/plano.ts`), aprovado
+ * antes de qualquer peça ser produzida. Não vai ao ar: aprová-lo libera a
+ * produção do que ele lista.
+ */
+export const RAMOS = ["newsletter", "artigo", "post", "plano"] as const;
 export type Ramo = (typeof RAMOS)[number];
 
 export const ESTADOS_DA_APROVACAO = [
@@ -54,6 +59,7 @@ export const ETAPAS_DO_RAMO: Record<Ramo, readonly Etapa[]> = {
   post: ["selecao", "texto", "imagem", "arte"],
   newsletter: ["selecao", "texto", "imagem"],
   artigo: ["selecao", "texto", "imagem"],
+  plano: ["selecao"],
 };
 
 /**
@@ -259,6 +265,7 @@ export const MINUTOS_DA_REFACAO: Record<Ramo, Record<Etapa, number>> = {
   post: { selecao: 6, texto: 3, imagem: 3, arte: 1 },
   artigo: { selecao: 6, texto: 4, imagem: 2, arte: 1 },
   newsletter: { selecao: 8, texto: 6, imagem: 3, arte: 1 },
+  plano: { selecao: 3, texto: 0, imagem: 0, arte: 0 },
 };
 
 /** Uma refação `rodando` há mais que isto é de um processo que morreu: volta para a fila. */

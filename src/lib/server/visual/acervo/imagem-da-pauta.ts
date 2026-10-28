@@ -91,7 +91,7 @@ export async function lerImagemDaPauta(
   return resultado ?? null;
 }
 
-async function gravarImagemDaPauta(
+export async function gravarImagemDaPauta(
   client: SupabaseClient,
   projectId: string,
   resultado: ResultadoVisual,

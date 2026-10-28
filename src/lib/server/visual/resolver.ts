@@ -94,6 +94,11 @@ export type PautaParaImagem = {
 };
 
 export type OpcoesDeResolucao = {
+  /**
+   * A cena já respondida por quem chama (29/10/2026): no motor Claude é o
+   * Claude que descreve o que fotografar, e a pergunta ao modelo não sai.
+   */
+  cenaPronta?: CenaDaPauta;
   client?: SupabaseClient;
   biblioteca?: Biblioteca;
   env?: Record<string, string | undefined>;
@@ -873,8 +878,8 @@ export async function resolveVisualAsset(
    * A mesma resposta é reaproveitada lá embaixo, então a pergunta continua
    * sendo UMA por pauta.
    */
-  if (acervo && conferir) {
-    cenaPerguntada = await cenaDaPauta(
+  if (acervo && (conferir || opcoes.cenaPronta)) {
+    cenaPerguntada = opcoes.cenaPronta ?? await cenaDaPauta(
       {
         titulo: pauta.titulo,
         resumo: pauta.resumo,
@@ -983,6 +988,8 @@ export async function resolveVisualAsset(
    */
   const cena = cenaPerguntada
     ? cenaPerguntada
+    : opcoes.cenaPronta
+    ? opcoes.cenaPronta
     : conferir
     ? await cenaDaPauta(
         {

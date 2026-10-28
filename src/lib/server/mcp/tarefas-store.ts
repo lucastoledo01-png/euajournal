@@ -27,6 +27,12 @@ export const TIPOS_DE_TAREFA = [
   "revisar_arte",
   // O texto do Reel (28/10/2026): `mcp/reels/tarefa.ts`.
   "escrever_reel",
+  // O dia pelo Claude (29/10/2026): `mcp/dia/`, `mcp/artigo/`, `mcp/newsletter/`.
+  "propor_plano",
+  "escrever_artigo",
+  "auditar_artigo",
+  "escrever_newsletter",
+  "auditar_newsletter",
 ] as const;
 
 export type TipoDeTarefa = (typeof TIPOS_DE_TAREFA)[number];

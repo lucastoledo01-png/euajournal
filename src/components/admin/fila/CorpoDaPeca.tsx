@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { Aprovacao } from "@/lib/server/aprovacao/contrato";
-import type { PreviaDaNewsletter, PreviaDoArtigo, PreviaDoPost } from "@/lib/server/aprovacao/previa";
+import type { PreviaDaNewsletter, PreviaDoArtigo, PreviaDoPlano, PreviaDoPost } from "@/lib/server/aprovacao/previa";
 import { MolduraDePrevia } from "./MolduraDePrevia";
 import { horaCurta } from "./tipos";
 
@@ -301,6 +301,65 @@ export function CorpoDoPost({ a, previa, edicao }: { a: Aprovacao; previa: Previ
         </div>
       </TextoEditavel>
       <PacoteFactual a={a} />
+    </div>
+  );
+}
+
+const NOME_NO_PLANO = { newsletter: "Newsletter", artigos: "Matérias do portal", posts: "Posts", reels: "Reels" } as const;
+
+/**
+ * O plano do dia (29/10/2026): o que o Claude quer produzir, por canal, com o
+ * porquê de cada item. Aprovar libera a produção; "tirar" grava o plano sem o
+ * item (pela mesma edição da fila, que gera hash novo); reprovar devolve ao
+ * Claude com o motivo.
+ */
+export function CorpoDoPlano({ previa, edicao }: { previa: PreviaDoPlano; edicao: Edicao }) {
+  const tirar = (canal: string, id: string) => {
+    const itens = { ...previa.itens } as Record<string, unknown>;
+    itens[canal] = ((itens[canal] as string[]) ?? []).filter((x) => x !== id);
+    void edicao.salvar(JSON.stringify(itens));
+  };
+  return (
+    <div className="space-y-4">
+      {previa.canais.map(({ canal, itens }) => (
+        <section key={canal}>
+          <h4 className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-slate-500">
+            {NOME_NO_PLANO[canal]} ({itens.length})
+          </h4>
+          {itens.length === 0 ? (
+            <p className="text-[13px] text-slate-500">Nada neste canal.</p>
+          ) : (
+            <ul className="space-y-2">
+              {itens.map((i) => (
+                <li key={i.id} className="flex items-start gap-3 rounded-lg bg-slate-50 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-medium text-slate-900">
+                      {i.link ? (
+                        <a href={i.link} target="_blank" rel="noreferrer" className="hover:underline">
+                          {i.titulo}
+                        </a>
+                      ) : (
+                        i.titulo
+                      )}
+                    </p>
+                    {i.porque ? <p className="mt-0.5 text-[13px] text-slate-600">{i.porque}</p> : null}
+                  </div>
+                  {edicao.pode ? (
+                    <button
+                      type="button"
+                      disabled={edicao.ocupado}
+                      onClick={() => tirar(canal, i.id)}
+                      className="shrink-0 rounded-md border border-slate-300 px-2 py-1 text-[12px] text-slate-700 hover:bg-white disabled:opacity-50"
+                    >
+                      Tirar
+                    </button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
     </div>
   );
 }

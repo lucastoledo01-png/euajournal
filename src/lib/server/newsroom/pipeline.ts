@@ -135,6 +135,15 @@ export type OpcoesDoPortao = {
    * Ausente (refação, scripts), a escolha é a de antes.
    */
   formasRecentesDoAssunto?: ReadonlyArray<FormaDoAssunto | null>;
+  /**
+   * O modelo, trocável (29/10/2026). No motor Claude, a redação, o QA e o
+   * auditor de conclusões são respondidos pelo Claude (`mcp/newsletter/`), com
+   * as MESMAS mensagens que iriam à OpenAI. Ausente, é a OpenAI de sempre.
+   */
+  modelo?: {
+    json: <T>(etapa: "redacao" | "qa", mensagens: Array<{ role: "system" | "user"; content: string }>) => Promise<{ data: T; usage: { promptTokens: number; completionTokens: number; estimatedCostUsd: number } }>;
+    claims: typeof auditarClaims;
+  };
 };
 
 /**
@@ -583,15 +592,13 @@ Requisitos obrigatórios:
   };
 
   const escreverEdicao = async (promptUsuario: string): Promise<EditionContent> => {
-    const resposta = await callOpenAIJSON<EditionContent>(
-      [
-        { role: "system", content: montarSystemEditorial(marca) },
-        { role: "user", content: promptUsuario },
-      ],
-      config.editorModel,
-      env,
-      fetcher,
-    );
+    const mensagens = [
+      { role: "system" as const, content: montarSystemEditorial(marca) },
+      { role: "user" as const, content: promptUsuario },
+    ];
+    const resposta = opcoesDoPortao.modelo
+      ? await opcoesDoPortao.modelo.json<EditionContent>("redacao", mensagens)
+      : await callOpenAIJSON<EditionContent>(mensagens, config.editorModel, env, fetcher);
 
     totalPromptTokens += resposta.usage.promptTokens;
     totalCompletionTokens += resposta.usage.completionTokens;
@@ -742,15 +749,13 @@ Avalie os pontos abaixo e responda EXCLUSIVAMENTE com o JSON:
 }
 `;
 
-    const resposta = await callOpenAIJSON<QAResult>(
-      [
-        { role: "system", content: "Você é um auditor rigoroso de fatos e qualidade editorial." },
-        { role: "user", content: qaPrompt },
-      ],
-      config.triageModel,
-      env,
-      fetcher,
-    );
+    const mensagensDoQa = [
+      { role: "system" as const, content: "Você é um auditor rigoroso de fatos e qualidade editorial." },
+      { role: "user" as const, content: qaPrompt },
+    ];
+    const resposta = opcoesDoPortao.modelo
+      ? await opcoesDoPortao.modelo.json<QAResult>("qa", mensagensDoQa)
+      : await callOpenAIJSON<QAResult>(mensagensDoQa, config.triageModel, env, fetcher);
 
     totalPromptTokens += resposta.usage.promptTokens;
     totalCompletionTokens += resposta.usage.completionTokens;
@@ -782,7 +787,7 @@ Avalie os pontos abaixo e responda EXCLUSIVAMENTE com o JSON:
       });
     }
 
-    const r = await auditarClaims(auditaveis, env, fetcher);
+    const r = await (opcoesDoPortao.modelo?.claims ?? auditarClaims)(auditaveis, env, fetcher);
     totalCostUsd += r.custoUsd;
     custosPorEtapa.auditoria_claims += r.custoUsd;
     return r;

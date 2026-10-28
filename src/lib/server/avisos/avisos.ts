@@ -206,7 +206,7 @@ const PENDENTES: readonly EstadoDaAprovacao[] = ["aguardando", "refazendo"];
 const FORA_DA_FILA: readonly EstadoDaAprovacao[] = ["cancelada", "descartada"];
 
 export function contarPorRamo(linhas: LinhaDaFila[]): ContagemPorRamo {
-  const c: ContagemPorRamo = { newsletter: 0, artigo: 0, post: 0 };
+  const c: ContagemPorRamo = { newsletter: 0, artigo: 0, post: 0, plano: 0 };
   for (const l of linhas) c[l.ramo] += 1;
   return c;
 }
@@ -278,9 +278,10 @@ export function textoUltimaChamada(
     newsletter: (n) => `${n} newsletter`,
     artigo: (n) => plural(n, "matéria", "matérias"),
     post: (n) => plural(n, "post", "posts"),
+    plano: (n) => plural(n, "plano do dia", "planos do dia"),
   };
   const linhas: string[] = [];
-  for (const ramo of ["newsletter", "artigo", "post"] as Ramo[]) {
+  for (const ramo of ["plano", "newsletter", "artigo", "post"] as Ramo[]) {
     const doRamo = pendentes.filter((p) => p.ramo === ramo);
     if (doRamo.length === 0) continue;
     const horarios = doRamo

@@ -47,7 +47,8 @@ function configDaAprovacao(projeto: ProjetoComCapacidades | null | undefined): R
  * painel, nem a peça sem aviso sai sozinha. Ver `mcp/motor.ts`.
  */
 export function modoDoRamo(projeto: ProjetoComCapacidades | null | undefined, ramo: Ramo): ModoDoRamo {
-  if (ehMotorClaude(projeto)) return "manual";
+  // O plano do dia é sempre do dono (29/10/2026): aprová-lo é decidir o que o Claude produz.
+  if (ehMotorClaude(projeto) || ramo === "plano") return "manual";
   const valor = configDaAprovacao(projeto)[ramo];
   return valor === "automatico" ? "automatico" : "manual";
 }

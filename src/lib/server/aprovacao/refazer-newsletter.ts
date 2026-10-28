@@ -1,4 +1,5 @@
 import type { Project } from "../projects";
+import type { OpcoesDoPortao } from "../newsroom/pipeline";
 import type { PacoteFactual } from "../editorial/pacote-factual";
 import type { EditionContent } from "../newsroom/schemas";
 import type { RankedCandidate } from "../newsroom/ranker";
@@ -73,6 +74,8 @@ export async function reescreverNewsletter(
     instrucao: string;
   },
   env: Record<string, string | undefined> = process.env,
+  /** O modelo da redação e das auditorias (29/10/2026): no motor Claude, o Claude. Ver `mcp/newsletter/`. */
+  modelo?: OpcoesDoPortao["modelo"],
 ): Promise<{ ok: true; edicao: Linha; html: string; avisos: string[] } | { ok: false; motivo: string }> {
   const { runNewsroomPipeline } = await import("../newsroom/pipeline");
   const { renderEditionToHtml, agendaDoBriefing } = await import("../newsroom/newsroom-service");
@@ -111,7 +114,7 @@ export async function reescreverNewsletter(
     config.maximoDeReparos,
     // Como a redação com os ramos no comando: nota baixa vira aviso, alucinação bloqueia.
     0,
-    { notaDeAviso: config.notaMinimaDeQA },
+    { notaDeAviso: config.notaMinimaDeQA, ...(modelo ? { modelo } : {}) },
   );
   if (!r.aprovado) {
     return { ok: false, motivo: `a reescrita não passou nas conferências de fato: ${r.bloqueios.join(" | ")}` };

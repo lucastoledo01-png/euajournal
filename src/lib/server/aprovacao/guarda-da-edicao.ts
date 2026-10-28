@@ -31,7 +31,7 @@ export type EntradaDaGuarda = {
 };
 
 /** Teto do Instagram para a legenda, e do assunto de e-mail que ainda cabe na caixa de entrada. */
-const LIMITE_POR_RAMO: Record<Ramo, number> = { post: 2200, newsletter: 200, artigo: 300 };
+const LIMITE_POR_RAMO: Record<Ramo, number> = { post: 2200, newsletter: 200, artigo: 300, plano: 20000 };
 
 export function conferirEdicao(e: EntradaDaGuarda): ProblemaDaEdicao[] {
   const problemas: ProblemaDaEdicao[] = [];

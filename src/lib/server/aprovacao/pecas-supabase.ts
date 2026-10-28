@@ -5,7 +5,8 @@ import { envDoListmonk } from "../credenciais-do-projeto";
 import { createListmonkClient } from "../listmonk";
 import type { Ramo } from "./contrato";
 import type { AdaptadorDePecas, PecaLida, ProjetoDaFila, ResultadoDoDespacho } from "./fila";
-import { hashDaNewsletter, hashDoArtigo, hashDoPostDaLinha } from "./hash";
+import { hashDaNewsletter, hashDoArtigo, hashDoPlano, hashDoPostDaLinha } from "./hash";
+import { itensEditados } from "../mcp/dia/plano-na-fila";
 import { arteDaLinhaDoPost } from "../aprendizado/detalhes";
 import { legendaDoInstagram } from "../social/legenda-final";
 
@@ -135,6 +136,12 @@ export function criarAdaptadorSupabase(
 
   const adaptador: AdaptadorDePecas = {
     async ler(ramo, pecaId): Promise<PecaLida | null> {
+      if (ramo === "plano") {
+        const l = await lerLinha("planos_do_dia", "id, data, itens", pecaId);
+        if (!l) return null;
+        const texto = JSON.stringify(l.itens ?? {}, null, 2);
+        return { hashAtual: hashDoPlano(l.itens), texto, titulo: `Plano do dia ${s(l.data)}`, material: [texto] };
+      }
       if (ramo === "post") {
         const l = await lerLinha("social_posts", "id, title, caption, slides_manifest, content_json", pecaId);
         if (!l) return null;
@@ -173,7 +180,14 @@ export function criarAdaptadorSupabase(
 
     async gravarTexto(ramo: Ramo, pecaId, novoTexto) {
       const agora = new Date().toISOString();
-      if (ramo === "post") {
+      if (ramo === "plano") {
+        // O dono só tira item do plano: pauta que o Claude não propôs não entra pela edição.
+        const atual = await lerLinha("planos_do_dia", "id, itens", pecaId);
+        if (!atual) throw new Error("[FILA] o plano não existe mais");
+        const itens = itensEditados(atual.itens, novoTexto);
+        const { error } = await client.from("planos_do_dia").update({ itens, atualizado_em: agora }).eq("id", pecaId).eq("project_id", projeto.id);
+        if (error) throw new Error(`[FILA] não consegui gravar o plano: ${error.message}`);
+      } else if (ramo === "post") {
         const { error } = await client
           .from("social_posts")
           /*
@@ -208,6 +222,19 @@ export function criarAdaptadorSupabase(
 
     async despachar(ramo, pecaId, aprovacao): Promise<ResultadoDoDespacho> {
       const agora = new Date();
+
+      if (ramo === "plano") {
+        // Aprovar o plano não publica nada: libera o Claude para produzir o que ele lista.
+        const { data, error } = await client
+          .from("planos_do_dia")
+          .update({ estado: "aprovado", etapa: "preparo", motivo: null, atualizado_em: agora.toISOString() })
+          .eq("id", pecaId)
+          .eq("project_id", projeto.id)
+          .select("id");
+        if (error) return { ok: false, motivo: error.message };
+        if (!data || data.length === 0) return { ok: false, motivo: "o plano não existe mais" };
+        return { ok: true, detalhe: "plano aprovado: o Claude segue para a produção" };
+      }
 
       if (ramo === "post") {
         /*
@@ -253,6 +280,15 @@ export function criarAdaptadorSupabase(
 
     async retirar(ramo, pecaId, tipo, motivo) {
       if (ramo === "post") return retirarPost(client, pecaId, tipo, motivo);
+      if (ramo === "plano") {
+        const { error } = await client
+          .from("planos_do_dia")
+          .update({ estado: "reprovado", motivo: `${tipo}: ${motivo}`.slice(0, 2000), atualizado_em: new Date().toISOString() })
+          .eq("id", pecaId)
+          .eq("project_id", projeto.id);
+        if (error) throw new Error(`[FILA] não consegui retirar o plano ${pecaId}: ${error.message}`);
+        return;
+      }
       /*
        * Newsletter não tem o que retirar: a campanha só nasce no despacho, e a
        * linha de `news_editions` continua sendo o registro da edição, que o

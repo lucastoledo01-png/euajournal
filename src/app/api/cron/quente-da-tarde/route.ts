@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ehMotorClaude } from "@/lib/server/mcp/motor";
 import type { NextRequest } from "next/server";
 import { requireCron } from "@/lib/server/api-auth";
 import { DEFAULT_PROJECT_ID, getProjectById, getProjectBySlug } from "@/lib/server/projects";
@@ -45,7 +46,8 @@ async function handle(req: NextRequest) {
    * crontab antes de ligar a capacidade é inócuo, como no relógio da
    * publicação.
    */
-  if (modoDaQuenteDaTarde(projeto) === "off") {
+  // No motor Claude (29/10/2026) o Claude faz o dia pelo MCP: o ciclo da tarde não escreve.
+  if (modoDaQuenteDaTarde(projeto) === "off" || ehMotorClaude(projeto)) {
     return NextResponse.json({ ok: true, rodou: false, motivo: "OFF" }, { status: 200 });
   }
 

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { comReel } from "../mcp/reels/refacao";
+import { comPlano } from "../mcp/dia/refacao";
 import { sendAlert } from "../alerts";
 import type { EstadoDaCapacidade, ProjetoComCapacidades } from "../capacidades";
 import type { AvisoDaPeca } from "./contrato";
@@ -45,7 +46,11 @@ export { avisosDoPost };
  * porquê de cada um, está em `ganchos-de-producao.ts`.
  */
 // O Reel na frente do post (28/10/2026): reprovado, ele volta para o Claude no MCP.
-export const GANCHOS_DE_PRODUCAO: GanchosDeRefazer = comReel(criarGanchosDeProducao(mundoDeProducao()), getSupabaseAdminClient);
+// O plano do dia (29/10/2026) também volta ao Claude.
+export const GANCHOS_DE_PRODUCAO: GanchosDeRefazer = comPlano(
+  comReel(criarGanchosDeProducao(mundoDeProducao()), getSupabaseAdminClient),
+  getSupabaseAdminClient,
+);
 
 /**
  * O projeto como a fila precisa dele, a partir do que o chamador tem na mão.

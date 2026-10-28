@@ -143,23 +143,23 @@ describe("contagens", () => {
   ];
 
   it("na fila conta tudo menos cancelada e descartada", () => {
-    expect(contarPorRamo(pecasNaFila(fila))).toEqual({ newsletter: 1, artigo: 2, post: 1 });
+    expect(contarPorRamo(pecasNaFila(fila))).toEqual({ newsletter: 1, artigo: 2, post: 1, plano: 0 });
   });
 
   it("pendente é aguardando ou refazendo", () => {
-    expect(contarPorRamo(pecasPendentes(fila))).toEqual({ newsletter: 1, artigo: 1, post: 1 });
+    expect(contarPorRamo(pecasPendentes(fila))).toEqual({ newsletter: 1, artigo: 1, post: 1, plano: 0 });
   });
 
   it("descreve no plural certo, e omite zero quando pedido", () => {
-    expect(descreverContagem({ newsletter: 1, artigo: 2, post: 9 })).toBe("1 newsletter, 2 matérias, 9 posts");
-    expect(descreverContagem({ newsletter: 0, artigo: 1, post: 1 })).toBe("0 newsletter, 1 matéria, 1 post");
-    expect(descreverContagem({ newsletter: 0, artigo: 1, post: 0 }, true)).toBe("1 matéria");
+    expect(descreverContagem({ newsletter: 1, artigo: 2, post: 9, plano: 0 })).toBe("1 newsletter, 2 matérias, 9 posts");
+    expect(descreverContagem({ newsletter: 0, artigo: 1, post: 1, plano: 0 })).toBe("0 newsletter, 1 matéria, 1 post");
+    expect(descreverContagem({ newsletter: 0, artigo: 1, post: 0, plano: 0 }, true)).toBe("1 matéria");
   });
 });
 
 describe("textos", () => {
   it("fila pronta diz amanhã e leva o link", () => {
-    const t = textoFilaPronta("desbuguei", "2026-10-06", "2026-10-05", { newsletter: 1, artigo: 2, post: 5 });
+    const t = textoFilaPronta("desbuguei", "2026-10-06", "2026-10-05", { newsletter: 1, artigo: 2, post: 5, plano: 0 });
     expect(t).toBe(
       "A fila de amanhã está pronta: 1 newsletter, 2 matérias, 5 posts.\n" +
         "Aprovar em https://casaloti.ia.br/admin/desbuguei/aprovacao",
@@ -168,7 +168,7 @@ describe("textos", () => {
 
   it("nenhum texto usa travessão", () => {
     const textos = [
-      textoFilaPronta("x", "2026-10-06", "2026-10-05", { newsletter: 1, artigo: 1, post: 1 }),
+      textoFilaPronta("x", "2026-10-06", "2026-10-05", { newsletter: 1, artigo: 1, post: 1, plano: 0 }),
       textoUltimaChamada("x", [linha("post", "aguardando", AMANHA_6H07.toISOString())], TZ, false),
       textoResumoDoDia("2026-10-06", DADOS_VAZIOS),
     ];

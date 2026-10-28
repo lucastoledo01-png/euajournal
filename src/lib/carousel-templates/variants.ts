@@ -681,7 +681,7 @@ ${foto ? `<div class="j-foto">${photo(foto)}</div>` : ""}
 ${bolha ? bolhaDoMiolo(bolha, slide.inset_position) : ""}
 <div class="jn-texto">
   ${chapeu ? `<span class="j-chapeu">${esc(chapeu)}</span>` : ""}
-  <div class="jn-blocos lay-texto" data-ajuste="encolher" data-max="42" data-min="26">
+  <div class="jn-blocos lay-texto" data-ajuste="encolher" data-max="54" data-min="30">
     <span>${blocos.map((b) => `<p>${protegerQuebras(esc(b))}</p>`).join("")}</span>
   </div>
 </div>`,
@@ -740,6 +740,46 @@ const ctaAssinatura: SlideVariant = {
   <div class="ja-titulo">Assine a newsletter do <em>${esc(MARCA.nome)}</em>.</div>
   <div class="ja-linha-sub">${esc(MARCA.tagline)} No seu <span class="ja-inteiro">e-mail</span>, de graça.</div>
   ${palavra ? `<span class="ja-palavra">Comente ${esc(palavra)} e receba o link</span>` : ""}
+</div>`,
+    };
+  },
+};
+
+/**
+ * O último slide que pede para seguir o perfil (27/10/2026).
+ *
+ * Existe para os posts que saem sem newsletter: o convite de assinar não faz
+ * sentido numa peça que não tem edição para oferecer. Mesmo fundo preto e mesma
+ * gramática do convite, só com o perfil no lugar da caixa de entrada.
+ */
+const ctaSiga: SlideVariant = {
+  key: "cta_siga",
+  label: "Notícia: convite para seguir o perfil",
+  render: (slide): VariantOutput => {
+    // Miniaturas do perfil: as capas dos posts do dia, quando quem monta a peça as passa.
+    const tiles = ((slide as unknown as { tile_urls?: string[] }).tile_urls ?? []).slice(0, 6);
+    // Faltou capa para fechar a grade de seis: o resto é o avatar da marca, sem repetir post.
+    const celulas = [...tiles, ...Array(Math.max(0, 6 - tiles.length)).fill(MARCA.avatar)];
+    const grade = tiles.length ? celulas.map((u) => `<i><img src="${esc(u)}" alt="" /></i>`).join("") : "";
+    return {
+      full: true,
+      onDark: true,
+      body: `
+<div class="ja-fundo"></div>
+<div class="js-topo">
+  <div class="ja-titulo">Siga o <em>${esc(MARCA.nome)}</em>.</div>
+  <div class="js-tag">${esc(MARCA.tagline)}</div>
+</div>
+<div class="js-cel" aria-hidden="true">
+  <div class="js-perfil">
+    <img class="js-ava" src="${esc(MARCA.avatar)}" alt="" />
+    <div>
+      <div class="js-nome">${esc(MARCA.instagramHandle.replace(/^@/, ""))}</div>
+      <div class="js-bio">${esc(MARCA.tagline)}</div>
+    </div>
+  </div>
+  <div class="js-botao">Seguir</div>
+  ${grade ? `<div class="js-grade">${grade}</div>` : ""}
 </div>`,
     };
   },
@@ -1230,6 +1270,7 @@ export const SLIDE_VARIANTS: Record<InstagramSlideType, Record<string, SlideVari
     dark_card: ctaDarkCard,
     cta_newsletter: ctaNewsletter,
     cta_assinatura: ctaAssinatura,
+    cta_siga: ctaSiga,
   },
 };
 

@@ -79,6 +79,9 @@ export const POSICOES_DA_BOLHA: readonly PosicaoDaBolha[] = [
   { chave: "pequena_esquerda_alta", esquerda: 0.04, topo: 0.15, diametro: 0.3 },
   { chave: "pequena_esquerda_baixa", esquerda: 0.04, topo: 0.405, diametro: 0.3 },
   { chave: "pequena_direita_baixa", esquerda: 0.66, topo: 0.405, diametro: 0.3 },
+  // Bolha de destaque (27/10/2026): o rosto do personagem ou a nota de dolar
+  // em tamanho de protagonista, a direita da marca e acima da manchete.
+  { chave: "grande_direita_alta", esquerda: 0.5, topo: 0.05, diametro: 0.46 },
 ];
 
 export const POSICAO_PADRAO = POSICOES_DA_BOLHA[0];
@@ -102,6 +105,7 @@ export const POSICOES_DA_BOLHA_DO_MIOLO: readonly PosicaoDaBolha[] = [
   { chave: "miolo_pequena_direita_alta", esquerda: 0.7, topo: 0.05, diametro: 0.24 },
   { chave: "miolo_pequena_direita_baixa", esquerda: 0.7, topo: 0.3, diametro: 0.24 },
   { chave: "miolo_pequena_esquerda_baixa", esquerda: 0.07, topo: 0.3, diametro: 0.24 },
+  { chave: "miolo_grande_direita", esquerda: 0.5, topo: 0.09, diametro: 0.42 },
 ];
 
 export function posicaoPorChave(chave: string | null | undefined): PosicaoDaBolha | null {

@@ -489,7 +489,7 @@ html,body{width:var(--s-w);height:var(--s-h);background:var(--s-bg);color:var(--
    16/09/2026, depois que o dono apontou que o nosso texto estava grande demais:
    la a manchete de tres linhas ocupa cerca de 12 por cento da altura da peca, e
    aqui ocupava mais de 20. A foto e que manda na peca; o texto e a base dela. */
-.j-texto{position:absolute;left:9%;right:9%;top:64%;bottom:8.5%;z-index:4;
+.j-texto{position:absolute;left:9%;right:9%;top:54%;bottom:14%;z-index:4;
   display:flex;flex-direction:column;justify-content:flex-end;}
 
 .j-chapeu{flex:0 0 auto;display:block;font-family:var(--s-font-display);font-size:22px;
@@ -505,7 +505,7 @@ html,body{width:var(--s-w);height:var(--s-h);background:var(--s-bg);color:var(--
    dois se apoiam na base, encostados, e o script de ajuste continua tendo uma
    caixa definida para medir, porque a faixa tem topo e base fixos. */
 .j-manchete{flex:0 0 auto;max-height:82%;overflow:hidden;display:block;
-  font-family:var(--s-font-display);font-size:54px;font-weight:800;line-height:1.1;
+  font-family:"Cifrao",var(--s-font-display);font-size:54px;font-weight:800;line-height:1.1;
   letter-spacing:-0.005em;text-transform:uppercase;color:#fff;}
 .j-manchete > span{display:block;}
 /* Bullet do miolo: uma linha por item, dentro do MESMO bloco que o ajuste
@@ -546,10 +546,10 @@ html,body{width:var(--s-w);height:var(--s-h);background:var(--s-bg);color:var(--
   rgba(0,0,0,0.22) 60%,rgba(0,0,0,0) 72%);}
 /* Faixa de topo e base fixos: o script de ajuste mede a caixa, e caixa sem
    altura definida nao e medivel (a licao da manchete que subia sobre a bolha). */
-.jn-texto{position:absolute;left:9%;right:9%;top:50%;bottom:8%;z-index:4;
+.jn-texto{position:absolute;left:9%;right:9%;top:42%;bottom:14%;z-index:4;
   display:flex;flex-direction:column;justify-content:flex-end;}
 .jn-blocos{flex:0 0 auto;max-height:90%;overflow:hidden;display:block;
-  font-family:var(--s-font-display);font-size:42px;font-weight:800;line-height:1.16;
+  font-family:"Cifrao",var(--s-font-display);font-size:54px;font-weight:800;line-height:1.16;
   letter-spacing:-0.003em;text-transform:uppercase;color:#fff;}
 .jn-blocos > span{display:block;}
 .jn-blocos p{margin:0 0 0.7em;}
@@ -598,5 +598,43 @@ html,body{width:var(--s-w);height:var(--s-h);background:var(--s-bg);color:var(--
 .ja-palavra{align-self:flex-start;margin-top:40px;padding:20px 38px;
   background:#E4344A;color:#fff;font-family:var(--s-font-display);
   font-size:32px;font-weight:800;letter-spacing:0.02em;text-transform:uppercase;}
+
+/* O cifrao, so ele. O "$" da fonte de display e mais curto que as capitais e a
+   barra nao atravessa o S, e em "R$ 5,40" ele saia espremido contra o R. Esta
+   face cobre apenas U+0024 e usa uma grotesca do sistema, de modo que o resto
+   do texto continua na fonte da marca. Sem nenhuma das fontes na maquina, o
+   navegador cai na fonte de display, como antes. */
+@font-face{font-family:"Cifrao";font-weight:800;font-style:normal;unicode-range:U+0024;
+  src:local("Helvetica Neue Bold"),local("HelveticaNeue-Bold"),local("Helvetica Bold"),
+  local("Helvetica-Bold"),local("Arial Bold"),local("Arial-BoldMT"),
+  local("Liberation Sans Bold"),local("LiberationSans-Bold");}
+
+/* --- convite para seguir o perfil -------------------------------------------
+   Reusa o fundo e o texto do convite de assinar. So muda o botao: o arroba
+   fica como esta, em minusculas, e o bloco sobe para o meio da tela. */
+.js-siga{top:0;bottom:0;justify-content:center;}
+.js-handle{text-transform:none;letter-spacing:0;}
+
+/* Versao com a marca grande, a frase e o perfil desenhado num celular que sai
+   pela base (referencia: o ultimo slide da Not Journal, 27/10/2026). */
+.js-logo{position:absolute;z-index:3;top:6.5%;left:50%;transform:translateX(-50%);width:66%;display:block;}
+.js-topo{position:absolute;z-index:3;left:6%;right:6%;top:11%;text-align:center;}
+.js-topo .ja-titulo{font-size:78px;}
+.js-tag{margin-top:18px;font-family:var(--s-font-display);font-size:38px;font-weight:800;
+  line-height:1.25;color:#E4344A;letter-spacing:-0.005em;}
+.js-cel{position:absolute;z-index:2;left:17%;right:17%;top:29%;bottom:-16%;transform:rotate(-4deg);transform-origin:50% 100%;background:#0b0b0c;
+  border:12px solid #3b3b3f;border-bottom:none;border-radius:72px 72px 0 0;overflow:hidden;}
+.js-perfil{display:flex;align-items:center;gap:30px;padding:46px 38px 0 38px;}
+.js-ava{flex:0 0 132px;width:132px;height:132px;border-radius:50%;object-fit:cover;
+  border:5px solid #0b0b0c;box-shadow:0 0 0 4px #E4344A;}
+.js-nome{font-family:var(--s-font-display);font-size:38px;font-weight:800;color:#fff;
+  letter-spacing:-0.01em;}
+.js-bio{margin-top:8px;font-family:var(--s-font-display);font-size:24px;font-weight:500;
+  line-height:1.3;color:rgba(255,255,255,0.7);}
+.js-botao{margin:30px 38px 0 38px;padding:20px 0;border-radius:16px;background:#E4344A;
+  color:#fff;text-align:center;font-family:var(--s-font-display);font-size:30px;font-weight:800;}
+.js-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:34px 0 0 0;}
+.js-grade i{display:block;aspect-ratio:3/4;background:#1c1c1e;overflow:hidden;}
+.js-grade img{width:100%;height:100%;object-fit:cover;display:block;}
 
 `;

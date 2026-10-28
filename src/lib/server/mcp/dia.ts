@@ -91,7 +91,7 @@ export function resumoDoDia(entrada: {
   } else if (abertas > 0) {
     proximoPasso = `Há ${abertas} tarefa(s) aberta(s). Peça a próxima tarefa.`;
   } else {
-    proximoPasso = "Nenhuma tarefa aberta para este dia.";
+    proximoPasso = "Nenhuma tarefa aberta para este dia. Para produzir o dia, chame fazer_o_dia.";
   }
 
   return {

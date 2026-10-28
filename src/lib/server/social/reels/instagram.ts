@@ -60,13 +60,18 @@ export function videosDaMidia(
       const tipo = String(m.media_type ?? "");
       return (TIPOS_DE_VIDEO.has(tipo) || m.media_product_type === "REELS") && horas <= opcoes.janelaHoras;
     })
-    // Sem `media_url` não há o que baixar: a Meta omite o campo em vídeo com música licenciada.
-    .filter(({ m }) => typeof m.media_url === "string" && m.media_url)
+    /*
+     * Sem `media_url` o vídeo entra assim mesmo, e quem baixa é o yt-dlp pelo
+     * link do post. Medido em 28/10/2026: a Meta omite o arquivo em 16 de 22
+     * perfis de notícia (globonews, g1, bbcbrasil...), quase sempre por música
+     * licenciada. O download pelo link pode falhar; aí o candidato vira
+     * `falhou` com o motivo, e o Claude escolhe outro.
+     */
     .map(({ m, horas }) => ({
       fonte: "instagram" as const,
       origemId: String(m.id),
       permalink: String(m.permalink ?? ""),
-      urlVideo: String(m.media_url),
+      urlVideo: typeof m.media_url === "string" && m.media_url ? m.media_url : null,
       autor: handle,
       titulo: String(m.caption ?? "").split("\n")[0].slice(0, 200),
       legenda: String(m.caption ?? "").slice(0, 2000),
@@ -77,6 +82,7 @@ export function videosDaMidia(
         horas: Math.round(horas * 10) / 10,
         porHora: Math.round(porHora(m, horas)),
         medianaDoPerfil: Math.round(base),
+        arquivoDaMeta: typeof m.media_url === "string" && Boolean(m.media_url),
       },
       notaDaFonte: Math.round(Math.min(100, (porHora(m, horas) / base) * 25)),
     }));

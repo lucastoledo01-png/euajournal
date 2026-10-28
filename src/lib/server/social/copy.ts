@@ -322,7 +322,12 @@ export function calendarioDaSemana(agora: Date = new Date()): string {
   return linhas.join("; ");
 }
 
-function montarUser(pauta: PautaAvaliada, pacote: PacoteFactual | null): string {
+/**
+ * O pedido da copy, exportado para o motor Claude via MCP (27/10/2026): a
+ * tarefa servida ao Claude Desktop leva este texto, byte a byte o que a OpenAI
+ * recebe. Ver `mcp/tarefas/escrever-post.ts`.
+ */
+export function montarUserDaCopy(pauta: PautaAvaliada, pacote: PacoteFactual | null): string {
   const p = pauta.grupo.primary;
 
   const partes = [
@@ -404,13 +409,25 @@ export async function gerarCopyDoPost(
   const { data, usage } = await callOpenAIJSON<unknown>(
     [
       { role: "system", content: montarSystemDaCopy(marca) },
-      { role: "user", content: montarUser(pauta, pacote) },
+      { role: "user", content: montarUserDaCopy(pauta, pacote) },
     ],
     config.editorModel,
     env,
     fetcher,
   );
 
+  const copy = aceitarCopy(data, posicao, marca.keyword);
+  return { copy, tokens: usage.totalTokens, custoUsd: usage.estimatedCostUsd };
+}
+
+/**
+ * O que vale para toda copy que chega, do modelo da esteira ou do Claude.
+ *
+ * Exportado para o motor Claude via MCP (27/10/2026): a entrega do Claude
+ * passa pela MESMA limpeza, pelo mesmo esquema e pelo mesmo CTA de código.
+ * Lança quando a copy não cabe no esquema, como antes.
+ */
+export function aceitarCopy(data: unknown, posicao: number, keyword: string): CopyDoPost {
   const copy = CopyDoPostSchema.parse(semMarcacaoDeNegrito(limparVicios(data)));
 
   /*
@@ -421,9 +438,8 @@ export async function gerarCopyDoPost(
    * depois de ver o caso. A ação é sempre a mesma e a forma varia por posição,
    * o que dá variedade sem abrir espaço para promessa nova.
    */
-  copy.cta = levaCta(posicao) ? ctaDaPosicao(posicao, marca.keyword) : "";
-
-  return { copy, tokens: usage.totalTokens, custoUsd: usage.estimatedCostUsd };
+  copy.cta = levaCta(posicao) ? ctaDaPosicao(posicao, keyword) : "";
+  return copy;
 }
 
 /**
@@ -451,9 +467,36 @@ export async function repararCopyDoPost(
   const config = getAIProviderConfig(env);
   const posicao = opcoes.posicao ?? 0;
 
+  const instrucao = instrucaoDeReparoDaCopy(copy, problemas);
+
+  const { data, usage } = await callOpenAIJSON<unknown>(
+    [
+      { role: "system", content: montarSystemDaCopy(marca) },
+      { role: "user", content: `${montarUserDaCopy(pauta, pacote)}
+
+${instrucao}` },
+    ],
+    config.editorModel,
+    env,
+    fetcher,
+  );
+
+  const corrigida = aceitarCopy(data, posicao, marca.keyword);
+
+  return { copy: corrigida, tokens: usage.totalTokens, custoUsd: usage.estimatedCostUsd };
+}
+
+/**
+ * O pedido de correção, exportado para o motor Claude via MCP (27/10/2026):
+ * a tarefa devolvida para reparo leva este texto, o mesmo do reparo da esteira.
+ */
+export function instrucaoDeReparoDaCopy(
+  copy: CopyDoPost,
+  problemas: Array<{ motivo: string; detalhe: string }>,
+): string {
   const lista = problemas.map((p, i) => `${i + 1}. [${p.motivo}] ${p.detalhe}`).join("\n");
 
-  const instrucao = `
+  return `
 O texto abaixo foi recusado. Corrija APENAS os problemas listados e devolva o JSON inteiro.
 
 PROBLEMAS A CORRIGIR:
@@ -469,23 +512,6 @@ REGRAS DA CORREÇÃO:
 TEXTO RECUSADO:
 ${JSON.stringify(copy, null, 2)}
 `;
-
-  const { data, usage } = await callOpenAIJSON<unknown>(
-    [
-      { role: "system", content: montarSystemDaCopy(marca) },
-      { role: "user", content: `${montarUser(pauta, pacote)}
-
-${instrucao}` },
-    ],
-    config.editorModel,
-    env,
-    fetcher,
-  );
-
-  const corrigida = CopyDoPostSchema.parse(semMarcacaoDeNegrito(limparVicios(data)));
-  corrigida.cta = levaCta(posicao) ? ctaDaPosicao(posicao, marca.keyword) : "";
-
-  return { copy: corrigida, tokens: usage.totalTokens, custoUsd: usage.estimatedCostUsd };
 }
 
 /**

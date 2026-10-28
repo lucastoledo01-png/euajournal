@@ -6,6 +6,7 @@ import { PortaoAdmin, sairDoPainel } from "@/components/admin/PortaoAdmin";
 import {
   ROTULO_DA_CAPACIDADE,
   ROTULO_DO_ESTADO,
+  ROTULO_DO_MOTOR,
   type ProjetoDoPainel,
   type RespostaDeProjetos,
 } from "@/components/admin/tipos";
@@ -144,6 +145,18 @@ function CardDoProjeto({ projeto }: { projeto: ProjetoDoPainel }) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-1.5">
+        {/*
+          O motor vem antes das capacidades: ele diz QUEM trabalha, e no motor
+          Claude nada sai sem o usuário abrir o Claude Desktop. É a primeira
+          coisa a saber de um projeto parado.
+        */}
+        <span
+          className={`rounded-full px-2.5 py-1 text-[11px] ${
+            projeto.motor === "claude_mcp" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {ROTULO_DO_MOTOR[projeto.motor] ?? ROTULO_DO_MOTOR.openai}
+        </span>
         {ligadas.length === 0 ? (
           <span className="text-[12px] text-slate-400">Etapas herdadas do servidor</span>
         ) : (

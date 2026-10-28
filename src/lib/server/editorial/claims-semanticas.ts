@@ -130,18 +130,13 @@ export type ResultadoDeClaims = {
   erro: string | null;
 };
 
-export async function auditarClaims(
-  pautas: PautaAuditavel[],
-  env: Record<string, string | undefined> = process.env,
-  fetcher: typeof fetch = fetch,
-  opcoes: OpcoesDoPrompt = {}
-): Promise<ResultadoDeClaims> {
-  if (pautas.length === 0) {
-    return { claims: [], naoSustentadas: [], custoUsd: 0, tokens: 0, erro: null };
-  }
-
-  const modelo = env.OPENAI_MODEL_TRIAGE || "gpt-4o-mini";
-  const corpo = pautas
+/**
+ * O corpo do pedido de auditoria, exportado para o motor Claude via MCP
+ * (27/10/2026): a tarefa de auditoria servida ao Claude Desktop leva este
+ * texto, o mesmo que a OpenAI recebe.
+ */
+export function montarUserDeClaims(pautas: PautaAuditavel[]): string {
+  return pautas
     .map((p) =>
       [
         `PAUTA ${p.indice}: ${p.titulo}`,
@@ -166,6 +161,30 @@ export async function auditarClaims(
       ].join("\n")
     )
     .join("\n\n=====\n\n");
+}
+
+/**
+ * O que vale para toda resposta de auditoria, do modelo da esteira ou do Claude.
+ * Resposta fora do esquema volta como `erro`, e erro não é aprovação.
+ */
+export function aceitarClaims(data: unknown): { claims: ClaimSemantica[]; naoSustentadas: ClaimSemantica[] } | { erro: string } {
+  const parsed = RespostaDeClaimsSchema.safeParse(data);
+  if (!parsed.success) return { erro: `formato inválido: ${parsed.error.issues[0]?.message ?? ""}` };
+  return { claims: parsed.data.claims, naoSustentadas: parsed.data.claims.filter((c) => !c.sustentada) };
+}
+
+export async function auditarClaims(
+  pautas: PautaAuditavel[],
+  env: Record<string, string | undefined> = process.env,
+  fetcher: typeof fetch = fetch,
+  opcoes: OpcoesDoPrompt = {}
+): Promise<ResultadoDeClaims> {
+  if (pautas.length === 0) {
+    return { claims: [], naoSustentadas: [], custoUsd: 0, tokens: 0, erro: null };
+  }
+
+  const modelo = env.OPENAI_MODEL_TRIAGE || "gpt-4o-mini";
+  const corpo = montarUserDeClaims(pautas);
 
   try {
     const { data, usage } = await callOpenAIJSON<unknown>(

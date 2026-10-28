@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/server/api-auth";
 import { listProjects } from "@/lib/server/projects";
 import { capacidadesDeclaradas, CAPACIDADES } from "@/lib/server/capacidades";
 import { MOLDES_DO_FEED, moldesDeclarados } from "@/lib/server/social/moldes-do-feed";
+import { motorDoProjeto } from "@/lib/server/mcp/motor";
 
 /**
  * Os projetos da plataforma, com o que cada um liga.
@@ -57,6 +58,8 @@ export async function GET(req: NextRequest) {
          * porque alguém ligou".
          */
         moldes: moldesDeclarados(p),
+        /* Quem faz o trabalho de modelo: a esteira com a OpenAI, ou o Claude Desktop pelo MCP. */
+        motor: motorDoProjeto(p),
       })),
     });
   } catch (err) {

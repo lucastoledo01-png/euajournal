@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { configDosReels, horaDaRodada, rodarDescoberta, type DepsDaDescoberta } from "./descoberta";
 import { videosDaMidia } from "./instagram";
 import { calorDoAssunto, consultasDoYoutube, ordenarVideos } from "./ordem";
-import { notaPorVisualizacoes, segundosDaDuracao } from "./youtube";
+import { notaPorVisualizacoes, segundosDaDuracao, serveParaOReel } from "./youtube";
 import type { VideoAchado } from "./tipos";
 
 const AGORA = Date.parse("2026-10-28T15:00:00Z");
@@ -44,6 +44,14 @@ describe("o YouTube", () => {
     expect(segundosDaDuracao("PT1M5S")).toBe(65);
     expect(segundosDaDuracao("PT45S")).toBe(45);
     expect(segundosDaDuracao("xx")).toBeNull();
+  });
+
+  it("fica só com notícia em português (casos da primeira rodada real)", () => {
+    expect(serveParaOReel({ titulo: "Kim's seesaw prank with Trump's 😂 #fun", legenda: "", idioma: null })).toBe(false);
+    expect(serveParaOReel({ titulo: "México vs Estados Unidos , donde es mejor trabajar como lavaplatos ?", legenda: "", idioma: "es" })).toBe(false);
+    expect(serveParaOReel({ titulo: "‘Shove that ballroom up your a**’: protester interrupts Trump rally", legenda: "", idioma: "en" })).toBe(false);
+    expect(serveParaOReel({ titulo: "Governo Trump dará vistos dos EUA a Flávio e sua família", legenda: "", idioma: "pt-BR" })).toBe(true);
+    expect(serveParaOReel({ titulo: "Últimas atualizações sobre a ida de Flávio aos Estados Unidos", legenda: "", idioma: null })).toBe(true);
   });
 
   it("dá nota pelas visualizações por hora", () => {

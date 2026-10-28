@@ -31,7 +31,7 @@ export type ConfigDosReels = {
 
 const PADRAO: ConfigDosReels = {
   perfisInstagram: [],
-  termosYoutube: ["Estados Unidos", "Trump", "Wall Street", "Casa Branca"],
+  termosYoutube: ["notícias Estados Unidos", "Trump hoje", "Casa Branca", "Wall Street hoje"],
   inicio: "09:00",
   fim: "17:00",
   janelaHoras: 48,

@@ -31,10 +31,11 @@ describe("os vídeos do Instagram", () => {
     { id: "d", media_type: "VIDEO", media_url: "https://cdn/d.mp4", like_count: 100, comments_count: 1, timestamp: "2026-10-20T12:00:00Z" },
   ];
 
-  it("fica só com vídeo, com arquivo, dentro da janela", () => {
+  it("fica só com vídeo dentro da janela; sem arquivo da Meta, entra para o yt-dlp", () => {
     const v = videosDaMidia("perfil", midia, { agoraMs: AGORA, janelaHoras: 48 });
-    expect(v.map((x) => x.origemId)).toEqual(["a"]);
+    expect(v.map((x) => x.origemId)).toEqual(["a", "c"]);
     expect(v[0].urlVideo).toBe("https://cdn/a.mp4");
+    expect(v[1].urlVideo).toBeNull();
     expect(v[0].notaDaFonte).toBeGreaterThan(25);
   });
 });

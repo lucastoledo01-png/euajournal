@@ -5,6 +5,7 @@ import {
   TETO_DE_FILHOS_DO_CARROSSEL,
   createCarouselContainer,
   createCarouselItemContainer,
+  createReelContainer,
   createSingleImageContainer,
 } from "./meta-client";
 import { renderOpenDesignSlides, uploadOpenDesignSlideToStorage } from "./opendesign-renderer";
@@ -263,15 +264,29 @@ export type EstadoDosFilhos = {
   registrar: (index: number, creationId: string) => Promise<void>;
 };
 
-async function montarContainer(
+export async function montarContainer(
   imageUrls: string[],
   caption: string,
   env: Record<string, string | undefined>,
   fetcher: typeof fetch,
   filhos?: EstadoDosFilhos,
+  reel = false,
 ): Promise<string> {
   if (imageUrls.length === 0) {
     throw new Error("Nenhum slide foi renderizado, não há o que publicar.");
+  }
+
+  /*
+   * O Reel escolhe pelo formato da linha, não pela contagem: um artefato só
+   * seria lido como imagem única e mandado à Meta como `image_url`.
+   */
+  if (reel) {
+    if (imageUrls.length !== 1) throw new Error(`Reel com ${imageUrls.length} arquivos: precisa de um vídeo só.`);
+    const video = await createReelContainer(imageUrls[0], caption, env, fetcher);
+    if (!video.ok || !video.creationId) {
+      throw new Error(`Falha ao criar o container do Reel: ${video.error}`);
+    }
+    return video.creationId;
   }
 
   if (imageUrls.length === 1) {
@@ -400,6 +415,8 @@ type PreparoDaPublicacao = {
    * não a que o manifesto diz que deveria estar.
    */
   hashesConferidos?: string[];
+  /** Só no V2: a linha é um Reel, e o container é de vídeo. */
+  reel?: boolean;
 };
 
 /**
@@ -607,6 +624,7 @@ async function prepararV2(
     legenda: carga.legenda,
     slides,
     filhos: carga.formato === "carousel" ? filhos : undefined,
+    reel: carga.formato === "reel",
     hashesConferidos: artefatos.map((a) => a.sha256),
   };
 }
@@ -988,9 +1006,19 @@ export async function processScheduledPost(
       igEnv,
       fetcher,
       preparo.filhos,
+      preparo.reel === true,
     );
 
-    const publicacao = await publicarComRegistro(supabase, socialPostId, creationId, igEnv, fetcher);
+    const ehReel = preparo.reel === true;
+    const publicacao = await publicarComRegistro(
+      supabase,
+      socialPostId,
+      creationId,
+      igEnv,
+      fetcher,
+      // A Meta processa o vídeo antes de liberar o container: minutos, não segundos.
+      ehReel ? { timeoutMs: 300_000, intervalMs: 5_000 } : undefined,
+    );
 
     if (publicacao.desfecho === "revisar") {
       await registrarRevisao(socialPostId, publicacao.motivo, publicacao.creationId);

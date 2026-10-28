@@ -11,6 +11,8 @@ import { depsDoPost, projetoDaFonte } from "./post/deps";
 import { entregarTarefaDoPost, iniciarPost } from "./post/fluxo";
 import { pautasDisponiveis } from "./post/material";
 import { ehTipoDeTarefa, tarefasSupabase } from "./tarefas-store";
+import { entregarEscritaDoReel, TIPO_DA_ESCRITA_DO_REEL } from "./reels/tarefa";
+import { candidatosSupabase } from "@/lib/server/social/reels/candidatos";
 import type { AcessoDoMcp } from "./tokens";
 
 /**
@@ -102,6 +104,13 @@ export async function proximaTarefa(acesso: AcessoDoMcp, args: { tipo?: unknown 
 export async function entregar(acesso: AcessoDoMcp, args: { id?: unknown; resultado?: unknown }, client: SupabaseClient = getSupabaseAdminClient()): Promise<Resposta> {
   const id = typeof args.id === "string" ? args.id : "";
   if (!id || args.resultado === undefined) return recusa(400, "informe id e resultado");
+  const tarefas = tarefasSupabase(client);
+  const tarefa = await tarefas.porId(id);
+  if (tarefa?.tipo === TIPO_DA_ESCRITA_DO_REEL) {
+    if (tarefa.projectId !== acesso.projeto.id) return recusa(422, "tarefa não encontrada neste projeto");
+    if (tarefa.estado !== "aberta" && tarefa.estado !== "reparar") return recusa(422, `a tarefa está "${tarefa.estado}" e não aceita entrega`);
+    return { ...(await entregarEscritaDoReel(tarefa, args.resultado, acesso.quem, { tarefas, candidatos: candidatosSupabase(client) })) };
+  }
   const r = await entregarTarefaDoPost(acesso.projeto, { id, resultado: args.resultado, quem: acesso.quem }, depsDoPost(client));
   return r.ok ? { ...r } : recusa(422, r.error);
 }

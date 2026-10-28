@@ -16,13 +16,26 @@ export async function subirPngParaStorage(
   pngBuffer: Buffer,
   filepath: string,
 ): Promise<string | null> {
+  return subirArquivoParaStorage(pngBuffer, filepath, "image/png", "public_assets");
+}
+
+/**
+ * O mesmo upload para qualquer arquivo e bucket. O Reel precisa disso: o MP4
+ * passa do teto de 10 MB do `public_assets` e mora no bucket `reels`.
+ */
+export async function subirArquivoParaStorage(
+  buffer: Buffer,
+  filepath: string,
+  mime: string,
+  bucket: string,
+): Promise<string | null> {
   try {
     const supabase = getSupabaseAdminClient();
 
     const { error: uploadErr } = await supabase.storage
-      .from("public_assets")
-      .upload(filepath, pngBuffer, {
-        contentType: "image/png",
+      .from(bucket)
+      .upload(filepath, buffer, {
+        contentType: mime,
         upsert: true,
       });
 
@@ -31,7 +44,7 @@ export async function subirPngParaStorage(
       return null;
     }
 
-    const { data: publicUrlData } = supabase.storage.from("public_assets").getPublicUrl(filepath);
+    const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(filepath);
 
     return publicUrlData.publicUrl;
   } catch (err) {

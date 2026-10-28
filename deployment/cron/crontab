@@ -19,6 +19,11 @@
 # Com as capacidades `radar` e `termometro` em off, a rota responde sem fazer nada.
 7,22,37,52 * * * *  /usr/local/bin/chamar radar 110
 
+# Reels (28/10/2026): acha os vídeos que estão rendendo, três minutos depois do
+# radar para ler o ranking novo. A rota roda só no primeiro disparo de cada
+# hora das 9h às 17h do projeto; com a capacidade `reels` em off, nada.
+10,25,40,55 * * * *  /usr/local/bin/chamar "reels?relogio=1" 110
+
 # Relógios de minuto: publicação no portal, fila de aprovação e avisos.
 * * * * *     /usr/local/bin/chamar publicacao 55
 * * * * *     /usr/local/bin/chamar fila-de-aprovacao 55

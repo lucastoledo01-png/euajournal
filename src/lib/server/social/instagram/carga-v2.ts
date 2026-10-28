@@ -73,7 +73,12 @@ export type CargaV2 = {
   artefatos: ArtefatoDaLinha[];
 };
 
-export type FormatoDaLinha = "static" | "carousel";
+/**
+ * `reel` (28/10/2026): um vídeo 9:16 montado no molde do eua.journal
+ * (`social/reels/`). Um artefato só, `video/mp4`, e nenhuma das regras da capa
+ * (foto, variante): o vídeo É a peça.
+ */
+export type FormatoDaLinha = "static" | "carousel" | "reel";
 
 /** Limites do carrossel, repetidos aqui porque o worker não importa o gerador. */
 const MINIMO_DE_SLIDES = 2;
@@ -302,7 +307,8 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
    */
   const formatoBruto = texto(conteudo?.formato) || "static";
   const formato: FormatoDaLinha | null =
-    formatoBruto === "static" || formatoBruto === "carousel" ? formatoBruto : null;
+    formatoBruto === "static" || formatoBruto === "carousel" || formatoBruto === "reel" ? formatoBruto : null;
+  const ehReel = formato === "reel";
   if (!formato) faltando.push(`content_json.formato desconhecido: "${formatoBruto}"`);
 
   const artefatos: ArtefatoDaLinha[] = [];
@@ -353,8 +359,12 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
     artefatos.push(comoArtefato(artefatoBruto, 1));
   }
 
+  if (ehReel && artefatoBruto && texto(artefatoBruto.mime) !== "video/mp4") {
+    faltando.push(`content_json.arte.artefato.mime="${texto(artefatoBruto.mime)}": o Reel publica só video/mp4`);
+  }
+
   const visual = objeto(conteudo?.visual);
-  if (!visual) faltando.push("content_json.visual");
+  if (!visual && !ehReel) faltando.push("content_json.visual");
 
   /*
    * Foto ou capa de texto, e a diferença tem que estar escrita.
@@ -384,7 +394,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
     );
   } else if (urlDaFoto) {
     foto = { imageUrl: urlDaFoto, attribution: texto(visual?.attribution) };
-  } else if (!capaDeTexto && visual) {
+  } else if (!capaDeTexto && visual && !ehReel) {
     faltando.push("content_json.visual: nem imageUrl nem capa=texto");
   }
 
@@ -399,7 +409,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
    * fundo, e o registro visual não tem `imageUrl`. Uma das duas informações
    * está errada, e publicar significaria escolher qual — que é adivinhar.
    */
-  if (arte) {
+  if (arte && !ehReel) {
     const variante = texto(arte.variante);
     /*
      * A esperada vem de `varianteDaCapa`, e não escrita aqui.
@@ -450,7 +460,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
       hashtags,
       eixo: texto(arte!.eixo),
       foto,
-      motivoSemFoto: foto ? "" : texto(visual!.motivo) || "NO_VALID_VISUAL_ASSET",
+      motivoSemFoto: foto || ehReel ? "" : texto(visual!.motivo) || "NO_VALID_VISUAL_ASSET",
       storyId,
       eventFingerprint: texto(linha.event_fingerprint) || null,
       visualAssetId: texto(linha.visual_asset_id) || null,

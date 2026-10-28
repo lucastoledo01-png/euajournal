@@ -123,6 +123,14 @@ export const CAPACIDADES = [
    * `social/quente-da-tarde.ts` e `/api/cron/quente-da-tarde`.
    */
   "quente_da_tarde",
+  /**
+   * Os Reels automáticos (28/10/2026): de hora em hora, das 9h às 17h, acha os
+   * vídeos que estão rendendo no Instagram e no YouTube e grava os candidatos
+   * em `reels_candidatos`. Quem escreve o texto é o Claude, pelo MCP, e o Reel
+   * só sai aprovado no painel. `dry_run` busca e grava o desfecho, sem
+   * candidato; `enforce` grava. Ausente vale `off`. Ver `social/reels/`.
+   */
+  "reels",
 ] as const;
 
 export type Capacidade = (typeof CAPACIDADES)[number];

@@ -15,6 +15,8 @@
 
 import { processScheduledPost, recuperarOrfaosV2 } from "../lib/server/social/instagram/worker-service";
 import { findDuePosts } from "../lib/server/social/instagram/scheduler";
+import { giroDosReels } from "../lib/server/social/reels/trabalho";
+import { depsDoTrabalhoDeProducao } from "../lib/server/social/reels/trabalho-producao";
 
 const LOTE_MAXIMO = 5;
 
@@ -66,6 +68,30 @@ for (const sinal of ["SIGTERM", "SIGINT"] as const) {
   });
 }
 
+/*
+ * Os Reels (28/10/2026) giram a cada 30 s, fora do intervalo dos posts: o
+ * Claude escolhe um vídeo no chat e espera a tarefa de texto, e 15 minutos de
+ * espera seria a conversa morrer. O giro só lê `reels_candidatos`; sem nada
+ * escolhido, é uma consulta. Erro repetido (a tabela ainda não existe) é
+ * escrito uma vez só.
+ */
+const INTERVALO_DOS_REELS_S = 30;
+let ultimoErroDosReels = "";
+
+async function girarReels(): Promise<void> {
+  try {
+    const r = await giroDosReels(depsDoTrabalhoDeProducao());
+    if (r.preparados || r.renderizados || r.falhas.length) {
+      console.log(`[WORKER REELS] preparados ${r.preparados}, renderizados ${r.renderizados}`, r.falhas);
+    }
+    ultimoErroDosReels = "";
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg !== ultimoErroDosReels) console.error("[WORKER REELS] giro falhou:", msg);
+    ultimoErroDosReels = msg;
+  }
+}
+
 function dormir(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -100,6 +126,7 @@ async function main() {
     }
 
     for (let i = 0; i < intervaloSegundos && !encerrando; i++) {
+      if (i % INTERVALO_DOS_REELS_S === 0) await girarReels();
       await dormir(1000);
     }
   }

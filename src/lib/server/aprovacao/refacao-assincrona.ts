@@ -44,7 +44,7 @@ import { aprendizadoDoCanal } from "../aprendizado/do-canal";
 
 export type DesfechoDaRefacao = {
   id: string;
-  desfecho: "refeita" | "substituida" | "impossivel" | "de_volta_a_fila" | "nao_reivindicada";
+  desfecho: "refeita" | "substituida" | "impossivel" | "de_volta_a_fila" | "nao_reivindicada" | "com_o_claude";
   detalhe: string;
 };
 
@@ -219,6 +219,15 @@ async function rodarRefacao(
   }
 
   if (!r.ok) return marcarImpossivel(a, refacao, r.motivo, deps);
+
+  if (r.assincrona) {
+    await deps.store.atualizar(
+      a.id,
+      { resumo: { ...a.resumo, refacao: { ...refacao, estado: "com_o_claude" }, refacaoPendente: r.assincrona } },
+      ["refazendo"],
+    );
+    return { id: a.id, desfecho: "com_o_claude", detalhe: r.assincrona };
+  }
 
   const em = iso(agoraDe(deps));
   const ultimaRefacao = { etapa: refacao.etapa, em, executadas: r.executadas, detalhe: r.detalhes.join(" | ") || undefined };

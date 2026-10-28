@@ -17,6 +17,17 @@ RUN npm ci
 RUN npx playwright install --with-deps chromium \
   && rm -rf /var/lib/apt/lists/*
 
+# Reels (28/10/2026): o ffmpeg corta e compõe o vídeo no molde, e o yt-dlp
+# baixa o vídeo do YouTube. O yt-dlp é um binário com versão fixada: o YouTube
+# muda e a versão precisa subir junto, então ela é um ARG, não a "latest".
+ARG YTDLP_VERSION=2026.10.26
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ffmpeg ca-certificates curl \
+  && curl -fsSL -o /usr/local/bin/yt-dlp \
+       "https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_VERSION}/yt-dlp_linux" \
+  && chmod +x /usr/local/bin/yt-dlp \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY tsconfig.json ./
 COPY src ./src
 

@@ -139,7 +139,13 @@ export async function enfileirar(
       hashArtefato: peca.hash,
       publicarEm: peca.publicarEm,
       avisos: peca.avisos,
-      resumo: { ...existente.resumo, ...peca.resumo, refacaoPendente: null },
+      resumo: {
+        ...existente.resumo,
+        ...peca.resumo,
+        refacaoPendente: null,
+        // A versão que o Claude refez chegou (28/10/2026): a refação que a esperava acabou.
+        ...(existente.resumo?.refacao?.estado === "com_o_claude" ? { refacao: null } : {}),
+      },
       estado: "aguardando",
       automatica: false,
       decididoPor: null,

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { pautaDeTeste } from "./calor.fixture";
 import {
+  andamentoDaHistoria,
   bonusDoCalor,
   contarVeiculos,
   numeroForte,
@@ -82,6 +83,7 @@ describe("os sinais do calor", () => {
       fama: { nome: "Donald Trump", sitelinks: 250 },
       horas: 2,
       numeroForte: "670",
+      veiculos3h: 5,
     });
     expect(quente.total).toBe(100);
     expect(bonusDoCalor(quente)).toBe(Math.round(100 * PESO_DO_CALOR));
@@ -89,6 +91,48 @@ describe("os sinais do calor", () => {
     const fria = pontuarCalor({ veiculos: 1, tendencias: [], fama: null, horas: 70, numeroForte: null });
     expect(fria.total).toBe(0);
     expect(bonusDoCalor(fria)).toBe(0);
+  });
+});
+
+describe("o capítulo da história (28/10/2026)", () => {
+  const v = (x: number[]) => x;
+  const AGORA2 = Date.parse("2026-10-28T12:00:00Z");
+  const h = (horasAtras: number) => new Date(AGORA2 - horasAtras * 3600 * 1000).toISOString();
+
+  it("matéria parecida e mais nova, mas não igual, supera a pauta: 'viaja' vira 'chega'", () => {
+    const pauta = v([1, 0, 0]);
+    const proxima = v([0.8, 0.6, 0]); // cosseno 0.8: mesmo assunto, outro fato
+    const andamento = andamentoDaHistoria(
+      pauta,
+      h(6),
+      ["cnn.com"],
+      [{ dominio: "g1.globo.com", vetor: proxima, publicadoEm: h(1) }],
+      0.65,
+      AGORA2,
+    );
+    expect(andamento.superada).toBe(true);
+    expect(andamento.veiculos3h).toBe(1);
+  });
+
+  it("quase igual é o mesmo fato republicado, e não supera", () => {
+    const andamento = andamentoDaHistoria(
+      v([1, 0, 0]),
+      h(6),
+      ["cnn.com"],
+      [{ dominio: "g1.globo.com", vetor: v([0.97, 0.2, 0]), publicadoEm: h(1) }],
+      0.65,
+      AGORA2,
+    );
+    expect(andamento.superada).toBe(false);
+  });
+
+  it("a etapa superada vale a metade, e a velocidade soma", () => {
+    const base = { veiculos: 3, tendencias: [], fama: null, horas: 3, numeroForte: null };
+    const viva = pontuarCalor({ ...base, veiculos3h: 4 });
+    const velha = pontuarCalor({ ...base, veiculos3h: 4, superada: true });
+    expect(viva.partes.velocidade).toBe(15);
+    expect(velha.total).toBe(Math.round(viva.total * 0.5));
+    expect(velha.explicacao).toContain("etapa superada");
   });
 });
 

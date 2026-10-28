@@ -7,6 +7,7 @@ import { agenteDaWikimedia } from "../visual/wikidata";
 import {
   LIMIAR_DE_VEICULOS_DO_CALOR,
   bonusDoCalor,
+  andamentoDaHistoria,
   contarVeiculos,
   dominiosDaPauta,
   horasDesde,
@@ -134,10 +135,20 @@ export async function calcularCalorDoDia(pool: PautaAvaliada[], opcoes: OpcoesDo
       }
     }
 
+    const andamento = andamentoDaHistoria(
+      vetorDaPauta(i),
+      p.grupo.primary.published_at,
+      dominiosDaPauta(p),
+      vizinhas,
+      limiar,
+      agoraMs,
+    );
     porStory.set(
       p.storyId,
       pontuarCalor({
         veiculos: contarVeiculos(vetorDaPauta(i), dominiosDaPauta(p), vizinhas, limiar, agoraMs),
+        veiculos3h: andamento.veiculos3h,
+        superada: andamento.superada,
         tendencias: tendenciasQueCasam(texto, termos),
         fama,
         horas: horasDesde(p.grupo.primary.published_at, agoraMs),
@@ -222,6 +233,8 @@ export function registroDoCalor(pool: PautaAvaliada[], porStory: Map<string, Cal
       notaComCalor: p.pontuacao.total + bonusDoCalor(c!),
       partes: c!.partes,
       veiculos: c!.sinais.veiculos,
+      veiculos3h: c!.sinais.veiculos3h ?? 0,
+      superada: c!.sinais.superada ?? false,
       tendencias: c!.sinais.tendencias.slice(0, 3),
       fama: c!.sinais.fama,
       horas: c!.sinais.horas === null ? null : Math.round(c!.sinais.horas * 10) / 10,

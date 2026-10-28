@@ -132,6 +132,7 @@ describe("o cardápio de capacidades", () => {
       "aprovacao",
       "carrossel_noticia",
       "calor",
+      "radar",
       "quente_da_tarde",
     ]);
   });

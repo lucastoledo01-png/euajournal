@@ -15,6 +15,10 @@
 */15 * * * *  /usr/local/bin/chamar "producao?relogio=1" 300
 */15 * * * *  /usr/local/bin/chamar "quente-da-tarde?relogio=1" 60
 
+# Radar e termômetro (28/10/2026): lê os feeds quentes e recalcula o ranking.
+# Com as capacidades `radar` e `termometro` em off, a rota responde sem fazer nada.
+7,22,37,52 * * * *  /usr/local/bin/chamar radar 110
+
 # Relógios de minuto: publicação no portal, fila de aprovação e avisos.
 * * * * *     /usr/local/bin/chamar publicacao 55
 * * * * *     /usr/local/bin/chamar fila-de-aprovacao 55

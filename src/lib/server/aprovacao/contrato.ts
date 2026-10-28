@@ -214,7 +214,12 @@ export type ContextoDeProducao = {
  *   impossivel  não dá para refazer sozinha, e `motivoImpossivel` diz por quê
  */
 export type EstadoDaRefacao = {
-  estado: "na_fila" | "rodando" | "impossivel";
+  /**
+   * `com_o_claude` (28/10/2026): a versão nova não sai daqui, sai do Claude
+   * pelo MCP (o Reel). A peça fica em `refazendo` até ela chegar; quem a
+   * devolve a `aguardando` é o `enfileirar` com o hash novo.
+   */
+  estado: "na_fila" | "rodando" | "impossivel" | "com_o_claude";
   etapa: Etapa;
   motivo: string;
   /** Newsletter: o `storyId` da pauta que o editor apontou, quando apontou. */

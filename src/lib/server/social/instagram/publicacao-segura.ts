@@ -266,8 +266,9 @@ export async function publicarComRegistro(
   creationId: string,
   env: Record<string, string | undefined> = process.env,
   fetcher: typeof fetch = fetch,
+  espera?: { timeoutMs?: number; intervalMs?: number },
 ): Promise<ResultadoDaPublicacao> {
-  const pronto = await waitForContainerReady(creationId, env, fetcher);
+  const pronto = await waitForContainerReady(creationId, env, fetcher, espera);
   if (!pronto.ok) {
     return { desfecho: "revisar", motivo: `container não ficou pronto: ${pronto.error}`, creationId };
   }

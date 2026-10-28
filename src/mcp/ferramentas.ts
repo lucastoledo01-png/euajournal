@@ -27,6 +27,9 @@ export const NOMES_DAS_FERRAMENTAS = [
   "entregar_tarefa",
   "montar_post",
   "agendar_post",
+  "reels_sugeridos",
+  "produzir_reel",
+  "ver_reel",
 ] as const;
 
 export type NomeDaFerramenta = (typeof NOMES_DAS_FERRAMENTAS)[number];
@@ -57,6 +60,7 @@ export const INSTRUCOES_DO_MCP = [
   "Cada tarefa traz a instrução (system e user), o material e o esquema JSON da resposta. Siga a instrução ao pé da letra e entregue SÓ o JSON do esquema.",
   "Quando a entrega volta com motivos, a tarefa está em reparo: peça a próxima tarefa e corrija só o apontado. Não invente para tapar buraco.",
   "Na auditoria, julgue só pelo pacote factual que vem na tarefa, como se não tivesse escrito o texto; se puder, audite numa conversa separada.",
+  "Reels: reels_sugeridos, produzir_reel com o id escolhido, ver_reel para a folha de quadros com o corte, proxima_tarefa com tipo escrever_reel, entregar_tarefa, e ver_reel de novo para conferir o Reel pronto. O chat não toca vídeo: a folha de quadros é a sua prévia, e o vídeo fica no painel.",
   "Você não aprova nem publica. Tudo o que agendar espera aprovação manual do dono no painel.",
 ].join("\n");
 
@@ -74,7 +78,7 @@ function falha(erro: unknown) {
   return { isError: true, content: [{ type: "text" as const, text: mensagem }] };
 }
 
-export function criarServidorMcp(backend: Backend, versao = "0.3.0"): McpServer {
+export function criarServidorMcp(backend: Backend, versao = "0.4.0"): McpServer {
   const servidor = new McpServer({ name: "euajournal", version: versao }, { instructions: INSTRUCOES_DO_MCP });
 
   const chamar = async (nome: NomeDaFerramenta, args: Record<string, unknown>) => {
@@ -142,7 +146,7 @@ export function criarServidorMcp(backend: Backend, versao = "0.3.0"): McpServer 
       description:
         "Devolve a próxima tarefa que espera você (reparo antes de nova), com instrução, material, esquema da resposta e, num reparo, os motivos.",
       inputSchema: {
-        tipo: z.enum(["escrever_post", "auditar_post"]).optional().describe("Só tarefas deste tipo."),
+        tipo: z.enum(["escrever_post", "auditar_post", "escrever_reel"]).optional().describe("Só tarefas deste tipo."),
       },
       annotations: { readOnlyHint: true },
     },
@@ -199,6 +203,57 @@ export function criarServidorMcp(backend: Backend, versao = "0.3.0"): McpServer 
       inputSchema: { story_id: PAUTA, data: DATA },
     },
     ({ story_id, data }) => chamar("agendar_post", { story_id, data }),
+  );
+
+  servidor.registerTool(
+    "reels_sugeridos",
+    {
+      title: "Reels sugeridos",
+      description:
+        "Os vídeos que estão rendendo no Instagram e no YouTube e casam com o nicho, do melhor para o pior, com métricas, " +
+        "link de origem e a história do termômetro com que casaram. Só leitura.",
+      inputSchema: { limite: z.number().int().min(1).max(20).optional().describe("Quantos. Padrão 8.") },
+      annotations: { readOnlyHint: true },
+    },
+    ({ limite }) => chamar("reels_sugeridos", { limite }),
+  );
+
+  servidor.registerTool(
+    "produzir_reel",
+    {
+      title: "Produzir um Reel",
+      description:
+        "Escolhe um vídeo de reels_sugeridos. A plataforma baixa, mede o corte que tira a marca de quem publicou e abre a tarefa escrever_reel. " +
+        "Nada vai ao ar sem aprovação no painel.",
+      inputSchema: { candidato_id: z.string().min(1).describe("O id que reels_sugeridos devolve.") },
+    },
+    ({ candidato_id }) => chamar("produzir_reel", { candidato_id }),
+  );
+
+  servidor.registerTool(
+    "ver_reel",
+    {
+      title: "Ver o Reel",
+      description:
+        "Mostra em que etapa o Reel está e a folha de quadros: antes do texto, a do vídeo de origem com o corte proposto em amarelo; " +
+        "depois do render, a do Reel pronto, com a legenda e o link do painel.",
+      inputSchema: { candidato_id: z.string().min(1) },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ candidato_id }) => {
+      try {
+        const r = (await backend("ver_reel", { candidato_id })) as { imagem?: { mime: string; base64: string } | null } & Record<string, unknown>;
+        const { imagem, ...resto } = r;
+        return {
+          content: [
+            ...(imagem ? [{ type: "image" as const, data: imagem.base64, mimeType: imagem.mime }] : []),
+            { type: "text" as const, text: JSON.stringify(resto, null, 2) },
+          ],
+        };
+      } catch (erro) {
+        return falha(erro);
+      }
+    },
   );
 
   return servidor;

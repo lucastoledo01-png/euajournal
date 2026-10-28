@@ -106,7 +106,9 @@ function StatusDaRefacao({ a, modo }: { a: Aprovacao; modo: string }) {
           </strong>{" "}
           {modo !== "enforce"
             ? "A fila está em ensaio, e no ensaio a refação não roda: a reprovação ficou registrada para o aprendizado."
-            : r.estado === "na_fila"
+            : r.estado === "com_o_claude"
+              ? "O pedido voltou ao Claude, no MCP. A versão nova entra aqui quando ele reescrever e o worker renderizar."
+              : r.estado === "na_fila"
               ? `Começa em até um minuto. Volta por volta de ${previsao} (estimativa).`
               : `Rodando desde ${horaCurta(new Date(inicio).toISOString())}. Volta por volta de ${previsao} (estimativa).`}
         </p>
@@ -415,7 +417,7 @@ export function CartaoDaPeca({
   );
 
   const detalhesDoPost =
-    real?.ramo === "post" ? `${real.formato === "carrossel" ? `Carrossel, ${real.telas.length} telas` : "Post único"}` : null;
+    real?.ramo === "post" ? real.formato === "reel" ? "Reel" : real.formato === "carrossel" ? `Carrossel, ${real.telas.length} telas` : "Post único" : null;
 
   return (
     <article

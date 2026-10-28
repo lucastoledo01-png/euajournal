@@ -218,6 +218,52 @@ export async function createCarouselContainer(
 }
 
 /**
+ * Container de Reel: a Meta baixa o MP4 de `video_url` e processa em segundo
+ * plano, então quem chama precisa esperar mais que na imagem antes de publicar.
+ */
+export async function createReelContainer(
+  videoUrl: string,
+  caption: string,
+  env: Record<string, string | undefined> = process.env,
+  fetcher: typeof fetch = fetch,
+): Promise<MetaPublishItemResult> {
+  const { accountId, accessToken, isConfigured } = getMetaConfig(env);
+
+  if (!isConfigured || !accountId || !accessToken) {
+    return { ok: false, error: "Credenciais de Meta Instagram não configuradas." };
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.set("media_type", "REELS");
+    params.set("video_url", videoUrl);
+    params.set("caption", caption);
+    params.set("share_to_feed", "true");
+    params.set("access_token", accessToken);
+
+    const response = await fetcher(`https://graph.facebook.com/v22.0/${accountId}/media`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+      signal: AbortSignal.timeout(tetoDeTempo(env)),
+    });
+
+    const json = await response.json().catch(() => ({}));
+
+    if (!response.ok || !json.id) {
+      return {
+        ok: false,
+        error: json.error?.message || `Falha ao criar container de Reel (${response.status})`,
+      };
+    }
+
+    return { ok: true, creationId: json.id };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
  * Aguarda o container terminar de ser processado antes da publicacao.
  *
  * A Graph API processa midia de forma assincrona. O codigo publicava logo apos

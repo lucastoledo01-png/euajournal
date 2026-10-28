@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { comReel } from "../mcp/reels/refacao";
 import { sendAlert } from "../alerts";
 import type { EstadoDaCapacidade, ProjetoComCapacidades } from "../capacidades";
 import type { AvisoDaPeca } from "./contrato";
@@ -43,7 +44,8 @@ export { avisosDoPost };
  * (lidas da própria linha de `social_posts`). O que continua sem gancho, e o
  * porquê de cada um, está em `ganchos-de-producao.ts`.
  */
-export const GANCHOS_DE_PRODUCAO: GanchosDeRefazer = criarGanchosDeProducao(mundoDeProducao());
+// O Reel na frente do post (28/10/2026): reprovado, ele volta para o Claude no MCP.
+export const GANCHOS_DE_PRODUCAO: GanchosDeRefazer = comReel(criarGanchosDeProducao(mundoDeProducao()), getSupabaseAdminClient);
 
 /**
  * O projeto como a fila precisa dele, a partir do que o chamador tem na mão.

@@ -21,6 +21,9 @@ const ROTAS: Record<NomeDaFerramenta, { caminho: string; metodo: "GET" | "POST" 
   entregar_tarefa: { caminho: "tarefa/entregar", metodo: "POST" },
   montar_post: { caminho: "post/montar", metodo: "POST" },
   agendar_post: { caminho: "post/agendar", metodo: "POST" },
+  reels_sugeridos: { caminho: "reels/sugeridos", metodo: "GET" },
+  produzir_reel: { caminho: "reels/produzir", metodo: "POST" },
+  ver_reel: { caminho: "reels/ver", metodo: "GET" },
 };
 
 export function backendPorHttp(config: ConfigDaPlataforma, fetcher: typeof fetch = fetch): Backend {

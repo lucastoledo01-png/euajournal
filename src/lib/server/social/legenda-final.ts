@@ -109,6 +109,8 @@ export function ehLinhaDeCredito(linha: string): boolean {
   const n = normalizar(linha.replace(MARCADOR, ""));
   if (!n) return false;
   if (ABRE_COM_ROTULO.test(n)) return true;
+  // O crédito do Reel só com dois-pontos: "Vídeo de Trump circula..." é frase, não crédito.
+  if (/^videos?\s*:/.test(n)) return true;
   if (SO_REPRODUCAO.test(n) && palavras(n) <= 8) return true;
   if (palavras(n) <= 25) {
     if (SIGLA_DE_LICENCA.test(n)) return true;
@@ -326,7 +328,8 @@ export function linhaDeCreditoSoComNomes(linha: string): string {
  * fechado (edição à mão no painel): "Foto: X" sem acervo, sem link e sem
  * texto de licença comprido. Fora desse formato, é crédito a tirar.
  */
-const CREDITO_CURTO = /^fotos?: [^\n]{1,240}$/i;
+// "Vídeo: @autor (Instagram)" é o crédito do Reel (28/10/2026).
+const CREDITO_CURTO = /^(fotos?|v[ií]deo): [^\n]{1,240}$/i;
 function ehCreditoCurto(linha: string): boolean {
   const t = linha.trim();
   if (!CREDITO_CURTO.test(t)) return false;

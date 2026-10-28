@@ -61,7 +61,18 @@ export type ContextoDaRefacao = {
  * "não dá", que vai para o painel com o motivo.
  */
 export type ResultadoDaEtapa =
-  | { ok: true; resumo?: Partial<ResumoDaPeca>; substituta?: PecaParaFila; detalhe?: string }
+  | {
+      ok: true;
+      resumo?: Partial<ResumoDaPeca>;
+      substituta?: PecaParaFila;
+      detalhe?: string;
+      /**
+       * A versão nova é feita FORA daqui (o Reel, pelo Claude no MCP): a etapa
+       * só devolveu o pedido, e as etapas seguintes não rodam. O texto diz ao
+       * painel o que se espera.
+       */
+      assincrona?: string;
+    }
   | { ok: false; motivo: string };
 
 export type GanchoDeEtapa = (ctx: ContextoDaRefacao) => Promise<ResultadoDaEtapa>;
@@ -93,6 +104,7 @@ export type ResultadoDaRefacao =
       resumo: Partial<ResumoDaPeca>;
       substituta?: PecaParaFila;
       detalhes: string[];
+      assincrona?: string;
     }
   | { ok: false; executadas: Etapa[]; falhou: Etapa; motivo: string };
 
@@ -129,6 +141,7 @@ export async function executarRefacao(
     resumo = { ...resumo, ...(r.resumo ?? {}) };
     if (r.detalhe) detalhes.push(r.detalhe);
     if (r.substituta) substituta = r.substituta;
+    if (r.assincrona) return { ok: true, executadas, resumo, detalhes, assincrona: r.assincrona };
   }
 
   return { ok: true, executadas, resumo, detalhes, ...(substituta ? { substituta } : {}) };

@@ -273,10 +273,26 @@ export function TelasDoPost({ telas, titulo }: { telas: string[]; titulo: string
   );
 }
 
+/** O MP4 aprovado, o mesmo arquivo que vai para a Meta, em 9:16. */
+function VideoDoReel({ url }: { url?: string }) {
+  if (!url) {
+    return <p className="rounded-lg bg-slate-100 p-6 text-center text-[13px] text-slate-500">Sem vídeo congelado.</p>;
+  }
+  return (
+    <div className="aspect-[9/16] w-[88%] overflow-hidden rounded-lg bg-black sm:w-[300px]">
+      <video src={url} controls playsInline preload="metadata" className="h-full w-full object-contain" />
+    </div>
+  );
+}
+
 export function CorpoDoPost({ a, previa, edicao }: { a: Aprovacao; previa: PreviaDoPost; edicao: Edicao }) {
   return (
     <div className="space-y-3">
-      <TelasDoPost telas={previa.telas} titulo={previa.manchete} />
+      {previa.formato === "reel" ? (
+        <VideoDoReel url={previa.telas[0]} />
+      ) : (
+        <TelasDoPost telas={previa.telas} titulo={previa.manchete} />
+      )}
       {/* A legenda como o Instagram a mostra: o perfil, e o texto com as quebras de linha. */}
       <TextoEditavel edicao={edicao} multilinha>
         <div className="text-[14px] leading-relaxed text-slate-900">

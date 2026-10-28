@@ -32,6 +32,9 @@ function chamadasFalsas(registro: Array<{ nome: string; args: Record<string, unk
     entregar_tarefa: ok("entregar_tarefa", { desfecho: "auditar" }),
     montar_post: ok("montar_post", { manchete: "M", legenda: "L", imagem: { mime: "image/jpeg", base64: "AAAA" } }),
     agendar_post: ok("agendar_post", { quando: "2026-10-28T11:00:00Z" }),
+    reels_sugeridos: ok("reels_sugeridos", { reels: [] }),
+    produzir_reel: ok("produzir_reel", { candidato_id: "c1" }),
+    ver_reel: ok("ver_reel", { estado: "nova", imagem: { mime: "image/jpeg", base64: "AAAA" } }),
   };
 }
 
@@ -82,5 +85,15 @@ describe("o MCP online", () => {
       content: Array<{ type: string; data?: string }>;
     };
     expect(r.content[0]).toMatchObject({ type: "image", data: "AAAA" });
+  });
+
+  it("ver_reel devolve a folha de quadros como imagem e o resto como texto", async () => {
+    const cliente = await conectar([]);
+    const r = (await cliente.callTool({ name: "ver_reel", arguments: { candidato_id: "c1" } })) as {
+      content: Array<{ type: string; data?: string; text?: string }>;
+    };
+    expect(r.content[0]).toMatchObject({ type: "image", data: "AAAA" });
+    expect(r.content[1].text).toContain('"estado": "nova"');
+    expect(r.content[1].text).not.toContain("base64");
   });
 });

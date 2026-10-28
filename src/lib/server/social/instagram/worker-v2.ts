@@ -87,7 +87,8 @@ export async function verificarArtefatos(
     const onde = carga.artefatos.length > 1 ? `slide ${artefato.index}: ` : "";
 
     const resposta = await fetcher(artefato.url, {
-      signal: AbortSignal.timeout(opcoes.tetoMs ?? 30_000),
+      // O MP4 do Reel pesa dezenas de MB; a imagem, centenas de KB.
+      signal: AbortSignal.timeout(opcoes.tetoMs ?? (artefato.mime === "video/mp4" ? 120_000 : 30_000)),
     });
 
     if (!resposta.ok) {

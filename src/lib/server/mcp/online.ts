@@ -1,6 +1,8 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { criarServidorMcp, RecusaDaPlataforma, type Backend, type NomeDaFerramenta } from "@/mcp/ferramentas";
 import * as servico from "./servico";
+import { depsDoReelNoMcp, produzirReel, reelsSugeridos, verReel } from "./reels/servico";
+import { getSupabaseAdminClient } from "@/lib/server/supabase-admin";
 import type { Resposta } from "./servico";
 import type { AcessoDoMcp } from "./tokens";
 
@@ -28,6 +30,9 @@ const CHAMADAS: Record<NomeDaFerramenta, (acesso: AcessoDoMcp, args: Record<stri
   entregar_tarefa: (a, args) => servico.entregar(a, args),
   montar_post: (a, args) => servico.montar(a, args),
   agendar_post: (a, args) => servico.agendar(a, args),
+  reels_sugeridos: (a, args) => reelsSugeridos(a, args, depsDoReelNoMcp(getSupabaseAdminClient())),
+  produzir_reel: (a, args) => produzirReel(a, args, depsDoReelNoMcp(getSupabaseAdminClient())),
+  ver_reel: (a, args) => verReel(a, args, depsDoReelNoMcp(getSupabaseAdminClient())),
 };
 
 export function backendDireto(acesso: AcessoDoMcp, chamadas = CHAMADAS): Backend {

@@ -133,7 +133,9 @@ describe("o cardápio de capacidades", () => {
       "carrossel_noticia",
       "calor",
       "radar",
+      "termometro",
       "quente_da_tarde",
+      "reels",
     ]);
   });
 });

@@ -52,7 +52,7 @@ export type PreviaDoPost = {
   manchete: string;
   /** As telas congeladas, na ordem de publicação: o que o worker sobe para a Meta. */
   telas: string[];
-  formato: "post único" | "carrossel";
+  formato: "post único" | "carrossel" | "reel";
   agendadoPara: string | null;
   publicadoEm: string | null;
   statusNaTabela: string;
@@ -103,6 +103,10 @@ export function telasDoPost(linha: Linha): string[] {
   return [];
 }
 
+function ehReelDaLinha(linha: Linha): boolean {
+  return s(((linha.content_json ?? {}) as { formato?: unknown }).formato) === "reel";
+}
+
 export function previaDoPost(linha: Linha, a: Pick<Aprovacao, "hashArtefato">): PreviaDoPost {
   const telas = telasDoPost(linha);
   const status = s(linha.status);
@@ -111,7 +115,8 @@ export function previaDoPost(linha: Linha, a: Pick<Aprovacao, "hashArtefato">): 
     legenda: s(linha.caption),
     manchete: s(linha.title),
     telas,
-    formato: telas.length > 1 ? "carrossel" : "post único",
+    // O Reel é decidido pelo registro, nunca pela contagem: um vídeo é uma tela só.
+    formato: ehReelDaLinha(linha) ? "reel" : telas.length > 1 ? "carrossel" : "post único",
     agendadoPara: s(linha.scheduled_at) || null,
     publicadoEm: s(linha.published_at) || null,
     statusNaTabela: status,

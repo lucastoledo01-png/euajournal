@@ -137,6 +137,14 @@ export function linhaDoReel(
   };
 }
 
+const DIAS_PARA_ACHAR_VAGA = 4;
+
+function somarDias(dataIso: string, dias: number): string {
+  const d = new Date(`${dataIso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
 export async function gravarReel(
   projeto: Project,
   reel: ReelParaGravar,
@@ -149,28 +157,40 @@ export async function gravarReel(
 
   if (reel.postExistente) return regravarReel(projeto, reel, reel.postExistente, deps);
 
-  const { data: linhas, error } = await deps.client
-    .from("social_posts")
-    .select("status, scheduled_at, error_message, dry_run")
-    .eq("project_id", projeto.id)
-    .eq("edition_date", reel.data)
-    .eq("platform", "instagram");
-  if (error) return { ok: false, error: `os posts do dia não puderam ser lidos: ${error.message}` };
-
+  /*
+   * A vaga: hoje, e sem vaga hoje, o próximo dia com horário livre (29/10/2026).
+   * Antes o Reel que chegava depois da última vaga do dia falhava, e o texto
+   * que o Claude escreveu se perdia.
+   */
   const cadencia = cadenciaDoProjeto(projeto);
   const agora = deps.agora ? deps.agora() : new Date();
-  const vagas = vagasDaTarde({
-    horarios: cadencia.instagram.horarios,
-    dataIso: reel.data,
-    timezone: projeto.timezone,
-    agoraMs: agora.getTime(),
-    postsDoDia: (linhas ?? []) as PostDoDia[],
-    maximoDoDia: cadencia.instagram.volume.maximo,
-    maximoDoCiclo: 1,
-  });
-  const horaLocal = vagas.teto > 0 ? vagas.horarios[0] : null;
-  if (!horaLocal) return { ok: false, error: `sem vaga no Instagram em ${reel.data}: ${vagas.motivo}` };
-  const quando = zonedTimeToUtc(reel.data, horaLocal, projeto.timezone).toISOString();
+  let dataDaVaga = reel.data;
+  let horaLocal: string | null = null;
+  let motivo = "";
+  for (let dia = 0; dia < DIAS_PARA_ACHAR_VAGA && !horaLocal; dia++) {
+    dataDaVaga = somarDias(reel.data, dia);
+    const { data: linhas, error } = await deps.client
+      .from("social_posts")
+      .select("status, scheduled_at, error_message, dry_run")
+      .eq("project_id", projeto.id)
+      .eq("edition_date", dataDaVaga)
+      .eq("platform", "instagram");
+    if (error) return { ok: false, error: `os posts de ${dataDaVaga} não puderam ser lidos: ${error.message}` };
+    const vagas = vagasDaTarde({
+      horarios: cadencia.instagram.horarios,
+      dataIso: dataDaVaga,
+      timezone: projeto.timezone,
+      agoraMs: agora.getTime(),
+      postsDoDia: (linhas ?? []) as PostDoDia[],
+      maximoDoDia: cadencia.instagram.volume.maximo,
+      maximoDoCiclo: 1,
+    });
+    horaLocal = vagas.teto > 0 ? vagas.horarios[0] : null;
+    motivo = vagas.motivo;
+  }
+  if (!horaLocal) return { ok: false, error: `sem vaga no Instagram de ${reel.data} a ${dataDaVaga}: ${motivo}` };
+  const quando = zonedTimeToUtc(dataDaVaga, horaLocal, projeto.timezone).toISOString();
+  reel = { ...reel, data: dataDaVaga };
 
   const p = projetoDaFila(projeto, projeto.id);
   const fila = opcoesDaFilaParaOStore(p ? { ...p, slug: projeto.slug } : null, deps.client);

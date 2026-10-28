@@ -68,6 +68,11 @@ export async function produzirReel(acesso: AcessoDoMcp, args: { candidato_id?: u
   const id = typeof args.candidato_id === "string" ? args.candidato_id : "";
   const c = id ? await deps.candidatos.porId(id) : null;
   if (!c || c.projectId !== acesso.projeto.id) return { ok: false, status: 404, error: "candidato não encontrado neste projeto" };
+  // O que falhou (download, render, sem vaga) tenta de novo com o preparo e o texto que já tinha.
+  if (c.estado === "falhou") {
+    if (!(await deps.candidatos.tentarDeNovo(id))) return { ok: false, status: 409, error: "outro pedido mexeu neste candidato antes" };
+    return { ok: true, candidato_id: id, proximo_passo: "De volta ao worker, com o texto que você já entregou. Acompanhe com ver_reel." };
+  }
   if (c.estado !== "nova") return { ok: false, status: 409, error: `o candidato está "${c.estado}"${c.motivo ? `: ${c.motivo}` : ""}` };
   if (!(await deps.candidatos.escolher(id))) return { ok: false, status: 409, error: "outro pedido escolheu este candidato antes" };
   return {

@@ -292,6 +292,7 @@ export function criarServidorMcp(backend: Backend, versao = "0.4.0"): McpServer 
       title: "Produzir um Reel",
       description:
         "Escolhe um vídeo de reels_sugeridos. A plataforma baixa, mede o corte que tira a marca de quem publicou e abre a tarefa escrever_reel. " +
+        "Num Reel que falhou, tenta de novo com o texto já entregue. " +
         "Nada vai ao ar sem aprovação no painel.",
       inputSchema: { candidato_id: z.string().min(1).describe("O id que reels_sugeridos devolve.") },
     },

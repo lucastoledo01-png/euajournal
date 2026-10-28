@@ -479,8 +479,28 @@ function severidadeDoNome(chave: string): "bloqueio" | "aviso" {
   return palavras.every((p) => GENERICAS.has(p)) ? "aviso" : "bloqueio";
 }
 
+/**
+ * O mesmo lugar escrito de outro jeito (29/10/2026). O texto diz "Estados
+ * Unidos" e a fonte diz "EUA", ou o contrário, ou em inglês: é o mesmo país, e
+ * a conferência recusava o Reel por isso. A lista é curta e fechada de
+ * propósito: equivalência larga demais vira porta para nome sem lastro.
+ */
+const EQUIVALENTES: ReadonlyArray<readonly string[]> = [
+  ["estados unidos", "eua", "united states", "usa", "u.s.", "estados unidos da america", "america"],
+  ["brasil", "brazil"],
+  ["casa branca", "white house"],
+  ["reino unido", "united kingdom", "uk"],
+];
+
+function contemPalavra(palheiro: string, termo: string): boolean {
+  const escapado = termo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${escapado}([^a-z0-9]|$)`).test(palheiro);
+}
+
 function nomeSustentado(chave: string, palheiro: string): boolean {
   if (palheiro.includes(chave)) return true;
+  const grupo = EQUIVALENTES.find((g) => g.includes(chave));
+  if (grupo && grupo.some((alt) => contemPalavra(palheiro, alt))) return true;
 
   // Casamento parcial para nome composto: o redator traduz e reordena. Basta
   // uma palavra significativa aparecer na origem.

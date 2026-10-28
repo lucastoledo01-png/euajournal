@@ -39,8 +39,32 @@ import type { PautaAvaliada } from "./guarda";
  * pauta irrelevante passar uma importante.
  */
 
-export const PESOS_DO_CALOR = { veiculos: 30, tendencia: 25, fama: 25, recencia: 10, numero: 10 } as const;
+export const PESOS_DO_CALOR = { veiculos: 25, tendencia: 20, fama: 20, recencia: 10, numero: 10, velocidade: 15 } as const;
+
+/** O que uma pauta perde quando já há um capítulo mais novo da mesma história (28/10/2026). */
+export const FATOR_DE_ETAPA_SUPERADA = 0.5;
+/** Horas de diferença para o capítulo novo valer: "viaja" e "chega" saem com horas de distância. */
+export const HORAS_PARA_SUPERAR = 2;
+/** Parecido demais é o mesmo fato noticiado de novo, e não o capítulo seguinte. */
+export const LIMITE_DE_MESMO_FATO = 0.9;
 export const PESO_DO_CALOR = 0.35;
+
+/**
+ * Os extras do termômetro (28/10/2026), por cima dos 100 pontos dos sinais.
+ *
+ * Aceleração: o assunto que mais que dobrou de veículos de uma janela de 3h
+ * para a seguinte, com 3 ou mais na mais nova, é o que está pegando AGORA.
+ * Brasil × EUA: o assunto em alta no Brasil com ator, lugar ou governo dos EUA
+ * no centro é exatamente a linha do eua.journal, e por isso vale mais que o
+ * mesmo calor num assunto só daqui ou só de lá.
+ */
+export const BONUS_DE_ACELERACAO = 8;
+export const BONUS_BRASIL_EUA = 15;
+
+export function acelerando(ultimas3h: number | undefined, anteriores3h: number | undefined): boolean {
+  const agora = ultimas3h ?? 0;
+  return agora >= 3 && agora >= 2 * (anteriores3h ?? 0);
+}
 
 /**
  * O limiar de "mesmo fato" para CONTAR VEÍCULOS, e só para isso (06/10/2026).
@@ -76,20 +100,46 @@ export type SinaisDeCalor = {
   horas: number | null;
   /** O número forte da manchete, quando há. */
   numeroForte: string | null;
+  /** Domínios distintos que contaram o fato nas últimas 3h: a aceleração. */
+  veiculos3h?: number;
+  /** Domínios distintos nas 3h anteriores a essas (de 3h a 6h atrás), para medir a aceleração. */
+  veiculosAntes3h?: number;
+  /** Em alta no Brasil e com os EUA no centro (ver `cruzamentoBrasilEua`). */
+  brasilEua?: boolean;
+  /** Existe um capítulo mais novo da mesma história (a pauta ficou para trás). */
+  superada?: boolean;
 };
 
 export type Calor = {
   total: number;
-  partes: { veiculos: number; tendencia: number; fama: number; recencia: number; numero: number };
+  partes: {
+    veiculos: number;
+    tendencia: number;
+    fama: number;
+    recencia: number;
+    numero: number;
+    velocidade: number;
+    aceleracao: number;
+    brasilEua: number;
+  };
   sinais: SinaisDeCalor;
   explicacao: string;
 };
 
 export function pontosDeVeiculos(n: number): number {
   if (n >= 5) return PESOS_DO_CALOR.veiculos;
-  if (n === 4) return 24;
-  if (n === 3) return 18;
-  if (n === 2) return 10;
+  if (n === 4) return 20;
+  if (n === 3) return 15;
+  if (n === 2) return 8;
+  return 0;
+}
+
+/** Quatro veículos em 3 horas é o assunto acelerando; o mesmo número em 24 horas é só o dia. */
+export function pontosDeVelocidade(n: number | undefined): number {
+  const v = n ?? 0;
+  if (v >= 4) return PESOS_DO_CALOR.velocidade;
+  if (v === 3) return 11;
+  if (v === 2) return 6;
   return 0;
 }
 
@@ -101,7 +151,7 @@ export function pontosDeVeiculos(n: number): number {
 export function pontosDeTendencia(t: SinaisDeCalor["tendencias"]): number {
   const fontes = new Set(t.map((x) => x.fonte));
   if (fontes.size >= 2) return PESOS_DO_CALOR.tendencia;
-  if (fontes.size === 1) return 18;
+  if (fontes.size === 1) return 14;
   return 0;
 }
 
@@ -119,18 +169,18 @@ export function pontosDeTendencia(t: SinaisDeCalor["tendencias"]): number {
 export function pontosDeFama(f: SinaisDeCalor["fama"]): number {
   const n = f?.sitelinks ?? 0;
   if (n >= 150) return PESOS_DO_CALOR.fama;
-  if (n >= 90) return 18;
-  if (n >= 40) return 12;
-  if (n >= 15) return 6;
+  if (n >= 90) return 15;
+  if (n >= 40) return 10;
+  if (n >= 15) return 5;
   return 0;
 }
 
 export function pontosDeRecencia(horas: number | null): number {
   if (horas === null || horas < 0) return 0;
-  if (horas <= 6) return PESOS_DO_CALOR.recencia;
-  if (horas <= 12) return 8;
-  if (horas <= 24) return 5;
-  if (horas <= 48) return 2;
+  if (horas <= 2) return PESOS_DO_CALOR.recencia;
+  if (horas <= 6) return 8;
+  if (horas <= 12) return 5;
+  if (horas <= 24) return 2;
   return 0;
 }
 
@@ -141,14 +191,23 @@ export function pontuarCalor(sinais: SinaisDeCalor): Calor {
     fama: pontosDeFama(sinais.fama),
     recencia: pontosDeRecencia(sinais.horas),
     numero: sinais.numeroForte ? PESOS_DO_CALOR.numero : 0,
+    velocidade: pontosDeVelocidade(sinais.veiculos3h),
+    aceleracao: acelerando(sinais.veiculos3h, sinais.veiculosAntes3h) ? BONUS_DE_ACELERACAO : 0,
+    brasilEua: sinais.brasilEua ? BONUS_BRASIL_EUA : 0,
   };
-  const total = partes.veiculos + partes.tendencia + partes.fama + partes.recencia + partes.numero;
+  const bruto =
+    partes.veiculos + partes.tendencia + partes.fama + partes.recencia + partes.numero + partes.velocidade +
+    partes.aceleracao + partes.brasilEua;
+  const total = sinais.superada ? Math.round(bruto * FATOR_DE_ETAPA_SUPERADA) : bruto;
   const explicacao =
     `calor ${total} = veic ${partes.veiculos} (${sinais.veiculos}) + tend ${partes.tendencia}` +
     (sinais.tendencias.length ? ` (${sinais.tendencias.map((t) => t.termo).slice(0, 2).join(", ")})` : "") +
     ` + fama ${partes.fama}` +
     (sinais.fama ? ` (${sinais.fama.nome}, ${sinais.fama.sitelinks})` : "") +
-    ` + rec ${partes.recencia} + num ${partes.numero}`;
+    ` + rec ${partes.recencia} + num ${partes.numero} + vel ${partes.velocidade}` +
+    (partes.aceleracao ? ` + acel ${partes.aceleracao} (${sinais.veiculos3h} em 3h, ${sinais.veiculosAntes3h ?? 0} antes)` : "") +
+    (partes.brasilEua ? ` + Brasil×EUA ${partes.brasilEua}` : "") +
+    (sinais.superada ? ` ×${FATOR_DE_ETAPA_SUPERADA} (etapa superada: já há capítulo mais novo)` : "");
   return { total, partes, sinais, explicacao };
 }
 
@@ -268,6 +327,51 @@ export function contarVeiculos(
     }
   }
   return Math.max(1, dominios.size);
+}
+
+/**
+ * Quantos veículos contaram o fato nas últimas 3 horas, e se já existe um
+ * capítulo MAIS NOVO da mesma história (28/10/2026).
+ *
+ * O dono viu "Flávio rumo aos EUA" no topo quando os portais já diziam que ele
+ * tinha chegado. O calor media o assunto, e não a etapa. A heurística: uma
+ * matéria parecida com a pauta (acima do limiar de mesmo assunto), mas NÃO
+ * quase igual (abaixo de `LIMITE_DE_MESMO_FATO`), publicada ao menos
+ * `HORAS_PARA_SUPERAR` horas depois, é o capítulo seguinte. Quase igual é o
+ * mesmo fato republicado, e esse não supera nada.
+ */
+export function andamentoDaHistoria(
+  vetor: Vetor | null,
+  publicadoEm: string | undefined,
+  dominiosProprios: string[],
+  vizinhas: Vizinha[],
+  limiar: number,
+  agoraMs: number,
+): { veiculos3h: number; veiculosAntes3h: number; superada: boolean } {
+  const t0 = Date.parse(publicadoEm ?? "");
+  const recentes = new Set<string>();
+  const anteriores = new Set<string>();
+  let superada = false;
+  if (Number.isFinite(t0) && agoraMs - t0 <= 3 * 3600 * 1000) {
+    for (const d of dominiosProprios) if (d && !AGREGADORES.has(d.toLowerCase())) recentes.add(d.toLowerCase());
+  }
+  if (Number.isFinite(t0) && agoraMs - t0 > 3 * 3600 * 1000 && agoraMs - t0 <= 6 * 3600 * 1000) {
+    for (const d of dominiosProprios) if (d && !AGREGADORES.has(d.toLowerCase())) anteriores.add(d.toLowerCase());
+  }
+  if (!vetor || vetor.length === 0 || limiar <= 0) return { veiculos3h: recentes.size, veiculosAntes3h: anteriores.size, superada };
+  for (const v of vizinhas) {
+    if (v.vetor.length !== vetor.length) continue;
+    const t = Date.parse(v.publicadoEm);
+    if (!Number.isFinite(t)) continue;
+    const d = v.dominio.toLowerCase();
+    if (!d || AGREGADORES.has(d)) continue;
+    const sim = cosseno(vetor, v.vetor);
+    if (sim < limiar) continue;
+    if (agoraMs - t <= 3 * 3600 * 1000) recentes.add(d);
+    else if (agoraMs - t <= 6 * 3600 * 1000) anteriores.add(d);
+    if (sim < LIMITE_DE_MESMO_FATO && Number.isFinite(t0) && t - t0 >= HORAS_PARA_SUPERAR * 3600 * 1000) superada = true;
+  }
+  return { veiculos3h: recentes.size, veiculosAntes3h: anteriores.size, superada };
 }
 
 export function horasDesde(publicadoEm: string | undefined, agoraMs: number): number | null {

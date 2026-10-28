@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { pautaDeTeste } from "./calor.fixture";
 import {
+  BONUS_BRASIL_EUA,
+  BONUS_DE_ACELERACAO,
+  acelerando,
+  andamentoDaHistoria,
   bonusDoCalor,
   contarVeiculos,
   numeroForte,
@@ -82,6 +86,9 @@ describe("os sinais do calor", () => {
       fama: { nome: "Donald Trump", sitelinks: 250 },
       horas: 2,
       numeroForte: "670",
+      veiculos3h: 5,
+      // 5 em 3h depois de 3 nas 3h anteriores não é aceleração forte: os 100 são só dos sinais.
+      veiculosAntes3h: 3,
     });
     expect(quente.total).toBe(100);
     expect(bonusDoCalor(quente)).toBe(Math.round(100 * PESO_DO_CALOR));
@@ -89,6 +96,48 @@ describe("os sinais do calor", () => {
     const fria = pontuarCalor({ veiculos: 1, tendencias: [], fama: null, horas: 70, numeroForte: null });
     expect(fria.total).toBe(0);
     expect(bonusDoCalor(fria)).toBe(0);
+  });
+});
+
+describe("o capítulo da história (28/10/2026)", () => {
+  const v = (x: number[]) => x;
+  const AGORA2 = Date.parse("2026-10-28T12:00:00Z");
+  const h = (horasAtras: number) => new Date(AGORA2 - horasAtras * 3600 * 1000).toISOString();
+
+  it("matéria parecida e mais nova, mas não igual, supera a pauta: 'viaja' vira 'chega'", () => {
+    const pauta = v([1, 0, 0]);
+    const proxima = v([0.8, 0.6, 0]); // cosseno 0.8: mesmo assunto, outro fato
+    const andamento = andamentoDaHistoria(
+      pauta,
+      h(6),
+      ["cnn.com"],
+      [{ dominio: "g1.globo.com", vetor: proxima, publicadoEm: h(1) }],
+      0.65,
+      AGORA2,
+    );
+    expect(andamento.superada).toBe(true);
+    expect(andamento.veiculos3h).toBe(1);
+  });
+
+  it("quase igual é o mesmo fato republicado, e não supera", () => {
+    const andamento = andamentoDaHistoria(
+      v([1, 0, 0]),
+      h(6),
+      ["cnn.com"],
+      [{ dominio: "g1.globo.com", vetor: v([0.97, 0.2, 0]), publicadoEm: h(1) }],
+      0.65,
+      AGORA2,
+    );
+    expect(andamento.superada).toBe(false);
+  });
+
+  it("a etapa superada vale a metade, e a velocidade soma", () => {
+    const base = { veiculos: 3, tendencias: [], fama: null, horas: 3, numeroForte: null };
+    const viva = pontuarCalor({ ...base, veiculos3h: 4 });
+    const velha = pontuarCalor({ ...base, veiculos3h: 4, superada: true });
+    expect(viva.partes.velocidade).toBe(15);
+    expect(velha.total).toBe(Math.round(viva.total * 0.5));
+    expect(velha.explicacao).toContain("etapa superada");
   });
 });
 
@@ -207,5 +256,28 @@ describe("a fama no Wikidata", () => {
     // Estado americano: instância de estado (Q35657), sem sede nem setor.
     const f = fetcherFalso("Virgínia Ocidental", "Q1371", ["enwiki", "ptwiki", "eswiki"], "Q35657");
     expect(await famaNoWikidata("Virgínia Ocidental", f, "teste")).toBeNull();
+  });
+});
+
+describe("os extras do termômetro (28/10/2026)", () => {
+  const base = { veiculos: 3, tendencias: [], fama: null, horas: 1, numeroForte: null };
+
+  it("acelera quando a janela de 3h mais nova tem 3 ou mais veículos e ao menos o dobro da anterior", () => {
+    expect(acelerando(3, 0)).toBe(true);
+    expect(acelerando(4, 2)).toBe(true);
+    expect(acelerando(4, 3)).toBe(false);
+    expect(acelerando(2, 0)).toBe(false);
+    const comAceleracao = pontuarCalor({ ...base, veiculos3h: 4, veiculosAntes3h: 1 });
+    const semAceleracao = pontuarCalor({ ...base, veiculos3h: 4, veiculosAntes3h: 3 });
+    expect(comAceleracao.total - semAceleracao.total).toBe(BONUS_DE_ACELERACAO);
+    expect(comAceleracao.explicacao).toMatch(/acel/);
+  });
+
+  it("Brasil × EUA soma o peso extra, e a etapa superada corta o total pela metade", () => {
+    const so = pontuarCalor({ ...base, veiculos3h: 2, veiculosAntes3h: 2 });
+    const cruzado = pontuarCalor({ ...base, veiculos3h: 2, veiculosAntes3h: 2, brasilEua: true });
+    expect(cruzado.total - so.total).toBe(BONUS_BRASIL_EUA);
+    const superada = pontuarCalor({ ...base, veiculos3h: 2, veiculosAntes3h: 2, brasilEua: true, superada: true });
+    expect(superada.total).toBe(Math.round(cruzado.total / 2));
   });
 });

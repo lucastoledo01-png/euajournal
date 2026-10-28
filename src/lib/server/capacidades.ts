@@ -101,6 +101,22 @@ export const CAPACIDADES = [
    */
   "calor",
   /**
+   * O radar de notícias (28/10/2026): a cada 15 minutos lê só os feeds das
+   * fontes e grava as matérias novas como `collected`, sem modelo e sem
+   * publicar nada. Existe porque o ciclo diário deixava o termômetro olhando
+   * um retrato de até 24 horas. `dry_run` só conta; `enforce` grava. Ausente
+   * vale `off`. Ver `newsroom/radar.ts` e `/api/cron/radar`.
+   */
+  "radar",
+  /**
+   * O termômetro de pauta (28/10/2026): agrupa as matérias do dia por
+   * história, acha o capítulo mais novo e trava o post que conta uma etapa já
+   * superada ("viaja" quando a história já está em "chega"). `dry_run` calcula,
+   * avisa no log e grava o ranking; `enforce` também segura o post e manda o
+   * alerta do assunto que acelera. Ausente vale `off`. Ver `editorial/termometro.ts`.
+   */
+  "termometro",
+  /**
    * A notícia quente no mesmo dia (06/10/2026): um ciclo da tarde, só do
    * Instagram, que coleta de novo e preenche as vagas livres de hoje com a
    * pauta nova e quente. Sem fallback de ambiente: ausente vale `off`. Ver

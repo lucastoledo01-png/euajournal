@@ -78,7 +78,7 @@ const SYSTEM = [
   "Só afirme o que o material diz: nome, número, data e lugar que não estão no material não entram.",
   "Linhas da manchete: curtas (até 30 caracteres cada), a do meio é a que muda tudo, sem ponto final.",
   "Legenda: o gancho é o lide (quem fez o quê, e quando); depois até 4 parágrafos curtos com o que o material sustenta. Não repita a manchete palavra por palavra.",
-  "Molde A quando o vídeo é horizontal ou a cena pede a moldura; molde B quando o vídeo é vertical e forte sozinho.",
+  "Molde: vídeo VERTICAL (mais alto que largo) é SEMPRE o molde B, tela cheia com a manchete simples; a moldura do A cortaria quase tudo. Molde A só para vídeo horizontal.",
   REGRA_DO_DOLAR,
 ].join("\n");
 
@@ -152,7 +152,15 @@ export function conferirTextoDoReel(
 ): { ok: true; texto: Omit<TextoDoReel, "tarefaId"> } | { ok: false; motivos: string[] } {
   const lido = TextoDoReelSchema.safeParse(bruto);
   if (!lido.success) return { ok: false, motivos: [`a resposta não cabe no esquema: ${lido.error.message.slice(0, 500)}`] };
-  const t = limparVicios(lido.data);
+  const lidoLimpo = limparVicios(lido.data);
+  /*
+   * Vídeo vertical é sempre o molde B (decisão do dono, 29/10/2026): na
+   * moldura do A, um 9:16 vira um recorte do meio, e o Reel do Trump saiu só
+   * com metade do rosto. É regra de formato, então é aplicada aqui, e não
+   * devolvida ao Claude como reparo.
+   */
+  const vertical = material.original.altura > material.original.largura;
+  const t = vertical && lidoLimpo.molde === "a" ? { ...lidoLimpo, molde: "b" as const, corte: null } : lidoLimpo;
 
   const manchete = t.linhas.join(" ").replace(/\s+/g, " ").trim();
   const corpo = [t.legenda.gancho, ...t.legenda.paragrafos].map((p) => p.trim()).filter(Boolean).join("\n\n");

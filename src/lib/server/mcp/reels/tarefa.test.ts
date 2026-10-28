@@ -7,8 +7,8 @@ const PREPARO: PreparoDoReel = {
   videoUrl: "https://x/origem.mp4",
   videoPath: "p/c1/origem.mp4",
   folhaUrl: "https://x/folha.jpg",
-  original: { largura: 720, altura: 1280, segundos: 32 },
-  corte: { a: { x: 0, y: 350, largura: 720, altura: 378 }, b: { x: 180, y: 0, largura: 482, altura: 864 } },
+  original: { largura: 1280, altura: 720, segundos: 32 },
+  corte: { a: { x: 0, y: 20, largura: 1280, altura: 692 }, b: { x: 440, y: 0, largura: 404, altura: 720 } },
   tarefaId: null,
 };
 
@@ -69,7 +69,7 @@ describe("o texto do Reel", () => {
 
   it("tira o travessão sozinho e recusa corte fora do vídeo", () => {
     const r = conferirTextoDoReel(
-      { ...BOM, legenda: { gancho: "Trump anunciou nesta terça uma tarifa de 50% — sobre o aço importado.", paragrafos: [] }, corte: { x: 600, y: 0, largura: 400, altura: 300 } },
+      { ...BOM, legenda: { gancho: "Trump anunciou nesta terça uma tarifa de 50% — sobre o aço importado.", paragrafos: [] }, corte: { x: 1000, y: 0, largura: 400, altura: 300 } },
       material,
     );
     expect(r.ok).toBe(false);
@@ -117,5 +117,22 @@ describe("o laço da tarefa", () => {
     r = await entregarEscritaDoReel(t, ruim, "claude", { tarefas, candidatos, env });
     expect(r.desfecho).toBe("descartado");
     expect(candidatos.todos[0].estado).toBe("descartada");
+  });
+});
+
+describe("o molde do vídeo vertical", () => {
+  it("vídeo vertical vai sempre para o molde B, com o corte do B", () => {
+    const vertical = { ...PREPARO, original: { largura: 720, altura: 1280, segundos: 32 } };
+    const material = materialDoCandidato(candidato(), vertical);
+    const r = conferirTextoDoReel(BOM, material);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.texto.molde).toBe("b");
+    expect(r.texto.corte).toEqual(PREPARO.corte.b);
+  });
+
+  it("vídeo horizontal pode ficar no A", () => {
+    const r = conferirTextoDoReel(BOM, materialDoCandidato(candidato(), PREPARO));
+    expect(r.ok && r.texto.molde).toBe("a");
   });
 });

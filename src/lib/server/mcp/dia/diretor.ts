@@ -70,6 +70,9 @@ export async function proximoPassoDoDia(projeto: Project, data: string, deps: De
       .sort((a, b) => (a.estado === "reparar" ? -1 : 0) - (b.estado === "reparar" ? -1 : 0) || a.criadaEm.localeCompare(b.criadaEm))[0];
   const tarefa = (t: Tarefa, resumo: string): PassoDoDia => ({ tipo: "tarefa", etapa: plano.etapa, tarefa: t, resumo });
 
+  // A verificação do plano vem antes de tudo: o post aberto agora é conferido na entrega, e precisa dela.
+  if (plano.estado === "aprovado") await deps.verificarPeloPlano(projeto, plano.itens.posts);
+
   // Trabalho começado vem antes de trabalho novo, em qualquer etapa.
   const pendente = aberta();
   if (pendente) return tarefa(pendente, `continuando: ${pendente.tipo}`);
@@ -121,7 +124,6 @@ export async function proximoPassoDoDia(projeto: Project, data: string, deps: De
   }
 
   if (plano.etapa === "producao") {
-    await deps.verificarPeloPlano(projeto, itens.posts);
     const candidatas = await deps.candidatas(projeto, pautas);
     const fotoOk = async (id: string) => (await deps.foto(projeto, id))?.status === "SELECTED";
     const pacoteOk = (id: string) => Boolean(candidatas.get(id)?.factualPackage);

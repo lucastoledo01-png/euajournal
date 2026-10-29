@@ -187,6 +187,20 @@ export function depsDoDiretor(client: SupabaseClient): DepsDoDiretor {
     },
     reels: async (_projeto, ids) => (await Promise.all(ids.map((id) => reels.porId(id)))).filter((r): r is NonNullable<typeof r> => r !== null),
     escolherReel: (id) => reels.escolher(id),
+    async verificarPeloPlano(projeto, storyIds) {
+      const mapa = await candidatos.buscarPorStoryIds(projeto.id, storyIds);
+      for (const c of mapa.values()) {
+        if (c.verificacao?.status === "confirm") continue;
+        await candidatos.gravarVerificacao(c.id, {
+          status: "confirm",
+          motivo: "aprovada pelo dono no plano do dia",
+          divergencias: [],
+          verificadoEm: new Date().toISOString(),
+          canal: "plano",
+          inputHash: "plano-do-dia",
+        });
+      }
+    },
     async postAgendado(projeto, data, storyId) {
       const { data: linhas } = await client
         .from("social_posts")

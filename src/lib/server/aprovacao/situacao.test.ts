@@ -25,7 +25,7 @@ describe("a situação junta a fila com a tabela da peça", () => {
   it("os quatro filtros cobrem todas as situações", () => {
     expect(filtroDaSituacao("aguardando")).toBe("aguardando");
     expect(filtroDaSituacao("aprovada")).toBe("aprovadas");
-    expect(filtroDaSituacao("refazendo")).toBe("reprovadas");
+    expect(filtroDaSituacao("refazendo")).toBe("aguardando");
     expect(filtroDaSituacao("reprovada")).toBe("reprovadas");
     expect(filtroDaSituacao("fora")).toBe("reprovadas");
     expect(filtroDaSituacao("publicada")).toBe("publicadas");

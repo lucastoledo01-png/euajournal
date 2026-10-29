@@ -198,6 +198,7 @@ describe("o diretor do dia", () => {
       abrirPacote: async (p, data, c) => tarefas.abrir({ projectId: p.id, editionDate: data, tipo: "extrair_pacote", chave: c.storyId, instrucao: {}, material: {}, esquema: {} }),
       reels: async () => [],
       escolherReel: async () => true,
+      verificarPeloPlano: async () => {},
       postAgendado: async () => false,
       iniciarPost: async (p, data, id) => tarefas.abrir({ projectId: p.id, editionDate: data, tipo: "escrever_post", chave: id, instrucao: {}, material: {}, esquema: {} }),
       agendarPost: async () => ({ ok: true }),
@@ -243,5 +244,18 @@ describe("o diretor do dia", () => {
 
     passo = await proximoPassoDoDia(projeto, "2026-10-29", d);
     expect(passo.tipo).toBe("pronto");
+  });
+
+  it("o post descartado só por falta de verificação volta ao Claude", async () => {
+    const { d, tarefas, planos, fotos } = deps();
+    const plano = await planos.doDia("p1", "2026-10-30");
+    await planos.atualizar(plano.id, { estado: "aprovado", etapa: "producao", itens: { ...PLANO_VAZIO, posts: ["s1"] } });
+    fotos.set("s1", { status: "SELECTED" });
+    (candidata as { factualPackage: unknown }).factualPackage = { verified_facts: ["x"] };
+    const t = await tarefas.abrir({ projectId: "p1", editionDate: "2026-10-30", tipo: "escrever_post", chave: "s1", instrucao: {}, material: {}, esquema: {} });
+    await tarefas.cancelar(t.id, ["[SOCIAL_REJECT_UNVERIFIED] ainda não passou pela verificação de finalista"]);
+    const passo = await proximoPassoDoDia(projeto, "2026-10-30", d);
+    expect(passo.tipo === "tarefa" && passo.tarefa.id).toBe(t.id);
+    expect(passo.tipo === "tarefa" && passo.tarefa.estado).toBe("reparar");
   });
 });

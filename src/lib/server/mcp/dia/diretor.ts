@@ -35,6 +35,13 @@ export type DepsDoDiretor = {
   abrirPacote: (projeto: Project, data: string, candidata: CandidataPersistida) => Promise<Tarefa | null>;
   reels: (projeto: Project, ids: string[]) => Promise<CandidatoDeReel[]>;
   escolherReel: (id: string) => Promise<boolean>;
+  /**
+   * A aprovação do plano pelo dono é a verificação de finalista do Instagram
+   * (29/10/2026): grava `verificacao: confirm` nas pautas de post do plano.
+   * Idempotente. Sem isso o Social Guard recusava todo post do Claude como
+   * `SOCIAL_REJECT_UNVERIFIED`, porque a verificação da esteira é da OpenAI.
+   */
+  verificarPeloPlano: (projeto: Project, storyIds: string[]) => Promise<void>;
   /** O post desta pauta já está gravado na fila? */
   postAgendado: (projeto: Project, data: string, storyId: string) => Promise<boolean>;
   iniciarPost: (projeto: Project, data: string, storyId: string) => Promise<Tarefa | { erro: string }>;
@@ -114,6 +121,7 @@ export async function proximoPassoDoDia(projeto: Project, data: string, deps: De
   }
 
   if (plano.etapa === "producao") {
+    await deps.verificarPeloPlano(projeto, itens.posts);
     const candidatas = await deps.candidatas(projeto, pautas);
     const fotoOk = async (id: string) => (await deps.foto(projeto, id))?.status === "SELECTED";
     const pacoteOk = (id: string) => Boolean(candidatas.get(id)?.factualPackage);
@@ -121,6 +129,16 @@ export async function proximoPassoDoDia(projeto: Project, data: string, deps: De
     for (const id of itens.posts) {
       if (!pacoteOk(id) || !(await fotoOk(id)) || (await deps.postAgendado(projeto, data, id))) continue;
       const escrita = doDia.find((t) => t.tipo === "escrever_post" && t.chave === id);
+      // O post descartado só por falta da verificação volta ao Claude, agora que o plano a gravou.
+      if (escrita?.estado === "cancelada" && escrita.motivos.some((m) => m.includes("SOCIAL_REJECT_UNVERIFIED"))) {
+        const devolvida = await deps.tarefas.pedirReparo(
+          escrita.id,
+          escrita.resultado,
+          ["A pauta foi verificada pela aprovação do plano. Entregue de novo a mesma copy (o JSON do esquema)."],
+          "plataforma",
+        );
+        return tarefa(devolvida, `post de volta: ${candidatas.get(id)?.title.slice(0, 80) ?? id}`);
+      }
       if (!escrita) {
         const t = await deps.iniciarPost(projeto, data, id);
         if ("erro" in t) continue;

@@ -90,6 +90,15 @@ describe("o plano", () => {
     expect(m.join(" ")).toContain("falta a busca da foto");
   });
 
+  it("recusa a mesma notícia de duas fontes no mesmo canal", () => {
+    const comRepetida: MaterialDoPlano = {
+      ...material,
+      pautas: [...material.pautas, { ...material.pautas[0], storyId: "p1b" }],
+    };
+    const m = conferirPlano({ ...bom, artigos: ["p1", "p1b"], cenas: { ...bom.cenas, p1b: { consulta: "x y", objeto: "" } }, porque: { ...bom.porque, p1b: "x" } }, comRepetida);
+    expect(m.join(" ")).toContain("mesmo título");
+  });
+
   it("conta veículos pelos nomes em comum", () => {
     const n = veiculosLexicos("Trump anuncia tarifa contra a China", [
       { titulo: "China responde a Trump", dominio: "a.com" },

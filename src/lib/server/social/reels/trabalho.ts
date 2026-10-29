@@ -1,4 +1,5 @@
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { disfarcarPalavrasPesadas } from "@/lib/server/social/palavras-pesadas";
 import os from "node:os";
 import path from "node:path";
 import type { Project } from "@/lib/server/projects";
@@ -96,8 +97,17 @@ export async function renderizarCandidato(c: CandidatoDeReel, deps: DepsDoTrabal
     writeFileSync(origem, Buffer.from(await resposta.arrayBuffer()));
 
     const saida = path.join(dir, "reel.mp4");
-    const linhas = t.linhas.map((l, i) => (i === t.destaque ? `*${l}*` : l)).join("|");
-    await deps.montar({ video: origem, formato: t.molde, linhas: [linhas], rotulo: t.rotulo, categoria: t.categoria, corte: t.corte, saida });
+    // As palavras pesadas saem disfarçadas no vídeo, como na legenda (29/10/2026).
+    const linhas = t.linhas.map((l, i) => (i === t.destaque ? `*${disfarcarPalavrasPesadas(l)}*` : disfarcarPalavrasPesadas(l))).join("|");
+    await deps.montar({
+      video: origem,
+      formato: t.molde,
+      linhas: [linhas],
+      rotulo: disfarcarPalavrasPesadas(t.rotulo),
+      categoria: t.categoria,
+      corte: t.corte,
+      saida,
+    });
 
     const bytes = readFileSync(saida);
     const sha256 = sha256De(bytes);

@@ -1,4 +1,5 @@
 import type { CarouselFormat, InstagramSlide } from "@/lib/carousel-templates/types";
+import { disfarcarPalavrasPesadas } from "./palavras-pesadas";
 import type { Layout } from "@/lib/carousel-templates/layout";
 import type { Affordance } from "@/lib/carousel-templates/chrome";
 import type { AssetVisual } from "../visual/tipos";
@@ -731,6 +732,12 @@ export async function renderizarCapas(
   opcoes?: { fetcher?: typeof fetch },
 ): Promise<ArteRenderizada[]> {
   if (entradas.length === 0) return [];
+  // O texto da arte do Instagram com as palavras pesadas disfarçadas (29/10/2026), como a legenda.
+  entradas = entradas.map((e) => ({
+    ...e,
+    headline: disfarcarPalavrasPesadas(e.headline),
+    ...(e.corpo ? { corpo: disfarcarPalavrasPesadas(e.corpo) } : {}),
+  }));
 
   const { chromium } = await import("playwright-core");
   const { assembleSlide } = await import("@/lib/carousel-templates/assemble");

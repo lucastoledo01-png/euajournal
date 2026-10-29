@@ -1,4 +1,5 @@
 import { MARCA } from "@/lib/marca";
+import { disfarcarPalavrasPesadas } from "./palavras-pesadas";
 import { autorComBanco, semSufixoDeBanco } from "../visual/bancos-oficiais/credito";
 
 /**
@@ -462,7 +463,8 @@ export function fecharLegenda(texto: string, opcoes: OpcoesDoFecho = {}): FechoD
 
 /** Atalho para quem só quer o texto. */
 export function legendaDoInstagram(texto: string, opcoes: OpcoesDoFecho = {}): string {
-  return fecharLegenda(texto, opcoes).texto;
+  // O último passo de toda legenda que vai ao Instagram: as palavras pesadas saem disfarçadas (29/10/2026).
+  return disfarcarPalavrasPesadas(fecharLegenda(texto, opcoes).texto);
 }
 
 /**

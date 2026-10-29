@@ -109,6 +109,14 @@ export function conferirPlano(itens: ItensDoPlano, material: MaterialDoPlano): s
   for (const [canal, usadas] of canais) {
     const lista = itens[canal];
     if (new Set(lista).size !== lista.length) motivos.push(`${canal}: a mesma pauta duas vezes`);
+    // A mesma notícia por duas fontes tem storyIds diferentes e o mesmo título (29/10/2026).
+    const titulos = new Map<string, string>();
+    for (const id of lista) {
+      const t = (material.pautas.find((p) => p.storyId === id)?.titulo ?? "").toLowerCase().normalize("NFD").replace(/[^a-z0-9 ]/g, "").trim();
+      if (!t) continue;
+      if (titulos.has(t)) motivos.push(`${canal}: ${id} repete a pauta ${titulos.get(t)} (mesmo título); escolha outra`);
+      else titulos.set(t, id);
+    }
     for (const id of lista) {
       if (!pool.has(id)) motivos.push(`${canal}: ${id} não está entre as pautas aprovadas na triagem`);
       else if (usadas.includes(id)) motivos.push(`${canal}: ${id} já saiu neste canal nos últimos 30 dias`);

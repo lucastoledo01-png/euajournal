@@ -20,9 +20,9 @@ export type FiltroDeStatus = "aguardando" | "aprovadas" | "reprovadas" | "public
 
 /** `rotulo` cabe no botão do celular; `descricao` diz o que entra, para o estado vazio. */
 export const FILTROS_DE_STATUS: ReadonlyArray<{ id: FiltroDeStatus; rotulo: string; descricao: string }> = [
-  { id: "aguardando", rotulo: "Aguardando", descricao: "aguardando a sua decisão" },
+  { id: "aguardando", rotulo: "Aguardando", descricao: "aguardando a sua decisão ou sendo refeita" },
   { id: "aprovadas", rotulo: "Aprovadas", descricao: "aprovada e ainda não publicada" },
-  { id: "reprovadas", rotulo: "Reprovadas", descricao: "reprovada, refazendo, cancelada ou descartada" },
+  { id: "reprovadas", rotulo: "Reprovadas", descricao: "reprovada, cancelada ou descartada" },
   { id: "publicadas", rotulo: "Publicadas", descricao: "publicada" },
 ];
 
@@ -43,7 +43,8 @@ export function situacaoDaPeca(a: Pick<Aprovacao, "estado">, noAr: boolean): Sit
 }
 
 export function filtroDaSituacao(s: SituacaoDaPeca): FiltroDeStatus {
-  if (s === "aguardando") return "aguardando";
+  // A peça sendo refeita volta para a decisão do editor: fica onde ele a deixou, e não some em "Reprovadas" (29/10/2026).
+  if (s === "aguardando" || s === "refazendo") return "aguardando";
   if (s === "aprovada") return "aprovadas";
   if (s === "publicada") return "publicadas";
   return "reprovadas";

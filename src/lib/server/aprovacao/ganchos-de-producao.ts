@@ -668,7 +668,16 @@ export function mundoDeProducao(env: Record<string, string | undefined> = proces
   return {
     // O cliente do banco já está no grafo de `integracao.ts`; só ele entra por import estático.
     client: getSupabaseAdminClient,
-    projeto: async (id) => (await import("../projects")).requireActiveProject(id),
+    /*
+     * A refação não publica: só reescreve a peça, que continua presa à fila e
+     * ao portão de publicação. Exigir projeto ativo aqui travava a refação no
+     * projeto pausado (29/10/2026, "pedi alteração e sumiram" no teste-claude).
+     */
+    projeto: async (id) => {
+      const p = await (await import("../projects")).getProjectById(id);
+      if (!p) throw new Error(`Projeto ${id} não encontrado.`);
+      return p;
+    },
     vozDoArtigo: async (projectId) => (await (await import("../ramos/vozes")).vozesDosRamos(projectId)).artigo,
     escrever: async (pauta, pacote, marca) =>
       (await import("../ramos/artigo")).escreverArtigoDaPauta(pauta, pacote, marca, { env }),

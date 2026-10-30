@@ -1,0 +1,168 @@
+[
+ {
+  "id": "p1-trump-eleicao",
+  "eixo": "politica",
+  "headline": "Trump chama eleição do Brasil de “vergonha” e não diz quem venceu",
+  "destaque": "não diz quem venceu",
+  "legenda": "Trump voltou a criticar a eleição presidencial brasileira nesta quinta-feira, 29 de outubro. Antes de embarcar para um comício na Carolina do Sul, o presidente dos Estados Unidos chamou a votação de vergonha e disse que não tomou partido a pedido de Lula, sem informar quando teria havido esse pedido. Questionado sobre quem é o vencedor legítimo, respondeu que não quer comentar o assunto neste momento. Trump também citou a reação do mercado financeiro brasileiro depois do segundo turno, mas a oscilação dos ativos não comprova irregularidade e ele não apresentou provas de fraude. Lula venceu Flávio Bolsonaro, que chegou aos Estados Unidos na quarta-feira, 28, e disse que vai organizar a oposição a partir do país, segundo o Not Journal.\n\n#trump #lula #eleicoesbrasil #flaviobolsonaro #brasileirosnosEUA",
+  "capa": {
+   "arquivo": "trump_cabeca.jpg",
+   "autor": "Casa Branca",
+   "licenca": "Domínio público",
+   "pagina": "https://commons.wikimedia.org/wiki/File:Donald_Trump_official_portrait,_2025_(cropped_headshot).jpg"
+  },
+  "bolhaDaCapa": {
+   "posicao": "pequena_direita_alta",
+   "foto": {
+    "arquivo": "lula_ombros.jpg",
+    "autor": "Ricardo Stuckert",
+    "licenca": "CC BY 2.0",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Foto_oficial_de_Luiz_Inácio_Lula_da_Silva_(ombros)_denoise.jpg"
+   }
+  },
+  "slides": [
+   {
+    "blocos": [
+     "Trump falou a jornalistas na quinta, 29, antes de embarcar para um comício na Carolina do Sul. Chamou a eleição de vergonha e disse que não tomou partido porque Lula pediu. Não explicou quando."
+    ],
+    "foto": {
+     "arquivo": "trump_comicio.jpg",
+     "autor": "Casa Branca",
+     "licenca": "Domínio público",
+     "pagina": "https://commons.wikimedia.org/wiki/File:Donald_Trump_official_portrait,_2025_(cropped_headshot).jpg"
+    }
+   },
+   {
+    "blocos": [
+     "Sobre quem venceu, respondeu: “Não quero comentar isso neste momento”. Não apresentou provas de fraude. Lula venceu Flávio Bolsonaro, que chegou aos EUA na quarta, 28."
+    ],
+    "foto": {
+     "arquivo": "flavio_ent.jpg",
+     "autor": "Agência Senado",
+     "licenca": "CC BY 2.0",
+     "pagina": "https://commons.wikimedia.org/wiki/File:Flávio_Bolsonaro_em_entrevista_(3x4).jpg"
+    }
+   }
+  ]
+ },
+ {
+  "id": "p2-kamala-impeachment",
+  "eixo": "politica",
+  "headline": "Kamala Harris diz que impeachment de Trump “não é uma boa ideia”",
+  "destaque": "“não é uma boa ideia”",
+  "legenda": "A ex-vice-presidente Kamala Harris disse que um novo impeachment de Donald Trump não é uma boa ideia, porque os democratas têm recursos limitados. A fala consta de entrevista ao canal MeidasTouch publicada na terça-feira, 27 de outubro, segundo o Not Journal. Para Harris, a energia deve ir para investigações e cobrança de contas, e o partido deve ser firme em temas como cortes na saúde. A declaração vem a poucos dias das eleições de meio de mandato, em 3 de novembro de 2026, em que os democratas são apontados como favoritos para retomar a Câmara. Mesmo com a maioria, eles não teriam os 67 votos do Senado necessários para condenar Trump.\n\n#kamalaharris #trump #impeachment #midterms #politicaamericana",
+  "capa": {
+   "arquivo": "kamala.jpg",
+   "autor": "Lawrence Jackson",
+   "licenca": "Domínio público",
+   "pagina": "https://commons.wikimedia.org/wiki/File:Kamala_Harris_Vice_Presidential_Portrait_(cropped).jpg"
+  },
+  "bolhaDaCapa": {
+   "posicao": "pequena_direita_alta",
+   "foto": {
+    "arquivo": "trump_cabeca.jpg",
+    "autor": "Casa Branca",
+    "licenca": "Domínio público",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Donald_Trump_official_portrait,_2025_(cropped_headshot).jpg"
+   }
+  },
+  "slides": [
+   {
+    "blocos": [
+     "Em entrevista ao MeidasTouch, publicada na terça, 27, Harris disse que os recursos são limitados e devem ir para investigações. Defendeu que os democratas sejam firmes na cobrança."
+    ],
+    "foto": {
+     "arquivo": "kamala_comicio.jpg",
+     "autor": "Wake Tech",
+     "licenca": "CC0",
+     "pagina": "https://commons.wikimedia.org/wiki/File:Kamala_Harris_speaking_during_presidential_campaign_rally_at_Wake_Tech_(August_16,_2024)_-44_-_53934371496.jpg"
+    }
+   },
+   {
+    "blocos": [
+     "A fala vem a poucos dias das eleições de meio de mandato, em 3 de novembro, em que os democratas são favoritos a retomar a Câmara. Mesmo assim, não teriam os 67 votos do Senado para condenar Trump."
+    ],
+    "foto": {
+     "arquivo": "trump_comicio.jpg",
+     "autor": "Casa Branca",
+     "licenca": "Domínio público",
+     "pagina": "https://commons.wikimedia.org/wiki/File:Donald_Trump_official_portrait,_2025_(cropped_headshot).jpg"
+    }
+   }
+  ]
+ },
+ {
+  "id": "p3-teste-alerta-fema",
+  "eixo": "mundo",
+  "headline": "EUA vão interromper rádio e TV em todo o país para teste de alerta em 17 de novembro",
+  "destaque": "em 17 de novembro",
+  "legenda": "A FEMA e a FCC vão fazer um teste nacional do Sistema de Alerta de Emergência, o EAS, na terça-feira, 17 de novembro, às 14h20 no horário do leste dos EUA, 16h20 em Brasília. Rádio, TV aberta, TV a cabo e por satélite vão interromper a programação por cerca de 1 minuto para transmitir a mensagem oficial, em inglês e espanhol. Celulares não recebem esse alerta, que é diferente do Wireless Emergency Alert. Se o teste for adiado, a nova data é 3 de dezembro de 2026. A lei federal exige que a FEMA teste o sistema ao menos a cada 3 anos, segundo a FCC.\n\n#fema #fcc #alertadeemergencia #eua #vidanosEUA",
+  "capa": {
+   "arquivo": "fema.jpg",
+   "autor": "Bill Koplitz",
+   "licenca": "Domínio público",
+   "pagina": "https://commons.wikimedia.org/wiki/File:FEMA_-_33801_-_PRSA_visits_FEMA_headquarters_in_Washington,_DC.jpg"
+  },
+  "slides": [
+   {
+    "blocos": [
+     "O teste será na terça, 17 de novembro, às 14h20 no horário do leste, 16h20 em Brasília. Rádio e TV vão parar por cerca de 1 minuto para transmitir o aviso."
+    ],
+    "foto": {
+     "arquivo": "fema2.jpg",
+     "autor": "Bill Koplitz",
+     "licenca": "Domínio público",
+     "pagina": "https://commons.wikimedia.org/wiki/File:FEMA_-_36327_-_FEMA's_Harvey_Johnson_at_FEMA_headquarters_press_conference.jpg"
+    }
+   },
+   {
+    "blocos": [
+     "A mensagem sai em inglês e espanhol e avisa que é apenas um teste. Celulares não recebem esse alerta. Se houver adiamento, a nova data é 3 de dezembro."
+    ],
+    "foto": {
+     "arquivo": "fema3.jpg",
+     "autor": "Bill Koplitz",
+     "licenca": "Domínio público",
+     "pagina": "https://commons.wikimedia.org/wiki/File:FEMA_-_37682_-_FEMA_Gustav_Press_Conference_in_Washington,_DC.jpg"
+    }
+   }
+  ]
+ },
+ {
+  "id": "p4-buscas-visto",
+  "eixo": "mundo",
+  "headline": "Buscas por visto americano mais que dobram após a eleição no Brasil",
+  "destaque": "mais que dobram",
+  "legenda": "As buscas por visto americano mais que dobraram depois do segundo turno da eleição brasileira. Segundo levantamento da Jumpstart Immigration, o interesse pelo termo “visto americano” cresceu 105% no pico após a votação, e em algumas categorias profissionais a procura chegou a ser até 12 vezes maior. Os vistos mais pesquisados foram o O-1, para fundadores e profissionais de destaque, o L-1, para transferência e expansão de empresas, e o E-2, para investidores. Os números medem interesse nas buscas, não pedidos aprovados, e a alta não significa que todos vão deixar o Brasil.\n\n#vistoamericano #o1 #l1 #e2 #brasileirosnosEUA",
+  "capa": {
+   "arquivo": "visto.jpg",
+   "autor": "Cytis",
+   "licenca": "CC0",
+   "pagina": "https://commons.wikimedia.org/wiki/File:Passport-flag-travel-visa-2642170.jpg"
+  },
+  "slides": [
+   {
+    "blocos": [
+     "Segundo a Jumpstart Immigration, o interesse por “visto americano” cresceu 105% no pico após o segundo turno. Em algumas categorias, a procura chegou a ser até 12 vezes maior."
+    ],
+    "foto": {
+     "arquivo": "capa_p1.jpg",
+     "autor": "Lula Oficial",
+     "licenca": "CC BY-SA 4.0",
+     "pagina": "https://commons.wikimedia.org/wiki/File:25.10.2026_-_Lula_é_reeleito_Presidente_do_Brasil_-_55611360312.jpg"
+    }
+   },
+   {
+    "blocos": [
+     "Os mais buscados foram O-1, L-1 e E-2. A alta mede interesse nas buscas, não vistos aprovados, e não quer dizer que todos vão sair do Brasil."
+    ],
+    "foto": {
+     "arquivo": "liberty.jpg",
+     "autor": "William Warby",
+     "licenca": "CC BY 2.0",
+     "pagina": "https://commons.wikimedia.org/wiki/File:Statue_of_Liberty,_NY.jpg"
+    }
+   }
+  ]
+ }
+]

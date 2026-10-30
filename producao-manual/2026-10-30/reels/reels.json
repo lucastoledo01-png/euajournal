@@ -1,0 +1,30 @@
+{
+ "fotos": "../fotos",
+ "trilha": "../../2026-10-27/reel2/trilha.m4a",
+ "reels": {
+  "p1": {
+   "foto": "trump_0821.jpg",
+   "crop": "1125:2000:940:0",
+   "cat": "POLÍTICA",
+   "h": "Trump chama eleição do Brasil de “vergonha” e <em>não diz quem venceu</em>"
+  },
+  "p2": {
+   "foto": "kamala_orig.jpg",
+   "crop": "1462:2600:3070:950",
+   "cat": "POLÍTICA",
+   "h": "Kamala Harris diz que impeachment de Trump <em>“não é uma boa ideia”</em>"
+  },
+  "p3": {
+   "foto": "fema2.jpg",
+   "crop": "1000:1777:700:0",
+   "cat": "EUA",
+   "h": "EUA vão interromper rádio e TV para teste de alerta <em>em 17 de novembro</em>"
+  },
+  "p4": {
+   "foto": "visto.jpg",
+   "crop": "1440:2560:1000:0",
+   "cat": "EUA",
+   "h": "Buscas por visto americano <em>mais que dobram</em> após a eleição no Brasil"
+  }
+ }
+}

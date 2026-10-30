@@ -110,7 +110,14 @@ export function depsDoDiretor(client: SupabaseClient): DepsDoDiretor {
       const fonte = (await projetoDaFonte(projeto)) ?? projeto;
       const agora = Date.now();
       const lista = await coletadas(client, fonte.id, new Date(agora - 24 * 3_600_000).toISOString());
-      const jaClassificadas = new Set((await candidatos.buscarDaJanela(projeto.id, 3)).keys());
+      /*
+       * Só o que já tem classificação sai do pré-filtro (29/10/2026). Quando o
+       * projeto lê a própria coleta (o eua.journal no motor Claude), toda
+       * coletada já existe no projeto como `collected`, sem classificação; a
+       * triagem completa essa linha em `gravarNovas`.
+       */
+      const janela = await candidatos.buscarDaJanela(projeto.id, 3);
+      const jaClassificadas = new Set([...janela].filter(([, c]) => c.classificationStatus === "done").map(([url]) => url));
       return abrirTriagem(projeto, data, preFiltrar(lista, jaClassificadas, { agoraMs: agora }), {
         tarefas,
         candidatos,

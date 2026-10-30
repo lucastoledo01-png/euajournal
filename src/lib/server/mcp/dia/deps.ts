@@ -20,6 +20,7 @@ import { abrirPacote } from "./pacotes";
 import { abrirPlano, pautaDoPlano, reelsDoPlano, volumesDoProjeto, type MaterialDoPlano } from "./plano";
 import { planosSupabase, type PlanoDoDia } from "./plano-store";
 import { abrirTriagem, preFiltrar, type Coletada } from "./triagem";
+import { ehPrioritaria, fontesPrioritarias } from "./fontes-prioritarias";
 
 /** As matérias do dia na coleta do projeto de onde vêm as pautas. */
 async function coletadas(client: SupabaseClient, projectIdDaFonte: string, desdeIso: string): Promise<Coletada[]> {
@@ -118,7 +119,9 @@ export function depsDoDiretor(client: SupabaseClient): DepsDoDiretor {
        */
       const janela = await candidatos.buscarDaJanela(projeto.id, 3);
       const jaClassificadas = new Set([...janela].filter(([, c]) => c.classificationStatus === "done").map(([url]) => url));
-      return abrirTriagem(projeto, data, preFiltrar(lista, jaClassificadas, { agoraMs: agora }), {
+      const prioritarias = fontesPrioritarias(projeto);
+      const prioritaria = (d: string | null) => ehPrioritaria(d, prioritarias);
+      return abrirTriagem(projeto, data, preFiltrar(lista, jaClassificadas, { agoraMs: agora, prioritaria }), {
         tarefas,
         candidatos,
         comInstrucoes: (p, fn) => comInstrucoesDoProjeto(p, fn),
@@ -132,15 +135,20 @@ export function depsDoDiretor(client: SupabaseClient): DepsDoDiretor {
         dominio: c.sourceDomain ?? "",
       }));
       const janela = [...(await candidatos.buscarDaJanela(projeto.id, 2)).values()].filter((c) => c.status === "approved");
+      const prioritarias = fontesPrioritarias(projeto);
       const desde = new Date(agora - 30 * 86_400_000).toISOString().slice(0, 10);
       const aprovados = (await planos.aprovadosDesde(projeto.id, desde)).filter((p) => p.id !== plano.id);
       const material: MaterialDoPlano = {
         data: plano.data,
         volumes: volumesDoProjeto(projeto),
         pautas: janela
-          .sort((a, b) => (b.editorialScore ?? 0) - (a.editorialScore ?? 0))
+          .sort(
+            (a, b) =>
+              Number(ehPrioritaria(b.sourceDomain, prioritarias)) - Number(ehPrioritaria(a.sourceDomain, prioritarias)) ||
+              (b.editorialScore ?? 0) - (a.editorialScore ?? 0),
+          )
           .slice(0, 40)
-          .map((c) => pautaDoPlano(c, doDia, null)),
+          .map((c) => pautaDoPlano(c, doDia, null, ehPrioritaria(c.sourceDomain, prioritarias))),
         reels: reelsDoPlano(await reels.sugeridos(projeto.id, 10)),
         jaUsadas: {
           newsletter: aprovados.flatMap((p) => p.itens.newsletter),

@@ -44,6 +44,8 @@ export type PautaDoPlano = {
   relevancia: number | null;
   veiculos: number;
   resumo: string;
+  /** De uma fonte que o dono pôs na frente (`settings.fontes_prioritarias`). */
+  prioritaria?: boolean;
 };
 
 export type MaterialDoPlano = {
@@ -67,7 +69,12 @@ export function veiculosLexicos(titulo: string, doDia: Array<{ titulo: string; d
   return dominios.size;
 }
 
-export function pautaDoPlano(c: CandidataPersistida, doDia: Array<{ titulo: string; dominio: string }>, publicadoEm: string | null): PautaDoPlano {
+export function pautaDoPlano(
+  c: CandidataPersistida,
+  doDia: Array<{ titulo: string; dominio: string }>,
+  publicadoEm: string | null,
+  prioritaria = false,
+): PautaDoPlano {
   return {
     storyId: c.storyId,
     titulo: c.title,
@@ -78,6 +85,7 @@ export function pautaDoPlano(c: CandidataPersistida, doDia: Array<{ titulo: stri
     relevancia: c.classificacao?.relevancia ?? null,
     veiculos: veiculosLexicos(c.title, doDia),
     resumo: (c.summary ?? "").slice(0, 400),
+    ...(prioritaria ? { prioritaria: true } : {}),
   };
 }
 
@@ -143,13 +151,16 @@ const SYSTEM = [
 
 function userDoPlano(m: MaterialDoPlano): string {
   const pautas = m.pautas
-    .map((p) => `- ${p.storyId} | ${p.titulo} | ${p.fonte ?? "?"} | ${p.eixo ?? "?"}/${p.pais ?? "?"} | relevância ${p.relevancia ?? "?"} | ${p.veiculos} veículo(s)\n  ${p.resumo}`)
+    .map((p) => `- ${p.storyId} | ${p.titulo} | ${p.fonte ?? "?"} | ${p.eixo ?? "?"}/${p.pais ?? "?"} | relevância ${p.relevancia ?? "?"} | ${p.veiculos} veículo(s)${p.prioritaria ? " | FONTE PRIORITÁRIA" : ""}\n  ${p.resumo}`)
     .join("\n");
   const reels = m.reels.map((r) => `- ${r.id} | ${r.fonte} @${r.autor ?? "?"} | nota ${r.nota} | ${r.titulo ?? ""} | ${r.link ?? ""}`).join("\n");
   return [
     `DATA: ${m.data}`,
     `VOLUMES: newsletter ${m.volumes.newsletter.minimo} a ${m.volumes.newsletter.maximo}; portal até ${m.volumes.artigos}; Instagram até ${m.volumes.instagram} (posts e Reels juntos).`,
     `PAUTAS APROVADAS NA TRIAGEM (${m.pautas.length}):\n${pautas || "(nenhuma)"}`,
+    m.pautas.some((p) => p.prioritaria)
+      ? "FONTE PRIORITÁRIA: o dono quer essas fontes na frente. Entre pautas de valor parecido, escolha a da fonte prioritária, e dê a ela pelo menos um canal quando a pauta se sustentar."
+      : "",
     `VÍDEOS SUGERIDOS PARA REEL (${m.reels.length}):\n${reels || "(nenhum)"}`,
     m.reprovacao ? `O DONO REPROVOU O PLANO ANTERIOR. Corrija isto: ${m.reprovacao}` : "",
   ]

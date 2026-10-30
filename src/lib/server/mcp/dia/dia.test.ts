@@ -12,6 +12,7 @@ import { conferirPlano, veiculosLexicos, type MaterialDoPlano } from "./plano";
 import { itensEditados } from "./plano-na-fila";
 import { planosEmMemoria, PLANO_VAZIO } from "./plano-store";
 import { linhasDaTriagem, preFiltrar, type Coletada } from "./triagem";
+import { ehPrioritaria, fontesPrioritarias } from "./fontes-prioritarias";
 
 const AGORA = Date.parse("2026-10-29T15:00:00Z");
 
@@ -33,6 +34,21 @@ describe("a triagem", () => {
       { agoraMs: AGORA },
     );
     expect(r.map((c) => c.storyId)).toEqual(["1"]);
+  });
+
+  it("põe a fonte prioritária na frente do corte e fica com a versão dela no título repetido", () => {
+    const lista = fontesPrioritarias({ settings: { fontes_prioritarias: ["https://www.notjournal.com.br/"] } });
+    const r = preFiltrar(
+      [
+        coletada({ storyId: "novo", url: "https://a.com/n", title: "Fed mantém os juros nesta quarta", publishedAt: "2026-10-29T14:00:00Z" }),
+        coletada({ storyId: "nj", url: "https://notjournal.com.br/x", sourceDomain: "www.notjournal.com.br", title: "Fed mantém os juros nesta quarta", publishedAt: "2026-10-29T09:00:00Z" }),
+        coletada({ storyId: "outro", url: "https://b.com/o", sourceDomain: "b.com", title: "Casa Branca anuncia outra coisa", publishedAt: "2026-10-29T13:00:00Z" }),
+      ],
+      new Set(),
+      { agoraMs: AGORA, teto: 1, prioritaria: (d) => ehPrioritaria(d, lista) },
+    );
+    expect(r.map((c) => c.storyId)).toEqual(["nj"]);
+    expect(ehPrioritaria("notjournal.com", lista)).toBe(false);
   });
 
   it("aplica a regra de decisão da esteira e aponta o que faltou classificar", () => {

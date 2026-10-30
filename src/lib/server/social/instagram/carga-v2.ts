@@ -73,7 +73,10 @@ export type CargaV2 = {
   artefatos: ArtefatoDaLinha[];
 };
 
-export type FormatoDaLinha = "static" | "carousel";
+export type FormatoDaLinha = "static" | "carousel" | "reel";
+
+/** O único tipo de arquivo que um Reel aceita. */
+export const MIME_DO_REEL = "video/mp4";
 
 /** Limites do carrossel, repetidos aqui porque o worker não importa o gerador. */
 const MINIMO_DE_SLIDES = 2;
@@ -302,7 +305,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
    */
   const formatoBruto = texto(conteudo?.formato) || "static";
   const formato: FormatoDaLinha | null =
-    formatoBruto === "static" || formatoBruto === "carousel" ? formatoBruto : null;
+    formatoBruto === "static" || formatoBruto === "carousel" || formatoBruto === "reel" ? formatoBruto : null;
   if (!formato) faltando.push(`content_json.formato desconhecido: "${formatoBruto}"`);
 
   const artefatos: ArtefatoDaLinha[] = [];
@@ -353,8 +356,31 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
     artefatos.push(comoArtefato(artefatoBruto, 1));
   }
 
+  /*
+   * O Reel é um vídeo só, e o tipo do arquivo é conferido, não presumido.
+   *
+   * `comoArtefato` assume `image/png` quando o mime falta, e um Reel sem mime
+   * cairia nesse padrão e seria entregue à Meta como se fosse imagem. Exigir
+   * `video/mp4` escrito é o que impede um payload de imagem de ser publicado
+   * como Reel, e o contrário.
+   */
+  if (formato === "reel" && artefatoBruto && texto(artefatoBruto.mime) !== MIME_DO_REEL) {
+    faltando.push(
+      `content_json.arte.artefato.mime="${texto(artefatoBruto.mime)}": o Reel só publica ${MIME_DO_REEL}`,
+    );
+  }
+
+  /*
+   * O Reel não tem capa desenhada nem foto resolvida: a peça é o vídeo.
+   *
+   * As conferências de `visual` e de `variante` existem para a arte estática e
+   * seriam recusas sem sentido aqui. Ficam ligadas para os outros formatos
+   * exatamente como estavam.
+   */
+  const ehReel = formato === "reel";
+
   const visual = objeto(conteudo?.visual);
-  if (!visual) faltando.push("content_json.visual");
+  if (!visual && !ehReel) faltando.push("content_json.visual");
 
   /*
    * Foto ou capa de texto, e a diferença tem que estar escrita.
@@ -384,7 +410,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
     );
   } else if (urlDaFoto) {
     foto = { imageUrl: urlDaFoto, attribution: texto(visual?.attribution) };
-  } else if (!capaDeTexto && visual) {
+  } else if (!capaDeTexto && visual && !ehReel) {
     faltando.push("content_json.visual: nem imageUrl nem capa=texto");
   }
 
@@ -399,7 +425,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
    * fundo, e o registro visual não tem `imageUrl`. Uma das duas informações
    * está errada, e publicar significaria escolher qual — que é adivinhar.
    */
-  if (arte) {
+  if (arte && !ehReel) {
     const variante = texto(arte.variante);
     /*
      * A esperada vem de `varianteDaCapa`, e não escrita aqui.
@@ -450,7 +476,7 @@ export function lerCargaV2(linha: LinhaDePost): LeituraDaCarga {
       hashtags,
       eixo: texto(arte!.eixo),
       foto,
-      motivoSemFoto: foto ? "" : texto(visual!.motivo) || "NO_VALID_VISUAL_ASSET",
+      motivoSemFoto: foto ? "" : ehReel ? "REEL" : texto(visual!.motivo) || "NO_VALID_VISUAL_ASSET",
       storyId,
       eventFingerprint: texto(linha.event_fingerprint) || null,
       visualAssetId: texto(linha.visual_asset_id) || null,

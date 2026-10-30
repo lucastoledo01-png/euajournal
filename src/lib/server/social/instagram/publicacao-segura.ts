@@ -266,8 +266,15 @@ export async function publicarComRegistro(
   creationId: string,
   env: Record<string, string | undefined> = process.env,
   fetcher: typeof fetch = fetch,
+  /**
+   * Quanto esperar o container ficar pronto. Só o vídeo passa isto: a imagem
+   * segue com o prazo de sempre, e a chamada dela não muda um byte.
+   */
+  esperaMs?: number,
 ): Promise<ResultadoDaPublicacao> {
-  const pronto = await waitForContainerReady(creationId, env, fetcher);
+  const pronto = esperaMs
+    ? await waitForContainerReady(creationId, env, fetcher, { timeoutMs: esperaMs })
+    : await waitForContainerReady(creationId, env, fetcher);
   if (!pronto.ok) {
     return { desfecho: "revisar", motivo: `container não ficou pronto: ${pronto.error}`, creationId };
   }

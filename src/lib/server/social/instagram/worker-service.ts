@@ -5,6 +5,7 @@ import {
   TETO_DE_FILHOS_DO_CARROSSEL,
   createCarouselContainer,
   createCarouselItemContainer,
+  createReelContainer,
   createSingleImageContainer,
 } from "./meta-client";
 import { renderOpenDesignSlides, uploadOpenDesignSlideToStorage } from "./opendesign-renderer";
@@ -263,6 +264,31 @@ export type EstadoDosFilhos = {
   registrar: (index: number, creationId: string) => Promise<void>;
 };
 
+/** Vídeo leva mais que imagem para a Meta processar: 10 minutos, e não os 2 da imagem. */
+const ESPERA_DO_REEL_MS = 10 * 60_000;
+
+/**
+ * O container do Reel: um vídeo, sem filhos e sem a escolha por contagem.
+ *
+ * Fica separado de `montarContainer` de propósito. Aquele decide o tipo pela
+ * quantidade de slides, e um vídeo só cairia no ramo da imagem única: a Meta
+ * recusaria o `.mp4` como `image_url`. O formato declarado na linha é quem
+ * manda aqui.
+ */
+async function montarContainerDeReel(
+  videoUrl: string | undefined,
+  caption: string,
+  env: Record<string, string | undefined>,
+  fetcher: typeof fetch,
+): Promise<string> {
+  if (!videoUrl) throw new Error("O Reel não tem vídeo aprovado, não há o que publicar.");
+  const reel = await createReelContainer(videoUrl, caption, env, fetcher);
+  if (!reel.ok || !reel.creationId) {
+    throw new Error(`Falha ao criar o container de Reel: ${reel.error}`);
+  }
+  return reel.creationId;
+}
+
 async function montarContainer(
   imageUrls: string[],
   caption: string,
@@ -389,6 +415,8 @@ async function registrarRevisao(
 type PreparoDaPublicacao = {
   legenda: string;
   slides: SlideSubido[];
+  /** Só o Reel declara isto: o vídeo vai por outro container e espera mais. */
+  tipo?: "reel";
   carousel?: InstagramCarouselContent;
   /** Só no carrossel: o que já foi criado na Meta e onde registrar o resto. */
   filhos?: EstadoDosFilhos;
@@ -606,6 +634,7 @@ async function prepararV2(
   return {
     legenda: carga.legenda,
     slides,
+    ...(carga.formato === "reel" ? { tipo: "reel" as const } : {}),
     filhos: carga.formato === "carousel" ? filhos : undefined,
     hashesConferidos: artefatos.map((a) => a.sha256),
   };
@@ -982,15 +1011,21 @@ export async function processScheduledPost(
      * `publicarComRegistro` tudo é irreversível, e é por isso que o
      * `creation_id` é gravado antes da chamada, não depois.
      */
-    const creationId = await montarContainer(
-      slides.map((s) => s.url),
-      preparo.legenda,
-      igEnv,
-      fetcher,
-      preparo.filhos,
-    );
+    const creationId =
+      preparo.tipo === "reel"
+        ? await montarContainerDeReel(slides[0]?.url, preparo.legenda, igEnv, fetcher)
+        : await montarContainer(
+            slides.map((s) => s.url),
+            preparo.legenda,
+            igEnv,
+            fetcher,
+            preparo.filhos,
+          );
 
-    const publicacao = await publicarComRegistro(supabase, socialPostId, creationId, igEnv, fetcher);
+    const publicacao =
+      preparo.tipo === "reel"
+        ? await publicarComRegistro(supabase, socialPostId, creationId, igEnv, fetcher, ESPERA_DO_REEL_MS)
+        : await publicarComRegistro(supabase, socialPostId, creationId, igEnv, fetcher);
 
     if (publicacao.desfecho === "revisar") {
       await registrarRevisao(socialPostId, publicacao.motivo, publicacao.creationId);

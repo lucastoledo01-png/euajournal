@@ -170,6 +170,56 @@ export async function createSingleImageContainer(
 }
 
 /**
+ * Container de Reel: um vídeo, publicado no feed e na aba de Reels.
+ *
+ * O container do vídeo é processado de forma assíncrona e demora mais que o de
+ * imagem; quem chama espera `FINISHED` com o prazo maior (ver
+ * `publicarComRegistro`). Reel não tem filhos nem `is_carousel_item`.
+ */
+export async function createReelContainer(
+  videoUrl: string,
+  caption: string,
+  env: Record<string, string | undefined> = process.env,
+  fetcher: typeof fetch = fetch,
+): Promise<MetaPublishItemResult> {
+  const { accountId, accessToken, isConfigured } = getMetaConfig(env);
+
+  if (!isConfigured || !accountId || !accessToken) {
+    return { ok: false, error: "Credenciais de Meta Instagram não configuradas." };
+  }
+
+  try {
+    const url = `https://graph.facebook.com/v22.0/${accountId}/media`;
+    const params = new URLSearchParams();
+    params.set("media_type", "REELS");
+    params.set("video_url", videoUrl);
+    params.set("caption", caption);
+    params.set("share_to_feed", "true");
+    params.set("access_token", accessToken);
+
+    const response = await fetcher(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+      signal: AbortSignal.timeout(tetoDeTempo(env)),
+    });
+
+    const json = await response.json().catch(() => ({}));
+
+    if (!response.ok || !json.id) {
+      return {
+        ok: false,
+        error: json.error?.message || `Falha ao criar container de Reel (${response.status})`,
+      };
+    }
+
+    return { ok: true, creationId: json.id };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
  * Quantos filhos um carrossel aceita na Graph API.
  *
  * Mora aqui porque é fato da API da Meta, e não decisão editorial. Quantos

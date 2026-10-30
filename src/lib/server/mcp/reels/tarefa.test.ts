@@ -122,13 +122,28 @@ describe("o laço da tarefa", () => {
 
 describe("o molde do vídeo vertical", () => {
   it("vídeo vertical vai sempre para o molde B, com o corte do B", () => {
-    const vertical = { ...PREPARO, original: { largura: 720, altura: 1280, segundos: 32 } };
+    const vertical = {
+      ...PREPARO,
+      original: { largura: 720, altura: 1280, segundos: 32 },
+      corte: { a: { x: 0, y: 300, largura: 720, altura: 720 }, b: PREPARO.corte.b },
+    };
     const material = materialDoCandidato(candidato(), vertical);
     const r = conferirTextoDoReel(BOM, material);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.texto.molde).toBe("b");
     expect(r.texto.corte).toEqual(PREPARO.corte.b);
+  });
+
+  it("vertical que embrulha um vídeo deitado fica no A, com o corte do meio", () => {
+    const embrulho = {
+      ...PREPARO,
+      original: { largura: 720, altura: 1280, segundos: 28 },
+      corte: { a: { x: 24, y: 540, largura: 672, altura: 358 }, b: null },
+    };
+    const r = conferirTextoDoReel(BOM, materialDoCandidato(candidato(), embrulho));
+    expect(r.ok && r.texto.molde).toBe("a");
+    expect(r.ok && r.texto.corte).toEqual(embrulho.corte.a);
   });
 
   it("vídeo horizontal pode ficar no A", () => {

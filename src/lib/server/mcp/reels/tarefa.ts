@@ -158,9 +158,16 @@ export function conferirTextoDoReel(
    * moldura do A, um 9:16 vira um recorte do meio, e o Reel do Trump saiu só
    * com metade do rosto. É regra de formato, então é aplicada aqui, e não
    * devolvida ao Claude como reparo.
+   *
+   * A exceção é o vertical que só embrulha um vídeo horizontal (30/10/2026):
+   * o perfil de notícia põe o vídeo deitado no meio, com o próprio logotipo e
+   * título em cima. O corte do A já acha esse retângulo; no B, tela cheia, a
+   * marca do outro perfil ia junto.
    */
   const vertical = material.original.altura > material.original.largura;
-  const t = vertical && lidoLimpo.molde === "a" ? { ...lidoLimpo, molde: "b" as const, corte: null } : lidoLimpo;
+  const a = material.corteProposto.a;
+  const embrulhaHorizontal = Boolean(a && a.largura > a.altura);
+  const t = vertical && !embrulhaHorizontal && lidoLimpo.molde === "a" ? { ...lidoLimpo, molde: "b" as const, corte: null } : lidoLimpo;
 
   const manchete = t.linhas.join(" ").replace(/\s+/g, " ").trim();
   const corpo = [t.legenda.gancho, ...t.legenda.paragrafos].map((p) => p.trim()).filter(Boolean).join("\n\n");

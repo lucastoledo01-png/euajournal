@@ -4,19 +4,30 @@ import { DEFAULT_PROJECT_ID } from "@/lib/server/projects";
 import { normalizeSignupEvent } from "@/lib/server/platform-events";
 import { getSupabaseAdminClient } from "@/lib/server/supabase-admin";
 import { verifyTurnstileToken } from "@/lib/server/turnstile";
+import { hostPublicoDoPedido } from "@/lib/server/mcp/origem";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const requestUrl = new URL(request.url);
   const turnstile = await verifyTurnstileToken({
     token: typeof body.turnstileToken === "string" ? body.turnstileToken : body["cf-turnstile-response"],
     expectedAction: "newsletter_signup",
-    requestHostname: requestUrl.hostname,
+    requestHostname: hostPublicoDoPedido(request),
     remoteIp: request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
   });
 
   if (!turnstile.ok) {
-    return NextResponse.json({ ok: false, reason: "turnstile_failed" }, { status: 403 });
+    /*
+     * A recusa fica registrada com o motivo (30/10/2026). O cadastro falhou
+     * calado desde o lançamento: zero leads, e nada dizia por quê.
+     */
+    await getSupabaseAdminClient()
+      .from("platform_events")
+      .insert({ event_type: "newsletter_signup_recusado", payload: { motivo: turnstile.reason, host: hostPublicoDoPedido(request) } })
+      .then(
+        () => undefined,
+        () => undefined,
+      );
+    return NextResponse.json({ ok: false, reason: "turnstile_failed", motivo: turnstile.reason }, { status: 403 });
   }
 
   const payload = normalizeSignupEvent(body);
@@ -39,6 +50,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
+    console.error("[NEWSLETTER] lead não gravado:", error.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 

@@ -1,0 +1,54 @@
+{
+ "fotos": "../fotos",
+ "trilha": "../../2026-10-27/reel2/trilha.m4a",
+ "reels": {
+  "r1": {
+   "foto": "lula3.jpg",
+   "crop": "1328:2361:1676:0",
+   "cat": "POLÍTICA",
+   "h": "Governo Lula vai derrubar sites e posts que incentivem <em>assédio eleitoral</em>"
+  },
+  "r2": {
+   "foto": "lula2.jpg",
+   "crop": "1328:2361:647:0",
+   "cat": "ECONOMIA",
+   "bolha": {
+    "foto": "s4.jpg",
+    "crop": "1700:1700:1500:0",
+    "x": 640,
+    "y": 300
+   },
+   "h": "Compras de até US$ 50 na Shein e na Shopee <em>voltam a ser tributadas em 2027</em>"
+  },
+  "r3": {
+   "foto": "flavio.jpg",
+   "crop": "723:1286:90:0",
+   "cat": "POLÍTICA",
+   "h": "Editorial do Wall Street Journal vê <em>vingança política</em> contra Flávio"
+  },
+  "r4": {
+   "foto": "lula1.jpg",
+   "crop": "1177:2093:1006:0",
+   "cat": "POLÍTICA",
+   "h": "Comissão de bispos questiona vitória de Lula <em>sem apresentar provas</em>"
+  },
+  "r5": {
+   "foto": "musk2.jpg",
+   "crop": "1075:1912:323:0",
+   "cat": "MUNDO",
+   "h": "Elon Musk questiona vitória de Lula: <em>“a matemática não fecha”</em>"
+  },
+  "r6": {
+   "foto": "trump_mr.jpg",
+   "crop": "1237:2200:381:1000",
+   "cat": "POLÍTICA",
+   "bolha": {
+    "foto": "flavio.jpg",
+    "crop": "700:700:100:60",
+    "x": 640,
+    "y": 300
+   },
+   "h": "Trump não deve apoiar Flávio como <em>“líder do Brasil”</em>, diz Reuters"
+  }
+ }
+}

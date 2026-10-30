@@ -12,7 +12,10 @@ import type { NewsSourceConfig, NewsSourceType } from "./newsroom/news-sources";
 
 /** Projeto semente, criado na migração com o conteúdo que já existia. */
 export const DEFAULT_PROJECT_ID = "00000000-0000-4000-8000-000000000001";
-export const DEFAULT_PROJECT_SLUG = "desbuguei";
+export const DEFAULT_PROJECT_SLUG = "euajournal";
+
+/** Slugs antigos que ainda abrem o projeto: o link guardado de antes da troca de nome (29/10/2026). */
+const SLUGS_ANTIGOS: Record<string, string> = { desbuguei: "euajournal" };
 
 export type Project = {
   id: string;
@@ -125,7 +128,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   const { data, error } = await supabase
     .from("projects")
     .select(PROJECT_COLUMNS)
-    .eq("slug", slug)
+    .eq("slug", SLUGS_ANTIGOS[slug] ?? slug)
     .maybeSingle();
 
   if (error) throw new LeituraDoProjetoFalhou(`Projeto ${slug}, leitura falhou: ${error.message}`);

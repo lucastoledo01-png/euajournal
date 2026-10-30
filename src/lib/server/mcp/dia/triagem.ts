@@ -56,12 +56,13 @@ function chaveDoTitulo(t: string): string {
  * Pura: as coletadas que valem uma classificação. Só o que chegou nas últimas
  * `horas`, sem agregador, sem o que o projeto do Claude já classificou, um
  * título por vez (o mesmo fato coletado de dois feeds), das mais novas para as
- * mais antigas, até o teto.
+ * mais antigas, até o teto. A fonte prioritária vem antes de todas: entra
+ * mesmo num dia cheio, e no título repetido é a versão dela que fica.
  */
 export function preFiltrar(
   coletadas: Coletada[],
   jaClassificadas: Set<string>,
-  opcoes: { agoraMs: number; horas?: number; teto?: number },
+  opcoes: { agoraMs: number; horas?: number; teto?: number; prioritaria?: (dominio: string | null) => boolean },
 ): Coletada[] {
   const desde = opcoes.agoraMs - (opcoes.horas ?? 24) * 3_600_000;
   const vistos = new Set<string>();
@@ -69,7 +70,11 @@ export function preFiltrar(
     .filter((c) => Date.parse(c.publishedAt) >= desde)
     .filter((c) => !AGREGADORES.test((c.sourceDomain ?? "").toLowerCase()))
     .filter((c) => !jaClassificadas.has(c.url))
-    .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
+    .sort((a, b) => {
+      const p = opcoes.prioritaria;
+      const frente = p ? Number(p(b.sourceDomain ?? null)) - Number(p(a.sourceDomain ?? null)) : 0;
+      return frente || Date.parse(b.publishedAt) - Date.parse(a.publishedAt);
+    })
     .filter((c) => {
       const k = chaveDoTitulo(c.title);
       if (!k || vistos.has(k)) return false;

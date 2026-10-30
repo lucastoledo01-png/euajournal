@@ -3,6 +3,7 @@ import { createListmonkClient } from "@/lib/server/listmonk";
 import { DEFAULT_PROJECT_ID } from "@/lib/server/projects";
 import { getSupabaseAdminClient } from "@/lib/server/supabase-admin";
 import { verifyTurnstileToken } from "@/lib/server/turnstile";
+import { hostPublicoDoPedido } from "@/lib/server/mcp/origem";
 import { getAdminSessionSecret } from "@/lib/server/env";
 import { loadLandingCampaign, recordFunnelEvent } from "@/lib/server/prompt-system/landing";
 import { materialCookie, signMaterialAccess } from "@/lib/server/prompt-system/material-gate";
@@ -26,12 +27,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ key
   const keyword = validation.keyword;
 
   const body = await request.json().catch(() => ({}));
-  const url = new URL(request.url);
-
   const turnstile = await verifyTurnstileToken({
     token: typeof body.turnstileToken === "string" ? body.turnstileToken : undefined,
     expectedAction: TURNSTILE_ACTION,
-    requestHostname: url.hostname,
+    requestHostname: hostPublicoDoPedido(request),
     remoteIp:
       request.headers.get("cf-connecting-ip") ??
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??

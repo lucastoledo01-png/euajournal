@@ -14,6 +14,15 @@ export function origemDoPedido(req: Request): string {
   return `${proto}://${host}`;
 }
 
+/**
+ * Só o nome do host público, sem porta (30/10/2026): o que o captcha confere.
+ * `new URL(req.url).hostname` é o do contêiner atrás do Traefik, e a inscrição
+ * da newsletter era recusada como "domínio não permitido" sem nunca gravar lead.
+ */
+export function hostPublicoDoPedido(req: Request): string {
+  return new URL(origemDoPedido(req)).hostname;
+}
+
 export function enderecoDosMetadadosDoRecurso(origem: string): string {
   return `${origem}/.well-known/oauth-protected-resource`;
 }

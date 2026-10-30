@@ -21,6 +21,7 @@ import { abrirPlano, pautaDoPlano, reelsDoPlano, volumesDoProjeto, type Material
 import { planosSupabase, type PlanoDoDia } from "./plano-store";
 import { abrirTriagem, preFiltrar, type Coletada } from "./triagem";
 import { ehPrioritaria, fontesPrioritarias } from "./fontes-prioritarias";
+import { rodarRadar } from "@/lib/server/newsroom/radar";
 
 /** As matérias do dia na coleta do projeto de onde vêm as pautas. */
 async function coletadas(client: SupabaseClient, projectIdDaFonte: string, desdeIso: string): Promise<Coletada[]> {
@@ -109,6 +110,15 @@ export function depsDoDiretor(client: SupabaseClient): DepsDoDiretor {
     planos,
     async abrirTriagem(projeto, data) {
       const fonte = (await projetoDaFonte(projeto)) ?? projeto;
+      /*
+       * A coleta na hora (29/10/2026). No motor Claude o ciclo das 06:03 não
+       * roda, e era ele que lia os feeds; sem isso a triagem abria vazia. O
+       * "faça o dia" lê todas as fontes antes de triar (uns 7 s para as 76),
+       * e o dia parte das notícias daquela hora. Falha na coleta não trava o
+       * dia: a triagem segue com o que já está no banco.
+       */
+      const coleta = await rodarRadar(fonte, { client });
+      if (!coleta.ok) console.error("[MCP DIA] coleta antes da triagem:", coleta.erros.join("; "));
       const agora = Date.now();
       const lista = await coletadas(client, fonte.id, new Date(agora - 24 * 3_600_000).toISOString());
       /*
